@@ -1,0 +1,57 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="5C8F2C61-94D3-9581-B181-86BE899CAE30" name="rel_users_events">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-11 13:12:29 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<ordsAlias>table_4</ordsAlias>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="rel_id" id="42D8D08A-872A-A824-4D0F-C23FECE34564">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-11 13:14:45 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="user_id" id="647843B2-1E6B-7BD1-F1F5-FF7A9D25E4ED">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-11 13:14:45 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="event_id" id="9EA5897F-F76C-9375-8955-DBC833A0CFD5">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-11 13:14:45 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="6F09F32D-82B2-35E9-C3A4-BB6E794D48ED" name="rel_users_events_PK">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-11 13:14:45 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="42D8D08A-872A-A824-4D0F-C23FECE34564"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>

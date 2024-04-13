@@ -1,0 +1,46 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="50F08A1B-7666-A7A8-963A-D014DACC65CD" name="Friends">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-09 22:33:11 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<ordsAlias>table_5</ordsAlias>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="user_id_a" id="8FE80724-7D62-9CD8-255E-468D0631874A">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-10 13:41:42 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT027</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="user_id_b" id="8575B6F6-D1AF-1E94-93CB-4F59A3B1B302">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-10 13:41:42 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT027</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="57C38ACC-0A73-297E-A6ED-B00321F5AE01" name="Friends_PK">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-10 13:41:42 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="8FE80724-7D62-9CD8-255E-468D0631874A"/>
+<colUsage columnID="8575B6F6-D1AF-1E94-93CB-4F59A3B1B302"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>

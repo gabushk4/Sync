@@ -1,0 +1,11 @@
+*{
+    background-color: #CD8A39;
+}
+#main{
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+}

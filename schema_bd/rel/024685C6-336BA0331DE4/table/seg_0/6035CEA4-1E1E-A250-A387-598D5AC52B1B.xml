@@ -1,0 +1,82 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="6035CEA4-1E1E-A250-A387-598D5AC52B1B" name="Users">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-09 22:31:40 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<ordsAlias>table_2</ordsAlias>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="user_id" id="32BFF31F-AC99-3C3A-F5E7-9A546908131B">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-10 13:25:32 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT027</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="username" id="D5FE9DBD-9173-8146-BEB1-1D3074361299">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-09 22:34:20 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>20</dataTypeSize>
+<ownDataTypeParameters>20,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="password" id="010FE98D-E1BB-BC5B-53C1-24B472CD31CF">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-10 13:25:32 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>A3A3C77D-0366-9768-FF89-1C25E56881C8</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="profile_pic_id" id="ED4933B4-CEE5-D1DE-3895-C4DCB40A67DF">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-10 13:25:32 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<dataTypePrecision>4</dataTypePrecision>
+<ownDataTypeParameters>,4,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="timezone" id="E6A3C908-6589-283A-4064-4AB3CF14D0F5">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-10 13:25:32 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>50</dataTypeSize>
+<ownDataTypeParameters>50,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="363DE8D1-3FC6-1786-9721-93BDAA25A5D6" name="Users_PK">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-10 13:25:32 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="32BFF31F-AC99-3C3A-F5E7-9A546908131B"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>

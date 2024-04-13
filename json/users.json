@@ -1,0 +1,53 @@
+{
+    "users":
+    [
+        {
+            "username": "gabushka",
+            "password":"",
+            "profile-pic": "",
+            "bio":"",
+            "events": 
+            [
+                {
+                    "title":"Guidon",
+                    "date": "12 March 2024",
+                    "dtime": "h8",
+                    "etime":"h9",
+                    "duration": 60,
+                    "description":"Bring back tesaurus",
+                    "private": false
+                }
+            ],
+            "friends":
+            [
+                {
+                    "username":"yassikpoke"
+                }
+            ]
+        },
+        {
+            "username": "yassikpoke",
+            "password":"",
+            "profile-pic": "",
+            "bio":"",
+            "events": 
+            [
+                {
+                    "title":"Cours de philo",
+                    "date": "12 March 2024",
+                    "dtime": "h12",
+                    "etime":"h14",
+                    "duration": 120,
+                    "description":"My teacher sucks frl",
+                    "private": false
+                }
+            ],
+            "friends":
+            [
+                {
+                    "username":"gabushka"
+                }
+            ]
+        }
+    ]
+}

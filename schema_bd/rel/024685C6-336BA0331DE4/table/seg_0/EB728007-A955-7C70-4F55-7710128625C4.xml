@@ -1,0 +1,118 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="EB728007-A955-7C70-4F55-7710128625C4" name="Events">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-09 22:31:47 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<ordsAlias>table_3</ordsAlias>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="event_id" id="0354C403-42A2-EFFE-2313-CB80552A2E55">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-10 13:36:54 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT027</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="8C509E69-3FBF-D206-6E95-5889E3D7229F" referredColumn="32BFF31F-AC99-3C3A-F5E7-9A546908131B"/>
+</associations>
+</Column>
+<Column name="title" id="634D584B-8F9A-D550-C6EC-D80EA2E987AF">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-10 13:36:54 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>50</dataTypeSize>
+<ownDataTypeParameters>50,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="date" id="32AC1076-0AC7-CF29-A742-8A88F5DCE2FD">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-10 13:36:54 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT007</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="debut_time" id="CC9112A7-EE2E-99A7-7E8A-AC10C146CB2A">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-10 13:36:54 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT014</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="duration" id="52931040-5E66-E7B6-FD54-0DE845B065C5">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-10 13:36:54 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<dataTypePrecision>3</dataTypePrecision>
+<ownDataTypeParameters>,3,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="description" id="5C02D1F8-6F9B-AAAF-CA55-C445E8595C38">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-10 13:36:54 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>A3A3C77D-0366-9768-FF89-1C25E56881C8</logicalDatatype>
+<dataTypeSize>400</dataTypeSize>
+<ownDataTypeParameters>400,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="private" id="91A34343-77F9-11F1-9303-E489F1B252B4">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-10 13:36:54 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<nullsAllowed>true</nullsAllowed>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT006</logicalDatatype>
+<dataTypeSize>1</dataTypeSize>
+<ownDataTypeParameters>1,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="65B67573-21F2-B10A-1F48-CE5627F767E4" name="Events_PK">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-10 13:36:54 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="0354C403-42A2-EFFE-2313-CB80552A2E55"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="EA1E862E-B742-A215-B87A-8076A5D3E192" name="Events_Users_FK">
+<createdBy>gabbo</createdBy>
+<createdTime>2024-04-10 13:38:08 UTC</createdTime>
+<ownerDesignName>schema_bd</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="0354C403-42A2-EFFE-2313-CB80552A2E55"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>

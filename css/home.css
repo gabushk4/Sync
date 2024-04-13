@@ -1,0 +1,217 @@
+*{
+    margin: 0;
+    font-family: 'Mooli', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+#header{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+#today-date{
+    margin-left: 3%;
+    font-size: 60px;
+}
+#search-bar{
+    text-align: center;
+    margin-left: 10%;
+}
+#filter-btn{
+    margin-left: 7%;
+}
+#filter-btn button{
+    width: 90px;
+    background-color: #FF914D;
+    border: 0;
+    border-radius: 10px;
+    height: 25px;
+}
+#filter-btn button:hover{
+    border: 2px solid grey;
+    background-color: #ff914def;
+    font-size: 12px;
+}
+#filter-btn button:active{
+    background-color: red;
+
+}
+#menu{
+    margin-left: 7%;
+}
+#main{
+    display: flex;
+    flex-direction: column;
+    background-color: #FFBD59;
+    padding-left:10px;
+}
+#content{
+    display: flex;
+    flex-direction: row;
+    overflow:hidden;
+}
+#hours-container{
+    width: 5%;
+    height: 100%;
+    overflow: hidden;
+    overflow-y: scroll;
+    position: relative;
+}
+#hours-slider{
+    position: relative;
+    width: 100%;
+    height: auto;
+}
+
+#horloge{
+    color: red;
+    top: 0px;
+    position:absolute;
+}
+#calendars{
+    background-color: #CD8A39;
+    display: grid;
+    grid-template-columns: 25% 75%;
+    gap: 5px;
+    border-radius: 10px;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+#user-calendar{
+    background-color: bisque;
+    width: 100%;
+    height: 100%;
+}
+#notifications{
+
+}
+#friends-calendar-container{
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+}
+#friends-calendar-slider{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+    gap: 20px;
+    position: relative;
+}
+.block{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    width: 250px;
+    align-items: center;
+    align-self: center;
+    color: white;
+    font-size: 20px;
+    z-index: 1;
+    position: relative;
+}
+.event-block{
+    display: grid;
+    grid-template-rows: auto 1fr auto; 
+    grid-template-columns: 1fr; 
+    text-align: center;
+    width: 100%;
+    background-color: black;
+    border-radius: 5px;
+    box-shadow: 4px 0 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+}
+.event-start-time{
+    grid-row: 1 / 2;
+}
+.event-start-time, .event-end-time{
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.5)
+}
+.event-end-time{
+    grid-row: 3 / 4;
+}
+.event-main{
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    justify-content: center;
+    grid-row: 2 / 3;
+}
+#headers{
+    padding-top: 17px;
+    padding-bottom: 5px;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    gap: 20px;
+    position: absolute;
+    z-index: 2;
+    background-color: #FF914D;
+}
+.header{
+    width: 250px !important;
+    color: white;
+    font-size: 25px;
+    border-radius: 30px;
+    text-align: center;
+    padding: 10px;
+    background-color: black;
+    top: 0;
+}
+.public-events{
+    background-color: wheat;
+}
+.private-events{
+    background-color: burlywood;
+}
+#right-side-icons{
+    display: flex;
+    flex-direction: column;
+    width: 15%;
+}
+#footer, footer > p{
+    text-align: center;
+    font-family: 'Times New Roman', Times, serif;
+}
+.calendar-arrow{
+    height: 15px;
+    width: auto;
+}
+#left-arrow, #right-arrow{
+    display: flex;
+    align-items: center;
+}
+.mouseenter{
+    text-shadow: rgb(31, 31, 31) 1px 0 2px;
+    text-decoration: wavy;
+}
+
+/* Largeur et couleur de la barre de défilement */
+::-webkit-scrollbar {
+    width: 0px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0);
+    border-radius: 10px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: white;
+    border-radius: 5px;
+}
+
+/* Pseudo-élément montrant lorsque l'élément est en défilement */
+::-webkit-scrollbar-thumb:hover {
+    background: white;
+}
+::-webkit-scrollbar-thumb:focus{
+    background: white;
+}
