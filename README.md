@@ -3,7 +3,7 @@ A shared calendar designed to be controlled by the users (f*ck GAFAM)
 
 # Pitch
 
-        Sync est un calendrier partagé revisité axé sur le principe d’un réseau social. Il propose une façon innovante de comparer les temps libres et d’organiser des évènements sociaux. De plus, comme tous calendrier, il permet une organisation de temps personnel et pourra, dans le futur,  apporter une aide grâce à l’intelligence artificielle pour organiser efficacement votre temps. Partager un horaire d’employeur à employé n’aura jamais été plus facile avec la possibilité de créer une organisation.  Sync se veut à l’encontre des GAFAM qui récoltent les données pour extirper de plus en plus de liberté et d’argent à ses consommateurs. S'il faut créer tout un environnement comme tel, nous le ferons pour protéger la liberté sur internet.
+Sync est un calendrier partagé revisité axé sur le principe d’un réseau social. Il propose une façon innovante de comparer les temps libres et d’organiser des évènements sociaux. De plus, comme tous calendrier, il permet une organisation de temps personnel et pourra, dans le futur,  apporter une aide grâce à l’intelligence artificielle pour organiser efficacement votre temps. Partager un horaire d’employeur à employé n’aura jamais été plus facile avec la possibilité de créer une organisation.  Sync se veut à l’encontre des GAFAM qui récoltent les données pour extirper de plus en plus de liberté et d’argent à ses consommateurs. S'il faut créer tout un environnement comme tel, nous le ferons pour protéger la liberté sur internet.
 
 # Cahier des charges de Sync
 
