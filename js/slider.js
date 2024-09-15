@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', (e) => {
     const minTop = 60
     const maxTop = -1400
     var hours = document.getElementById('hours-slider')
+    var hoursContainer = document.getElementById('hours-container')
     hours.addEventListener('mouseenter', function(e){
         for (const div of document.querySelectorAll('.hour')) {
             e.preventDefault()
@@ -54,27 +55,31 @@ document.addEventListener('DOMContentLoaded', (e) => {
             var deltaY = (e.clientY - prevMouseY) / rapport            
             var top = parseInt(hours.style.top)
             var newTop = top + deltaY
-            if(newTop <= maxTop){
-                hours.style.top = maxTop + 'px'
-                slider.style.top = minTop + 'px'
-            }
-            else if(newTop >= minTop){
-                hours.style.top = minTop + 'px'
-                slider.style.top = minTop + 'px'
-            }
-            else{
-                hours.style.top = newTop + 'px'
-                slider.style.top = newTop + 'px'
-            }
+            
         }
     })
 
     var prevTop = parseInt(hours.style.top)
 
-    hours.addEventListener('scroll', function(e){
-        var delta = prevTop - parseInt(hours.style.top)
-        console.log(delta)
-    })
+    /* slider.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const scrollAmount = e.deltaY;
+        console.log(scrollAmount)
+        var newTop = parseInt(slider.style.top) - scrollAmount
+
+        if(newTop <= maxTop){
+            hours.style.top = maxTop + 'px'
+            slider.style.top = minTop + 'px'
+        }
+        else if(newTop >= minTop){
+            hours.style.top = minTop + 'px'
+            slider.style.top = minTop + 'px'
+        }
+        else{
+            hours.style.top = newTop + 'px'
+            slider.style.top = newTop + 'px'
+        }
+    }); */
 
     const sliderWidth = slider.offsetWidth
     const containerWidth = slider.parentElement.offsetWidth

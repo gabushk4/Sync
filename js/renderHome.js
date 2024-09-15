@@ -22,7 +22,7 @@ const indexPrivate = 7
 document.addEventListener('DOMContentLoaded', function(){
     //Setting up the home page
     sizeContent()   
-    //Créer les amis du user
+    //Créer les amis du user (un algorithme qui rend seulement à 6 user de loin de la position du premier block)
     for (var i = 0; i < users.length; i++) {
         CreateFriend(users[i])
     }
@@ -51,7 +51,7 @@ function CreateFriend(username){
     document.getElementById('headers').append(header)
 }
 
-function createEvent(event){
+function createEvent(event/* title, date, begin, duration, timezone, private */){
     var eventBlock = document.createElement('div')
     var debut = document.createElement('div')
     var main = document.createElement('div')

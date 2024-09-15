@@ -39,7 +39,6 @@ function updateClock() {
     var minutes = now.getMinutes();
 
     // Mettre à jour l'affichage de l'heure
-    //console.log() H:M:S
     if(heures > 9){
         iStart = 0
     }
