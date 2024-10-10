@@ -1,26 +1,26 @@
-//npm packages
+//paquets npm
 const express = require("express");
 const router = express.Router();
 const jwt = require('jsonwebtoken')
 
-//functions
+//fonctions
 const {generateSalt, hash, compare} = require('../../functions/pass')
 const { generateId } = require('../../functions/idGen')
 require("dotenv").config();
 const { selectQueryBuilder } = require("../../functions/sqlquerybuilder");
 const authenticateToken  = require('../../functions/authenticate')
+const FactoriserTimestamp = require('../../functions/factoriserTimestamp')
 
+//PDO
 let { pool } = require('../../PDO');
 
 //Pour developpement seulement
-router.get("/", async (req, res, next) => {
+/* router.get("/", async (req, res, next) => {
   var sql = "SELECT * FROM membres";
+  
   try {
     const [resultats] = await pool.query(sql)
-    const reponse = 
-    {
-      compte: resultats.length,
-      membres: resultats.map((r) => {
+    const membres = resultats.map((r) => {
         const date = new Date(r.temps_creation / 1)
         return {
           id_membre: r.id,
@@ -29,9 +29,11 @@ router.get("/", async (req, res, next) => {
           fp_url: r.fp_url, 
           temps_creation: date.toLocaleString()
         }
-      })
-    }
-    res.status(200).json({reponse})
+    })
+    res.status(200).json({
+      compte: resultats.length,
+      membres
+     })
   } catch (err) {
     res.status(500).json({
       message: 'Une erreur au niveau de la base de donnée est survenue',
@@ -39,7 +41,11 @@ router.get("/", async (req, res, next) => {
     })
   }
   
-}) 
+})  */
+
+router.get('/protected', authenticateToken, (req, res) => {
+  res.json({ message: `Bonjour ${req.membre.pseudo}, vous avez accédé à une route protégée !` });
+});
 
 router.post('/connexion', async (req, res, next) => {
   let sqlMdp = `
@@ -64,21 +70,26 @@ router.post('/connexion', async (req, res, next) => {
       hashedPass: resultatMdp[0].mot_de_passe,
       salt: resultatMdp[0].salt
     }
-    if(!compare(mdp, hash)) return res.status(401).json({messdage:'Authentification échouée'})
+    if(!compare(mdp, hash)) return res.status(401).json({message:'Authentification échouée'})
     
     const membre = {
       id: idMembre,
       pseudo: pseudo
     }
     
-    const accessToken = jwt.sign(membre, process.env.ACCESS_TOKEN_SECRET)
-    res.json({ cacheable: true [{
-            access_token: accessToken
-        }]
+    const accessToken = jwt.sign(membre, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "24h"})
+    res.json({ 
+      cacheable: true, 
+      acces_token: {
+        token: accessToken,
+        timestamp_serveur: Date.now(),
+        membre: membre
+      }
     })
 
-  } catch (error) {
-    res.status(500).json({message: 'Une erreur au niveau de la base de donnée est survenue',
+  } catch (err) {
+    res.status(500).json({
+      message: 'Une erreur au niveau de la base de donnée est survenue',
       erreur: err.message})
   }
   
@@ -86,25 +97,27 @@ router.post('/connexion', async (req, res, next) => {
 
 router.post("/inscription", async (req, res, next) => {
   try {
-    let id = await generateId();
+    let idmembre = await generateId(6,true,true,"M");
     let salt = generateSalt(14);    
     let { hashedPass: mdpHash } = hash(req.body.mot_de_passe, salt);
     let date = new Date(Date.now())
     
-    let temps_creation = date.toISOString().replace('T', ' ')
+    let temps_creation = FactoriserTimestamp(date.toISOString())
+
+    if(temps_creation == undefined)
+      throw err
     
-    console.log(temps_creation)
     // Sauvegarde du membre
-    var sql = "INSERT INTO membres (id, pseudo, mot_de_passe, telephone, temps_creation, fuseau_horaire) VALUES (?, ?, ?, ?, ?, ?)";
-    await pool.query(sql, [id, req.body.pseudo, mdpHash, req.body.telephone, temps_creation, req.body.fuseau_horaire])
+    var sql = "INSERT INTO membres (id, pseudo, mot_de_passe, telephone, temps_creation, decalage_utc) VALUES (?, ?, ?, ?, ?, ?)";
+    await pool.query(sql, [idmembre, req.body.pseudo, mdpHash, req.body.telephone, temps_creation, req.body.decalage_utc])
 
     // Sauvegarde du salt
     sql = "INSERT INTO mot_de_passes (id_membre, salt) VALUES (?, ?)";
-    await pool.query(sql, [id, salt]); 
+    await pool.query(sql, [idmembre, salt]); 
 
     // Querie pour reponse
     sql = "SELECT * FROM membres WHERE id = ?"
-    const [resultat] = await pool.query(sql, [id])
+    const [resultat] = await pool.query(sql, [idmembre])
     const r = resultat[0]
     if (resultat.length > 0) {
       res.status(201).json({
@@ -114,8 +127,8 @@ router.post("/inscription", async (req, res, next) => {
           pseudo: r.pseudo,
           mot_de_passe: r.mot_de_passe,
           telephone: r.telephone,
-          temps_creation: temps_creation,
-          fuseau_horaire: r.fuseau_horaire
+          temps_creation_utc: temps_creation,
+          decalage_utc: r.decalage_utc
         }
       });
     } else {
@@ -129,8 +142,8 @@ router.post("/inscription", async (req, res, next) => {
   }
 })
 
-router.get("/:idmembre", authenticateToken, async (req, res, next) => {
-  const id = req.params.idmembre
+router.get("/", authenticateToken, async (req, res, next) => {
+  const id = req.membre.id
   var sql = `SELECT * FROM membres WHERE id = ?`;
   try {
     const [resultat] = await pool.query(sql, [id])
@@ -149,7 +162,7 @@ router.get("/:idmembre", authenticateToken, async (req, res, next) => {
       fp_url: r.fp_url,
       temps_creation: date.toLocaleString()
     })
-  } catch (error) {
+  } catch (err) {
     res.status(500).json({
       message: 'Une erreur au niveau de la base de donnée est survenue',
       erreur: err.message
@@ -161,7 +174,6 @@ router.patch("/:idmembre", async (req, res, next) => {
   const id = req.params.idmembre;
   const updates = req.body;
   
-
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({ message: "Aucun champ à mettre à jour" });
   }
@@ -184,6 +196,7 @@ router.patch("/:idmembre", async (req, res, next) => {
       })
     }
   }
+  
   const values = Object.values(updates);
   try {
     //Mettre à jour le membre
