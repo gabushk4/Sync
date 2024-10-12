@@ -10,7 +10,7 @@ const { json } = require('body-parser')
 
 
 //PDO
-let { pool } = require('../PDO')
+let { pool } = require('../../PDO')
 const FactoriserTimestamp = require('../../functions/factoriserTimestamp')
 
 //Pour developpement seulement
@@ -35,7 +35,7 @@ router.get('/', authentifierToken, async (req, res, next) => {
     let offset = req.query.offset || 0
     let debut = req.query.debut || FactoriserTimestamp(new Date(Date.now()).toISOString())
     let fin = req.query.fin || FactoriserTimestamp(new Date(Date.now() + 2).toISOString())
-    var sql = ` SELECT * 
+    var sql = `SELECT * 
         FROM evenements 
         WHERE (idproprietaire = ?) 
         AND (debut >= timestamp?)

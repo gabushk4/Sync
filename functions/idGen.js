@@ -1,6 +1,6 @@
 "use strict"
 const genId = require('generate-unique-id')
-const { pool } = require('../api/PDO')
+const { pool } = require('../PDO')
 
 async function generateId(length = 6, useLetters = true, useNumbers = true, prefixe = ''){
     let stop = false
