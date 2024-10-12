@@ -12,7 +12,7 @@ const pool = mysql.createPool({
 pool.getConnection()
   .then(console.log('db connected.'))
   .catch(err => {
-    console.log(err)
+    console.log(err.message)
   })
 
 module.exports = { pool }
