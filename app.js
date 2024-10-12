@@ -4,11 +4,11 @@ const morgan = require("morgan");
 const bodyParser = require("body-parser");
 const fs = require("fs");
 
-const membresRoutes = require("./routes/membres");
-const notificationsRoutes = require("./routes/notifications");
-const evenementsRoutes = require("./routes/evenements");
-const messagesRoutes = require("./routes/evenements");
-const amisRoutes = require("./routes/amis")
+const membresRoutes = require("./api/routes/membres");
+const notificationsRoutes = require("./api/routes/notifications");
+const evenementsRoutes = require("./api/routes/evenements");
+const messagesRoutes = require("./api/routes/evenements");
+const amisRoutes = require("./api/routes/amis")
 
 app.use(morgan("dev"));
 
@@ -57,4 +57,4 @@ const date = new Date()
 
 console.log('-' + date.getTimezoneOffset()/60)
 
-module.exports = app;
+module.exports = app; 
