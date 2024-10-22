@@ -7,8 +7,7 @@ const jwt = require('jsonwebtoken')
 const {generateSalt, hash, compare} = require('../../functions/pass')
 const { generateId } = require('../../functions/idGen')
 require("dotenv").config();
-const { selectQueryBuilder } = require("../../functions/sqlquerybuilder");
-const authenticateToken  = require('../../functions/authenticate')
+const {authentifierToken}  = require('../../functions/authenticate')
 const FactoriserTimestamp = require('../../functions/factoriserTimestamp')
 
 //PDO
@@ -42,10 +41,6 @@ let { pool } = require('../../PDO');
   }
   
 })  */
-
-router.get('/protected', authenticateToken, (req, res) => {
-  res.json({ message: `Bonjour ${req.membre.pseudo}, vous avez accédé à une route protégée !` });
-});
 
 router.post('/connexion', async (req, res, next) => {
   let sqlMdp = `
@@ -142,7 +137,7 @@ router.post("/inscription", async (req, res, next) => {
   }
 })
 
-router.get("/", authenticateToken, async (req, res, next) => {
+router.get("/", authentifierToken, async (req, res, next) => {
   const id = req.membre.id
   var sql = `SELECT * FROM membres WHERE id = ?`;
   try {

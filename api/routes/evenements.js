@@ -4,14 +4,14 @@ const router = express.Router()
 require('dotenv').config()
 
 //fonctions
-const authentifierToken = require('../../functions/authenticate')
+const {authentifierToken} = require('../../functions/authenticate')
 const { generateId } = require('../../functions/idGen')
-const { json } = require('body-parser')
+const FactoriserTimestamp = require('../../functions/factoriserTimestamp')
 
 
 //PDO
 let { pool } = require('../../PDO')
-const FactoriserTimestamp = require('../../functions/factoriserTimestamp')
+
 
 //Pour developpement seulement
 router.get('/all', async (req, res, next) => {
