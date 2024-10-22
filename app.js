@@ -34,7 +34,7 @@ app.use("/membres", membresRoutes);
 //app.use("/notifications", notificationsRoutes);
 app.use("/evenements", evenementsRoutes);
 //app.use("/messages", messagesRoutes);
-//app.use("/amis", amisRoutes)
+app.use("/amis", amisRoutes)
 
 //route for 404 not found
 app.use((req, res, next) => {

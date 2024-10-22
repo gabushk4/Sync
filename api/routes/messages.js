@@ -36,7 +36,7 @@ router.post('/', authenticateToken, (req, res, next) =>{
     }
 })
 
-router.put('/', (req, res, next) =>{
+router.put('/', authenticateToken, (req, res, next) =>{
     const idMembre = req.membre.id
     try {
         
@@ -48,7 +48,7 @@ router.put('/', (req, res, next) =>{
     }
 })
 
-router.get('/:idconversation', (req, res, next) =>{
+router.get('/:idconversation', authenticateToken, (req, res, next) =>{
     const idMembre = req.membre.id
     try {
         
