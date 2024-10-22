@@ -117,57 +117,75 @@ router.post('/', authentifierToken, async (req, res, next) => {
 
 router.get('/amis', authentifierToken, async (req, res, next) => {
     try {
-        let idMembre = req.params.id_membre 
-        let limite = req.query.limite || 20
-        let offset = req.query.offset || 0
-        let debut = req.query.debut
-        let fin = req.query.fin
-        var sql = 
-        `SELECT p.id_membre, p.id_evenement, e.debut, e.fin, e.regle_recurrence
-            FROM evenements e 
-            INNER JOIN participants p ON e.id = p.id_evenement
-            INNER JOIN membres m ON p.id_membre = m.id
-            WHERE p.id_membre IN 
-            (
-                SELECT a.id_ami as id_membre
-                    FROM amis a
-                    INNER JOIN membres m ON a.id_ami = m.id
-                    WHERE a.id_membre = ?
-                UNION 
-                SELECT a.id_membre as id_membre
-                    FROM amis a 
-                    INNER JOIN membres m ON a.id_membre = m.id
-                    WHERE a.id_ami = ?
-            )
-            AND (debut >= timestamp?) 
-            AND (fin <= timestamp?)
-            ORDER BY m.temps_creation
-            LIMIT ? OFFSET ?`
-        const [resultats] = await pool.query(sql, [idMembre, idMembre, debut, fin, limite, offset])
-        const reponse = resultats.map((r) => {
-            return{
-                    id_ami: r.id_membre, 
+        let idMembre = req.membre.id 
+        let limiteAmis = req.query.limiteAmi || 3
+        let offsetAmis = req.query.offset || 0
+        let debut = req.query.debut || '1978-01-01 00:00:00'
+        let fin = req.query.fin || '2035-12-31 23:59:59'
+        
+        // Récupérer les amis du membre
+        const amisSql = `
+        SELECT a.id_ami AS id_ami 
+        FROM amis a 
+        WHERE a.id_membre = ? 
+        UNION
+        SELECT a.id_membre AS id_ami 
+        FROM amis a 
+        WHERE a.id_ami = ? 
+        LIMIT ? OFFSET ?
+        `;
+
+        const [resultatsAmis] = await pool.query(amisSql, [idMembre, idMembre, limiteAmis, offsetAmis]);
+        const idsAmis = resultatsAmis.map((ami) => ami.id_ami);
+
+        // Vérifiez s'il y a des amis avant de continuer
+        if (idsAmis.length > 0) {
+            const idsAmisPlaceholders = idsAmis.map(() => '?').join(',');
+            const evenementsSql = `
+                SELECT 
+                    p.id_membre, 
+                    p.id_evenement, 
+                    e.debut, 
+                    e.fin, 
+                    e.regle_recurrence 
+                FROM evenements e 
+                INNER JOIN participants p ON e.id = p.id_evenement 
+                WHERE p.id_membre IN (${idsAmisPlaceholders}) 
+                AND e.debut >= ? 
+                AND e.fin <= ? 
+                ORDER BY e.debut
+            `;
+            const [resultatsEvenements] = await pool.query(evenementsSql, [...idsAmis, debut, fin]);
+            const evenements = resultatsEvenements.map((r) => {
+                return {
+                    id_ami: r.id_membre,
                     evenement: {
                         debut: r.debut,
-                        fin: r.fin, 
-                        regle_recurrence: r.regle_recurrence, 
+                        fin: r.fin,
+                        regle_recurrence: r.regle_recurrence,
                         couleur: "à venir",
-                        url: 
-                            {
-                                method: get,
-                                string: `/evenements/${r.id_evenement}`
-                            }
+                        url: {
+                            method: 'GET',
+                            string: `/evenements/${r.id_evenement}`
+                        }
                     }
-                }
-        })
-        res.status(200).json({
-            compte: resultats.length,
-            cacheable: true,
-            evenements: {
-                reponse
-            }
-        })
-    
+                };
+            });
+
+            // Retourner les résultats au client
+            res.status(200).json({
+                compte: resultatsEvenements.length,
+                cacheable: true,
+                evenements: evenements
+            });
+        } else {
+            // Aucun ami trouvé
+            res.status(200).json({
+                compte: 0,
+                cacheable: true,
+                evenements: []
+            });
+        }
     } catch (err) {
         res.status(500).json({
             message: 'Une erreur au niveau de la base de donnée est survenue',
@@ -296,11 +314,12 @@ router.get('/:idevenement/participants', authentifierToken, async (req, res, nex
         const reponse = resultats.map((r) => {
             return{
                 pseudo: r.pseudo,
-                droit: r.privilege,
+                privilege: r.privilege,
                 fp_url: r.fp_url
             }  
         })
         res.status(200).json({
+            cacheable: true,
             id_evenement: req.params.idevenement,
             participants: [
                 reponse
@@ -319,9 +338,34 @@ router.get('/:idevenement/participants', authentifierToken, async (req, res, nex
 
 router.post('/:idevenement/participants', async (req, res, next) =>{
     try {
-        
+        const idEvenement = req.params.idevenement;
+        const { idMembre, privilege } = req.body; 
+
+        // Validation des données d'entrée
+        if (!idMembre || !privilege) {
+            return res.status(400).json({ message: 'idMembre et privilege sont requis.' });
+        }
+
+        // Vérifiez si l'événement existe
+        const [evenement] = await pool.query('SELECT * FROM evenements WHERE id = ?', [idEvenement]);
+        if (evenement.length === 0) {
+            return res.status(404).json({ message: 'Événement non trouvé.' });
+        }
+
+        // Ajout du participant
+        const sql = `INSERT INTO participants (id_membre, id_evenement, privilege) VALUES (?, ?, ?)`;
+        await pool.query(sql, [idMembre, idEvenement, privilege]);
+
+        res.status(201).json({ 
+            message: 'Participant ajouté avec succès.',
+            liste_participants: {
+                method: 'GET',
+                url: `/evenements/${req.params.idevenement}/participants`
+            } 
+        });
     } catch (error) {
-        
+        console.error('Erreur lors de l\'ajout du participant:', error);
+        res.status(500).json({ message: 'Une erreur est survenue lors de l\'ajout du participant.' });
     }
 })
 
