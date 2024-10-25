@@ -12,15 +12,20 @@
   "description": "A shared calendar designed to be controlled by the users (f*ck GAFAM)",
   "dependencies": {
     "body-parser": "^1.20.2",
+    "csv-parser": "^3.0.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
+    "fluent-ffmpeg": "^2.1.3",
     "fs": "^0.0.1-security",
     "generate-unique-id": "^2.0.3",
+    "google-auth-library": "^9.14.2",
+    "googleapis": "^144.0.0",
     "http": "^0.0.1-security",
     "https": "^1.0.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "mysql2": "^3.11.0",
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.4",
+    "ytdl-core": "^4.11.5"
   }
 }

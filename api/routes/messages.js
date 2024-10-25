@@ -57,7 +57,8 @@ router.get('/:id_conversation', authentifierToken, verifierAccesConversation, as
   
   // Créer un nouveau message
   router.post('/', authentifierToken, async (req, res) => {
-    const { id_conversation, message, id_auteur, temps_envoi } = req.body;
+    const { id_conversation, message, temps_envoi } = req.body;
+    const id_auteur = req.membre.id
   
     try {
         const newMessage = { id_conversation, message, id_auteur, temps_envoi };
@@ -69,8 +70,8 @@ router.get('/:id_conversation', authentifierToken, verifierAccesConversation, as
         res.status(500).json({
             message: 'Une erreur au niveau de la base de données est survenue',
             erreur: {
-            message: err.message,
-            sql: err.sql,
+                message: err.message,
+                sql: err.sql
             },
       });
     }
