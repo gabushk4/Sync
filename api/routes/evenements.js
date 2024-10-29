@@ -30,17 +30,19 @@ router.get('/all', async (req, res, next) => {
 /// req.query: {limite=5|offset=0|debut|fin}
 router.get('/', authentifierToken, async (req, res, next) => {
     let idProprietaire = req.membre.id
-    console.log(idProprietaire)
     let limite = req.query.limite || 5
     let offset = req.query.offset || 0
-    let debut = req.query.debut || FactoriserTimestamp(new Date(Date.now()).toISOString())
-    let fin = req.query.fin || FactoriserTimestamp(new Date(Date.now() + 2).toISOString())
-    var sql = `SELECT * 
-        FROM evenements 
-        WHERE (idproprietaire = ?) 
-        AND (debut >= timestamp?)
-        AND (fin <= timestamp?)
+    const now = new Date()
+    let debut = req.query.debut || FactoriserTimestamp(now.toISOString())
+    now.setHours(now.getHours() + 2)
+    let fin = req.query.fin || FactoriserTimestamp(now.toISOString())
+    var sql = ` SELECT * 
+        FROM evenements e INNER JOIN participants p ON e.id = p.id_evenement 
+        WHERE (p.id_membre = ?) 
+        AND (debut >= ?)
+        AND (fin <= ?)
         LIMIT ? OFFSET ?`
+
     try {        
         const [resultats] = await pool.query(sql, [idProprietaire, debut, fin, limite, offset])
         const compte = resultats.length
@@ -71,24 +73,25 @@ router.get('/', authentifierToken, async (req, res, next) => {
         })
     }
 })
-///Insert un objet 'evenement' dans la table 'evenements' et redirect vers '/evenements/:idevenement'
-///req.body: {titre|description|debut|fin|participants|reccurence}
+///Insert un objet 'evenement' dans la table 'evenements' et permet la redirection vers '/evenements/:idevenement' pour une éventuelle modification
+///req.body: {participants}
 router.post('/', authentifierToken, async (req, res, next) => {
+    let idevenement = await generateId(6,true,true,`E`)
+    console.log(idevenement)
+    let sql = `INSERT INTO evenements(id) VALUES(?)`
     try {
-        let inserts, values = []
-
-        let idevenement = await generateId(6,true,true,`E`)
-        console.log(idevenement)
-        let sql = `INSERT INTO evenements(id) VALUES(?)`
         await pool.query(sql, idevenement)
 
-        let [participants] = req.body.participants /*participants: [{ id: x, privilege:x }]*/
+        let participants = req.body.participants /*participants: [{ id: x, privilege:x }]*/
+        console.log(participants.length)
 
         if(participants.length > 0){
+            let inserts = []
+            let values = []
             sql = 'INSERT INTO participants(id_evenement, id_membre, privilege) VALUES'
             for(let i = 0; i < participants.length; i++){
                 inserts.push('(?, ?, ?)')
-                values.push(idevenement, participants[i].id, participants[i].privilege)
+                values.push(idevenement, participants[i].id_membre, participants[i].privilege)
             }
             sql += inserts.join(', ')
             await pool.query(sql, values)
@@ -174,38 +177,47 @@ router.get('/amis', authentifierToken, async (req, res, next) => {
 })
 
 router.get('/:idevenement', authentifierToken, async (req, res, next) => {
-    const sqlEvenement = `SELECT * FROM evenements e 
-    INNER JOIN participants p ON e.id = p.id_evenement 
-    WHERE id_membre IN (SELECT id_membre FROM participants WHERE id_evenement = ?)`
-    try {
-        const resultat = await pool.query(sqlEvenement, [req.params.idevenement])
+    const sqlEvenement = `SELECT e.*, p.* 
+                      FROM evenements e 
+                      INNER JOIN participants p ON e.id = p.id_evenement 
+                      WHERE e.id = ?`; // Modifier la requête pour récupérer un événement par son ID
 
-        if(resultat.id_membre != req.params.id_membre){
-            res.status(401).json({
-                message: "vous n'avez pas accès à cet évènement"
-            })
+    try {
+        const resultat = await pool.query(sqlEvenement, [req.params.idevenement]);
+
+        // Vérifie si des résultats ont été retournés
+        if (resultat.length === 0) {
+            return res.status(404).json({ message: "Événement non trouvé" });
         }
-        else{
-            const participants = resultat.map((r) => {
-                return{
-                    pseudo: r.pseudo,
-                    droit: r.droit,
-                    fp_url: r.fp_url
-                }
-            })
-            res.status(200).json({
-                titre: resultat.titre,
-                description: resultat.description,
-                debut: resultat.debut,
-                fin: resultat.fin,
-                participants: participants
-            })
+
+        // Vérifie si l'utilisateur a accès à l'événement
+        const participant = resultat.find(r => r.id_membre === req.params.id_membre);
+        
+        if (!participant) {
+            return res.status(401).json({
+                message: "Vous n'avez pas accès à cet évènement"
+            });
         }
-    } catch (err) {
-        res.status(500).json({
-            message: 'Une erreur au niveau de la base de donnée est survenue',
-              erreur: err.message
-          })
+
+        // Extraction des détails de l'événement
+        const evenement = resultat[0]; // Puisque nous avons trouvé au moins un événement
+
+        const participants = resultat.map((r) => ({
+            pseudo: r.id_membre,
+            droit: r.privilege,
+            fp_url: r.fp_url
+        }));
+
+        res.status(200).json({
+            titre: evenement.titre,
+            description: evenement.description,
+            debut: evenement.debut,
+            fin: evenement.fin,
+            participants: participants
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur lors de la récupération des événements." });
     }
     
 })

@@ -8,7 +8,7 @@ const pool = mysql.createPool({
     password: process.env.DB_PASS,
     database: process.env.DB_NAME,
   })
-
+ 
 pool.getConnection()
   .then(console.log('db connected.'))
   .catch(err => {
