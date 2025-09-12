@@ -1,4 +1,6 @@
+const { response } = require('express')
 const jwt = require('jsonwebtoken')
+const {pool} = require('../PDO')
 require('dotenv').config()
 
 function authentifierToken(req, res, next){
@@ -7,10 +9,11 @@ function authentifierToken(req, res, next){
     if(token == null) return res.status(401).json({ message: 'Un token est necéssaire'})
     
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, membre) => {
-        if(err) return res.send(403).json({message: 'Votre token n\'est plus valide'})
+        if(err) return res.status(403).json({message: 'Votre token n\'est plus valide', token: token})
         
         req.membre = membre
-        return next()
+        //console.log('authentifier token', req.membre)
+        next()
     })
 }
 
@@ -45,6 +48,35 @@ async function verifierAccesConversation(req, res, next) {
       });
     }
 }
-  
 
-module.exports = authentifierToken, verifierAccesConversation
+async function verifierAccesEvenement(req, res, next) {
+  const membreId = req.membre.id
+  const {idevenement} = req.params
+
+  try {
+    const [reponse] = await pool.query(`
+      SELECT 1
+        FROM evenements e
+        WHERE e.id_publique = ?
+          AND (
+            EXISTS (SELECT 1 FROM participants_evenements pe WHERE pe.id_evenement = e.id AND pe.id_membre = ?)
+            OR EXISTS (SELECT 1 FROM invitations_evenement ie WHERE ie.id_evenement = e.id AND ie.id_invite = ?)
+          )
+        LIMIT 1;`, [idevenement, membreId, membreId])
+    if(reponse.length > 0) {
+      req.membre = req.membre
+      return next()
+    }    
+  } catch (error) {
+    req.membre = undefined
+    return res.status(403).json({
+      message:'accès a l\'évènement renié'
+    })
+  }
+}
+
+module.exports = {
+  authentifierToken,
+  verifierAccesConversation,
+  verifierAccesEvenement
+}

@@ -3,14 +3,16 @@ const app = express();
 const morgan = require("morgan");
 const bodyParser = require("body-parser");
 const fs = require("fs");
+const path = require('path')
 
 const membresRoutes = require("./api/routes/membres");
 const notificationsRoutes = require("./api/routes/notifications");
 const evenementsRoutes = require("./api/routes/evenements");
 const messagesRoutes = require("./api/routes/evenements");
 const amisRoutes = require("./api/routes/amis")
+const imagesRoutes = require("./api/routes/images")
 
-app.use(morgan("dev"));
+app.use(morgan("dev")); 
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -29,12 +31,26 @@ app.use((req, res, next) => {
   next();
 });
 
+const imagePath = path.join(__dirname, 'public/img');
+console.log("Dossier des images:", imagePath)
+
+app.use((req, res, next) => {
+  console.log("Requête reçue :", req.url,); // Log de l'URL de la requête
+  next(); // Passe au middleware suivant
+});
+
+app.get("/", (req, res) => {
+  res.status(201).send("Server is running...");
+});
+
 //routes which should handle requests
 app.use("/membres", membresRoutes);
-//app.use("/notifications", notificationsRoutes);
+app.use("/notifications", notificationsRoutes);
 app.use("/evenements", evenementsRoutes);
-//app.use("/messages", messagesRoutes);
+app.use("/messages", messagesRoutes);
 app.use("/amis", amisRoutes)
+app.use('/images', imagesRoutes);
+app.use('/img', express.static(imagePath));
 
 //route for 404 not found
 app.use((req, res, next) => {
@@ -45,16 +61,12 @@ app.use((req, res, next) => {
 
 //route for db not connected
 app.use((error, req, res, next) => {
-  res.status(error.status || 500);
-  res.json({
-    error: {
+  return res.status(error.status || 500).json({
       message: error.message,
-    },
+      erreur:error
   });
 }); 
 
 const date = new Date()
-
-console.log('-' + date.getTimezoneOffset()/60)
 
 module.exports = app; 

@@ -2,8 +2,8 @@ const http = require("http");
 const app = require("./app");
 
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
-const server = http.createServer(app);
-
-server.listen(port);
+app.listen(port, '0.0.0.0', () => {
+    console.log(`Serveur roule sur 0.0.0.0:${port}`);
+  });

@@ -15,18 +15,18 @@ const url = args[0];
 // Fonction pour convertir une vidéo YouTube en MP3
 async function convertToMp3(url) {
     const downloadDir = path.resolve('C:\\Users\\gabbo\\Music\\FROM_YTB');  // Remplacer par ton nom d'utilisateur Windows
-  exec(`yt-dlp -o '${downloadDir}/%(title)s.%(ext)s' -x --audio-format mp3 ${url}`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Erreur : ${error.message}`);
-      return;
-    }
-    if (stderr) {
-      console.error(`Erreur : ${stderr}`);
-      return;
-    }
+    exec(`yt-dlp -o '${downloadDir}/%(title)s.%(ext)s' -x --audio-format mp3 ${url}`, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Erreur : ${error.message}`);
+            return;
+        }
+        if (stderr) {
+            console.error(`Erreur : ${stderr}`);
+            return;
+        }
     console.log('Téléchargement terminé !');
   });
-}
+} 
 
 convertToMp3(url)
 
