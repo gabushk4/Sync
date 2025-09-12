@@ -14,7 +14,7 @@ const pool = mysql.createPool({
 pool.getConnection()
   .then((val)=>{console.log('db connected.')},(res)=>{console.log('db connection failed',res)})
   .catch(err => {
-    console.log(err)
+    console.log(err.message)
   })
 
 module.exports = { pool }
