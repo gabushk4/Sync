@@ -243,7 +243,7 @@ router.post(
                 url: `/evenements/invitations/${insertIds[notifIndex]}`,
                 body: {
                   id_evenement: idPriveEvenement,
-                  statut: "accepter",
+                  statut: "acceptee",
                 },
               },
               {
@@ -252,7 +252,7 @@ router.post(
                 url: `/evenements/invitations/${insertIds[notifIndex]}`,
                 body: {
                   id_evenement: idPriveEvenement,
-                  statut: "refuser",
+                  statut: "refusee",
                 },
               },
             ],

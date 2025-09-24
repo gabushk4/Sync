@@ -18,35 +18,6 @@ let { pool } = require("../../PDO");
 const { formaterDateVersClient } = require("../../functions/formaterDateVersClient");
 const { DateTime } = require("luxon");
 
-//Pour developpement seulement
-/* router.get("/", async (req, res, next) => {
-  var sql = "SELECT * FROM membres";
-  
-  try {
-    const [resultats] = await pool.query(sql)
-    const membres = resultats.map((r) => {
-        const date = new Date(r.temps_creation / 1)
-        return {
-          id_membre: r.id,
-          pseudo: r.pseudo,
-          telephone: r.telephone,
-          fp_url: r.fp_url, 
-          temps_creation: date.toLocaleString()
-        }
-    })
-    res.status(200).json({
-      compte: resultats.length,
-      membres
-     })
-  } catch (err) {
-    res.status(500).json({
-      message: 'Une erreur au niveau de la base de donnée est survenue',
-      erreur: err.message
-    })
-  }
-  
-})  */
-
 router.post("/connexion", async (req, res, next) => {
   let sqlMdp = `
     SELECT mot_de_passe, salt  
@@ -77,15 +48,22 @@ router.post("/connexion", async (req, res, next) => {
 
     const membre = {
       id: idMembre,
-      pseudo: pseudo,
+      pseudo:pseudo,
+      type:'access'
     };
-    //Changer le expires in et ajouter un refresh token
+
     const accessToken = jwt.sign(membre, process.env.ACCESS_TOKEN_SECRET, {
-      expiresIn: "7d",
+      expiresIn: "1h",
     });
-    res.json({
+    const payload = {id_membre: idMembre, pseudo_membre:pseudo, type:'refresh'}
+    const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {expiresIn:'30d'}) 
+
+    await pool.execute('INSERT INTO tokens_rafraichissement (id_membre, token) VALUES(?, ?)', [idMembre, refreshToken])
+    
+    res.status(200).json({
       cacheable: true,
       access_token: accessToken,
+      refresh_token:refreshToken,
       timestamp_serveur: Date.now(),
       membre: {
         pseudo: membre.pseudo,
@@ -120,8 +98,8 @@ router.post("/inscription", verifierPseudo, async (req, res, next) => {
       res
         .send(500)
         .json({ message: "incapable de générer un timestamp de création" });
-
-    //verification du pseudo
+    
+    
 
     // Sauvegarde du membre
     var sql =
@@ -151,6 +129,17 @@ router.post("/inscription", verifierPseudo, async (req, res, next) => {
     });
   }
 });
+router.post('/deconnexion', authentifierToken, async(req, res, next)=>{
+  idMembre = req.membre.id
+  id_appareil = req.body.id_appareil?req.body.id_appareil:undefined
+  const sql = `UPDATE TABLE tokens_rafraichissement SET blacklist = true WHERE id_membre = ?`
+  try {
+    await pool.execute(sql,[idMembre])
+    res.send(201).json({message:'déconnecté avec succès'})
+  } catch (error) {
+    res,send(500).json({erreur:error, message:'un problème est survenu au niveau de la base de données'})
+  }
+})
 
 router.get("/", authentifierToken, async (req, res) => {
   const id = req.membre.id;

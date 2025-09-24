@@ -109,15 +109,15 @@ router.get('/', authentifierToken, async (req, res) => {
   // 3. Endpoint PATCH pour mettre à jour le statut d'une notification
   router.patch('/:notificationId', authentifierToken, async (req, res) => {
     const { notificationId } = req.params;
-    const { status } = req.body;
+    const { statut } = req.body;
   
-    if (!status || !sous_type) {
-      return res.status(400).json({ message: 'Les champs status et type sont requis.' });
+    if (!statut || statut !== 'lue' || statut !== 'non_lue') {
+      return res.status(400).json({ message: 'le champs statut est requis.' });
     }
   
     try {
       const query = 'UPDATE notifications SET status = ? WHERE id = ? AND id_receveur = ?';
-      const params = [status, notificationId, req.membre.id, type]; 
+      const params = [statut, notificationId, req.membre.id, type]; 
   
       const [result] = await pool.query(query, params);
   
@@ -130,5 +130,17 @@ router.get('/', authentifierToken, async (req, res) => {
       res.status(500).json({ message: 'erreur lors de la mise à jour du statut', error });
     }
   });
+
+  router.delete('/:notificationId', authentifierToken, async (req,res,next)=>{
+    const {id} = req.membre
+    const {notificationId} = req.params
+    const sql = 'DELETE FROM notifications WHERE id = ? AND id_receveur = ?'
+    try {
+      await pool.execute(sql,[notificationId, id])
+      res.status(204).json({message:"on l'a rangé ou personne ne regarde; rangé quoi?"})
+    } catch (error) {
+      res.status(500).json({ message: 'erreur lors de la suppression de la notification', error });
+    }
+  })
   
   module.exports = router;

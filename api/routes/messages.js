@@ -74,11 +74,9 @@ router.post("/", authentifierToken, async (req, res) => {
   const id_auteur = req.membre.id;
 
   try {
-    const newMessage = { id_conversation, message, id_auteur, temps_envoi };
-
     const [result] = await pool.query(
-      "INSERT INTO messages_texte SET ?",
-      newMessage
+      "INSERT INTO messages_texte (id_conversation, id_auteur, message, temps_envoie) VALUES(?, ?, ?)",
+      [id_conversation, id_auteur, message, temps_envoi]
     );
 
     res.status(201).json({ id: result.insertId, ...newMessage });

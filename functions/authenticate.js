@@ -17,6 +17,21 @@ function authentifierToken(req, res, next){
     })
 }
 
+async function authentifierRefreshToken(req, res, next){
+    const { refresh_token } = req.body
+    if(!refresh_token) return res.status(401).json({ message: 'Refresh token requis' })
+    
+    jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET, async (err, payload) => {
+        
+      
+        if(err) return res.status(403).json({ message: 'Refresh token invalide' })
+
+        // Optionnel : vérifier en base que le token n'est pas révoqué et correspond au device
+        req.refresh = payload
+        next()
+    })
+}
+
 // Middleware pour vérifier que l'utilisateur a accès à la conversation
 async function verifierAccesConversation(req, res, next) {
     const membreId = req.membre.id; // ID du membre récupéré via authentifierToken()
@@ -77,6 +92,7 @@ async function verifierAccesEvenement(req, res, next) {
 
 module.exports = {
   authentifierToken,
+  authentifierRefreshToken,
   verifierAccesConversation,
   verifierAccesEvenement
 }
