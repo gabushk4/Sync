@@ -75,9 +75,15 @@ router.post("/", authentifierToken, async (req, res) => {
 
   try {
     const [result] = await pool.query(
-      "INSERT INTO messages_texte (id_conversation, id_auteur, message, temps_envoie) VALUES(?, ?, ?)",
+      "INSERT INTO messages_texte (id_conversation, id_auteur, message, temps_envoi) VALUES(?, ?, ?)",
       [id_conversation, id_auteur, message, temps_envoi]
     );
+
+    const [responsePushTokenPseudo] = 
+
+    envoyerNotification(
+
+    )
 
     res.status(201).json({ id: result.insertId, ...newMessage });
   } catch (err) {

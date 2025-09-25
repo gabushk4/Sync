@@ -261,11 +261,7 @@ router.post(
             membre.push_token,
             "evenements",
             "On t'invite à partager un moment",
-            `${req.membre.pseudo} t'invite à ${titre} le ${DateTime.fromSQL(
-              debut
-            ).toFormat("dd LLL", { locale: "fr" })} à ${DateTime.fromSQL(
-              debut
-            ).toFormat("HH:mm")}`,
+            `${req.membre.pseudo} t'invite à ${titre}`,
             createurId,
             membre.id,
             data,

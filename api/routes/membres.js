@@ -131,19 +131,18 @@ router.post("/inscription", verifierPseudo, async (req, res, next) => {
 });
 router.post('/deconnexion', authentifierToken, async(req, res, next)=>{
   idMembre = req.membre.id
-  id_appareil = req.body.id_appareil?req.body.id_appareil:undefined
-  const sql = `UPDATE TABLE tokens_rafraichissement SET blacklist = true WHERE id_membre = ?`
+  //id_appareil = req.body.id_appareil?req.body.id_appareil:undefined
+  const sql = `UPDATE tokens_rafraichissement SET blacklist = TRUE WHERE id_membre = ?`
   try {
     await pool.execute(sql,[idMembre])
-    res.send(201).json({message:'déconnecté avec succès'})
+    res.status(201).json({message:'déconnecté avec succès'})
   } catch (error) {
-    res,send(500).json({erreur:error, message:'un problème est survenu au niveau de la base de données'})
+    res.status(500).json({erreur:error, message:'un problème est survenu au niveau de la base de données'})
   }
 })
 
 router.get("/", authentifierToken, async (req, res) => {
   const id = req.membre.id;
-  console.log('id_prive', id)
   var sql = `SELECT id_publique, pseudo, bio, courriel, i.url, temps_creation 
     FROM membres m 
       LEFT JOIN images i ON i.id = m.id_fp 
@@ -181,8 +180,6 @@ router.get("/fuseau_horaire", authentifierToken, async (req, res) => {
       `SELECT fuseau_horaire FROM membres WHERE id = ?`,
       [idMembre]
     );
-
-    console.log("/fuseau_horaire", resultats);
 
     if (resultats.length === 0) {
       return res
