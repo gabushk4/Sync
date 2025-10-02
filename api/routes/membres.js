@@ -80,7 +80,6 @@ router.post("/connexion", async (req, res, next) => {
 
 router.post("/inscription", verifierPseudo, async (req, res, next) => {
   try {
-    let idmembre = await generateIdWithQueue(10, true, true);
     let idPublique = await generateIdWithQueue(
       8,
       false,
@@ -103,9 +102,8 @@ router.post("/inscription", verifierPseudo, async (req, res, next) => {
 
     // Sauvegarde du membre
     var sql =
-      "INSERT INTO membres (id, id_publique, pseudo, mot_de_passe, courriel, temps_creation, fuseau_horaire) VALUES (?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO membres (id_publique, pseudo, mot_de_passe, courriel, temps_creation, fuseau_horaire) VALUES (?, ?, ?, ?, ?, ?, ?)";
     await pool.query(sql, [
-      idmembre,
       idPublique,
       req.body.pseudo,
       mdpHash,

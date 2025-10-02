@@ -135,15 +135,16 @@ router.post("/demandes", authentifierToken, async (req, res, next) => {
       idDestinataire
     );
     //INSERT dans la table demandes_amis
-    sql = `INSERT INTO demandes_amis (id_demandeur, id_destinataire) VALUES (?, ?)`;
-    const [resDemande] = await pool.query(sql, [idDemandeur, idDestinataire]);
+    const idDemande = generateIdWithQueue(10, true, true, 'D', "demandes_amis")
+    sql = `INSERT INTO demandes_amis (id_publique, id_demandeur, id_destinataire) VALUES (?, ?, ?)`;
+    const [resDemande] = await pool.query(sql, [idDemande, idDemandeur, idDestinataire]);
 
     //Envoyer une notif
     const [reponsePushToken] = await pool.query(
       "SELECT push_token FROM membres WHERE id = ?",
       [idDestinataire]
     );
-    const { push_token, pseudo } = reponsePushToken[0];
+    const { push_token } = reponsePushToken[0];
 
     const p = {
         actions:[
@@ -208,12 +209,12 @@ router.patch(
           });
       }
 
-      const sql = `UPDATE demandes_amis SET statut = ? WHERE id = ?`;
+      const sql = `UPDATE demandes_amis SET statut = ? WHERE id_publique = ?`;
       await pool.query(sql, [statut, idDemande]);
 
       if (statut === "acceptee") {
         const [reponse] = await pool.query(
-          "SELECT id_demandeur, id_destinataire FROM demandes_amis WHERE id = ?",
+          "SELECT id_demandeur, id_destinataire FROM demandes_amis WHERE id_publique = ?",
           [idDemande]
         );
         const { id_demandeur, id_destinataire } = reponse[0];
@@ -249,7 +250,7 @@ router.delete(
       const idMembre = req.membre.id;
       const idDemande = req.params.idDemande;
 
-      const sql = `DELETE FROM demandes_amis WHERE id = ? AND ()`;
+      const sql = `DELETE FROM demandes_amis WHERE id_publique = ?`;
       await pool.query(sql, [idDemande]);
 
       res.status(200).json({ message: "demande d'ami supprimée avec succès." });
@@ -261,31 +262,6 @@ router.delete(
     }
   }
 );
-
-// Récupérer les détails d'un ami spécifique
-router.get("/:idami", authentifierToken, async (req, res, next) => {
-  try {
-    const idAmi = req.params.idami;
-    const idMembre = req.membre.id;
-
-    const sql = `SELECT m.id, m.pseudo, m.fp_url
-                     FROM amis a
-                     JOIN membres m ON a.id_ami = m.id
-                     WHERE a.id_membre = ? AND a.id_ami = ?`;
-    const [rows] = await pool.query(sql, [idMembre, idAmi]);
-
-    if (rows.length > 0) {
-      res.status(200).json(rows[0]);
-    } else {
-      res.status(404).json({ message: "Ami non trouvé" });
-    }
-  } catch (err) {
-    res.status(500).json({
-      message: "Une erreur au niveau de la base de donnée est survenue",
-      erreur: err.message,
-    });
-  }
-});
 
 // Modifier les informations d'un ami (éventuellement, si vous avez des informations personnalisées pour chaque ami)
 router.patch(
@@ -320,7 +296,7 @@ router.delete("/:idami", authentifierToken, async (req, res, next) => {
   try {
     const idAmi = req.params.idami;
     const idMembre = req.membre.id;
-
+    
     const sql = `DELETE FROM amis WHERE (id_membre = ? AND id_ami = ?) OR (id_membre = ? AND id_ami = ?)`;
     await pool.query(sql, [idMembre, idAmi, idAmi, idMembre]);
 

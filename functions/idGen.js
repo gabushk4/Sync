@@ -5,10 +5,10 @@ const { pool } = require('../PDO')
 let isGenerating = false
 const queue = []
 
-async function generateIdWithQueue(length = 6, useLetters = true, useNumbers = true, prefixe = '') {
+async function generateIdWithQueue(length = 6, useLetters = true, useNumbers = true, prefixe = '', table) {
   return new Promise((resolve) => {
     queue.push(async () => {
-      const id = await generateId(length, useLetters, useNumbers, prefixe)
+      const id = await generateId(length, useLetters, useNumbers, prefixe, table)
       resolve(id)
     })
     processQueue()
@@ -25,7 +25,7 @@ async function processQueue() {
   isGenerating = false
 }
 
-async function generateId(length = 6, useLetters = true, useNumbers = true, prefixe = ''){
+async function generateId(length = 6, useLetters = true, useNumbers = true, prefixe = '', table = 'membres'){
     let stop = false
     do{
         const id = genId({
@@ -33,8 +33,7 @@ async function generateId(length = 6, useLetters = true, useNumbers = true, pref
             useLetters: useLetters, 
             useNumbers: useNumbers
         })
-        const sql = `SELECT * FROM membres WHERE id = '${prefixe + id}'`
-        await pool.query(sql)
+        await pool.query(`SELECT * FROM ${table} WHERE id_publique = ?`, [`${prefixe + id}`])
             .then(result => {
                 if(result[0].length > 0){
                     console.log('Un membre existe avec cet id: ' + id)

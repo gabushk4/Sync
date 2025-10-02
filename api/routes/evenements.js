@@ -133,12 +133,7 @@ router.get(
 );
 ///Insert un objet 'evenement' dans la table 'evenements' et permet la redirection vers '/evenements/:idevenement' pour une éventuelle modification
 ///req.body: {participants}
-router.post(
-  "/",
-  authentifierToken,
-  formaterDates,
-  verifierDisponibilite,
-  async (req, res, next) => {
+router.post("/", authentifierToken, formaterDates, verifierDisponibilite, async (req, res, next) => {
     const createurId = req.membre.id;
     const debut = req.debutSQL;
     const fin = req.finSQL;
@@ -148,12 +143,6 @@ router.post(
     const regleRecurrence = req.body.regle_recurrence || null;
 
     const idPubliqueEvenement = await generateIdWithQueue(10, true, true, "E");
-    const idPriveEvenement = await generateIdWithQueue(
-      10,
-      true,
-      true,
-      `${titre.substring(0, 3)}`
-    );
     const slug = await genererSlugAvecQueue(titre, idPubliqueEvenement);
 
     const conn = await pool.getConnection();
@@ -162,11 +151,10 @@ router.post(
       await conn.beginTransaction();
 
       await conn.execute(
-        `INSERT INTO evenements(id_publique, id, debut, fin, titre, description, prive, regle_recurrence, createur_id, slug)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO evenements(id_publique, debut, fin, titre, description, prive, regle_recurrence, createur_id, slug)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           idPubliqueEvenement,
-          idPriveEvenement,
           debut,
           fin,
           titre,
@@ -618,11 +606,9 @@ router.get("/disponibilites", authentifierToken, async (req, res, next) => {
 });
 
 router.get("/:idevenement", authentifierToken, verifierAccesEvenement, async (req, res, next) => {
-  const sqlEvenement = `SELECT e.*, p.*, m.id_publique, m.fuseau_horaire 
+  const sqlEvenement = `SELECT e.*, 
                       FROM evenements e 
-                      INNER JOIN participants_evenements p ON e.id = p.id_evenement 
-                      INNER JOIN membres m ON p.id_membre = m.id
-                      INNER JOIN invitations_evenement ie ON e.id = ie.id_evenement
+                      INNER JOIN membres m ON m.id = e.createur_id
                       WHERE e.id_publique = ? `;
 
   try {
@@ -633,26 +619,10 @@ router.get("/:idevenement", authentifierToken, verifierAccesEvenement, async (re
       return res.status(404).json({ message: "Événement non trouvé" });
     }
 
-    // Vérifie si l'utilisateur a accès à l'événement
-    const participant = resultat.find((r) => r.id_membre == req.membre.id);
-    let privilege;
-    if (!participant) {
-      privilege = "lecteur";
-    }
-
     // Extraction des détails de l'événement
     const [evenement] = resultat; // Puisque nous avons trouvé au moins un événement
 
     console.log("/evenements/:idevenement", resultat[0]);
-
-    const participants = resultat.map((r) => {
-      privilege = r.privilege;
-      return {
-        id_membre: r.id_publique,
-        privilege: r.privilege ? r.privilege : "lecteur",
-        fp_url: r.fp_url,
-      };
-    });
 
     res.status(200).json({
       id: req.params.idevenement,
@@ -661,7 +631,6 @@ router.get("/:idevenement", authentifierToken, verifierAccesEvenement, async (re
       debut: formaterDateVersClient(evenement.debut),
       fin: formaterDateVersClient(evenement.fin),
       prive: evenement.prive,
-      participants: participants,
       privilege_membre: privilege,
       fuseau_horaire: evenement.fuseau_horaire,
       regle_recurrence: evenement.regle_recurrence,
@@ -896,48 +865,61 @@ router.get(
   "/:idevenement/participants",
   authentifierToken,
   async (req, res, next) => {
-    try {
-      const limite = req.query.limite || 10;
-      const offset = req.query.offset || 0;
-      const sqlParticipants = `
-            SELECT m.pseudo, m.fp_url, p.privilege, m.id_publique, e.id
-            FROM evenements e
-            INNER JOIN participants_evenements p ON e.id = p.id_evenement
-            INNER JOIN membres m ON p.id_membre = m.id
-            WHERE e.id = ?
-            LIMIT ? OFFSET ? 
-        `;
-      const [resultats] = await pool.query(sqlParticipants, [
-        req.params.idevenement,
-        limite,
-        offset,
-      ]);
-      const reponse = resultats.map((r) => {
-        return {
-          pseudo: r.pseudo,
-          privilege: r.privilege,
-          fp_url: r.fp_url,
-          url: {
-            method: "GET",
-            url: `/membres/${r.id_publique}`,
-          },
-        };
-      });
-      res.status(200).json({
-        cacheable: true,
-        id_evenement: req.params.idevenement,
-        participants: [reponse],
-      });
-    } catch (err) {
-      res.status(500).json({
-        message: "Une erreur au niveau de la base de donnée est survenue",
-        erreur: {
-          message: err.message,
-          sql: err.sql,
+  try {
+    const limite = parseInt(req.query.limite) || 10;
+    const offset = parseInt(req.query.offset) || 0;
+
+    const sqlParticipantsEtInvites = `
+      SELECT m.pseudo, m.fp_url, p.privilege, m.id_publique, 'participant' AS type
+      FROM participants_evenements p
+      INNER JOIN membres m ON p.id_membre = m.id
+      WHERE p.id_evenement = ?
+      
+      UNION
+      
+      SELECT m.pseudo, m.fp_url, NULL AS privilege, m.id_publique, 'invite' AS type
+      FROM invitations_evenement i
+      INNER JOIN membres m ON i.id_invite = m.id
+      WHERE i.id_evenement = ?
+      
+      LIMIT ? OFFSET ?
+    `;
+
+    const [resultats] = await pool.query(sqlParticipantsEtInvites, [
+      req.params.idevenement,
+      req.params.idevenement,
+      limite,
+      offset,
+    ]);
+
+    const reponse = resultats.map((r) => {
+      return {
+        pseudo: r.pseudo,
+        privilege: r.privilege||'lecteur', // peut être null si c’est un invité
+        type: r.type,           // "participant" ou "invite"
+        fp_url: r.fp_url,
+        url: {
+          method: "GET",
+          url: `/membres/${r.id_publique}`,
         },
-      });
-    }
+      };
+    });
+
+    res.status(200).json({
+      cacheable: true,
+      id_evenement: req.params.idevenement,
+      participants: reponse,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Une erreur au niveau de la base de donnée est survenue",
+      erreur: {
+        message: err.message,
+        sql: err.sql,
+      },
+    });
   }
+}
 );
 
 router.post(
@@ -1155,14 +1137,17 @@ router.post("/invitations", authentifierToken, async (req, res, next) => {
     if (!rEv.length)
       return res.status(404).json({ message: "évènement introuvable" });
 
-    const valuesR = invitations.map((invite) => [
-      rEv[0].id,
-      idMembre,
-      invite.id_invite,
-    ]);
+    const valuesR = invitations.map((invite) => {
+      const idInvitation = generateIdWithQueue(10, true, true, 'I', 'invitations_evenements')
+      return [
+        idInvitation,
+        rEv[0].id,
+        idMembre,
+        invite.id_invite,
+    ]});
 
     const [rInsert] = await pool.query(
-      "INSERT INTO invitations_evenement(id_evenement, id_invitant, id_invite) VALUES ?",
+      "INSERT INTO invitations_evenement(id_publique, id_evenement, id_invitant, id_invite) VALUES ?",
       [valuesR]
     );
     const [rPushToken] = await pool.query(
@@ -1203,11 +1188,11 @@ router.patch(
     const nouvStatut = req.body.statut;
     const { id_evenement } = req.body;
 
-    if (nouvStatut != "refusee" || nouvStatut != "acceptee" || !id_evenement)
+    if (!nouvStatut || !id_evenement)
       return res.status(400).json({ message: "body passé invalide" });
     try {
       const [r] = await pool.query(
-        "UPDATE invitations_evenements SET statut = ? WHERE id = ?",
+        "UPDATE invitations_evenement SET statut = ? WHERE id_publique = ?",
         [nouvStatut, req.params.idinvitation]
       );
       if (r.affectedRows < 1)
@@ -1215,13 +1200,13 @@ router.patch(
       let message;
       if (nouvStatut == "acceptee") {
         message = "ça y'est, ta présence est confirmé";
-        const [rPart] = pool.query(
-          "INSERT INTO participants_evenements(id_membre, privilege) VALUES(?, 'lecteur') WHERE id_evenement = ?",
+        const [rPart] = await pool.query(
+          "INSERT INTO participants_evenements(id_membre, id_evenement, privilege) VALUES(?, ?, 'lecteur')",
           [idMembre, id_evenement]
-        );
+        ); 
       } else message = "dire non c'est parfois se dire oui";
       return res.status(200).json({ message: message });
-    } catch (error) {
+    } catch (error) { 
       return res.status(500).json({
         message: "une erreur au niveau de la base de donnée est survenue",
         erreur: error.message,

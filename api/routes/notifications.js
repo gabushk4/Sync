@@ -15,7 +15,7 @@ let { pool } = require('../../PDO');
 router.get('/', authentifierToken, async (req, res) => {    
     const { type } = req.query;
 
-    let query = 'SELECT id, type, id_metier, statut, date_envoi, message, source, payload  FROM notifications WHERE id_receveur = ?';
+    let query = 'SELECT id_publique, type, id_metier, statut, date_envoi, message, source, payload  FROM notifications WHERE id_receveur = ?';
     let params = [req.membre.id];  // On filtre les notifications par l'id de l'utilisateur
     
     if (type) {
@@ -39,7 +39,7 @@ router.get('/', authentifierToken, async (req, res) => {
           compte: rowsNotifs.length,
           notifications:rowsNotifs.map((r, index)=>{
             return {
-              id: r.id,
+              id: r.id_publique,
               type: r.type,
               id_metier: r.id_metier,
               statut: r.statut, 
@@ -111,13 +111,13 @@ router.get('/', authentifierToken, async (req, res) => {
     const { notificationId } = req.params;
     const { statut } = req.body;
   
-    if (!statut || statut !== 'lue' || statut !== 'non_lue') {
+    if (!statut) {
       return res.status(400).json({ message: 'le champs statut est requis.' });
     }
   
     try {
-      const query = 'UPDATE notifications SET status = ? WHERE id = ? AND id_receveur = ?';
-      const params = [statut, notificationId, req.membre.id, type]; 
+      const query = 'UPDATE notifications SET statut = ? WHERE id_publique = ? AND id_receveur = ?';
+      const params = [statut, notificationId, req.membre.id]; 
   
       const [result] = await pool.query(query, params);
   
@@ -134,7 +134,7 @@ router.get('/', authentifierToken, async (req, res) => {
   router.delete('/:notificationId', authentifierToken, async (req,res,next)=>{
     const {id} = req.membre
     const {notificationId} = req.params
-    const sql = 'DELETE FROM notifications WHERE id = ? AND id_receveur = ?'
+    const sql = 'DELETE FROM notifications WHERE id_publique = ? AND id_receveur = ?'
     try {
       await pool.execute(sql,[notificationId, id])
       res.status(204).json({message:"on l'a rangé ou personne ne regarde; rangé quoi?"})

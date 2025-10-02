@@ -33,7 +33,6 @@ app.use((req, res, next) => {
 });
 
 const imagePath = path.join(__dirname, 'public/img');
-console.log("Dossier des images:", imagePath)
 
 app.use((req, res, next) => {
   console.log("Requête reçue :", req.url,); // Log de l'URL de la requête
@@ -42,7 +41,7 @@ app.use((req, res, next) => {
 
 app.get("/", (req, res) => {
   res.status(201).send("Server is running...");
-});
+}); 
 
 //routes which should handle requests
 app.use("/membres", membresRoutes);
