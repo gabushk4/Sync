@@ -46,19 +46,19 @@ router.post("/connexion", async (req, res, next) => {
     if (!compare(mdp, hash))
       return res.status(401).json({ message: "Authentification échouée" });
 
-    const membre = {
+    let payload = {
       id: idMembre,
-      pseudo:pseudo,
       type:'access'
     };
 
-    const accessToken = jwt.sign(membre, process.env.ACCESS_TOKEN_SECRET, {
+    const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
       expiresIn: "1h",
     });
-    const payload = {id_membre: idMembre, pseudo_membre:pseudo, type:'refresh'}
+    payload = {id_membre: idMembre, pseudo_membre:pseudo, type:'refresh'}
     const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {expiresIn:'30d'}) 
 
-    await pool.execute('INSERT INTO tokens_rafraichissement (id_membre, token) VALUES(?, ?)', [idMembre, refreshToken])
+    await pool.execute('DELETE FROM tokens_rafraichissement WHERE id_membre = ?', [idMembre]);
+    await pool.execute('INSERT INTO tokens_rafraichissement (id_membre, token) VALUES (?, ?)', [idMembre, refreshToken]);
     
     res.status(200).json({
       cacheable: true,
@@ -66,7 +66,7 @@ router.post("/connexion", async (req, res, next) => {
       refresh_token:refreshToken,
       timestamp_serveur: Date.now(),
       membre: {
-        pseudo: membre.pseudo,
+        pseudo: pseudo,
         id_publique: idPublique,
       },
     });
@@ -102,8 +102,8 @@ router.post("/inscription", verifierPseudo, async (req, res, next) => {
 
     // Sauvegarde du membre
     var sql =
-      "INSERT INTO membres (id_publique, pseudo, mot_de_passe, courriel, temps_creation, fuseau_horaire) VALUES (?, ?, ?, ?, ?, ?, ?)";
-    await pool.query(sql, [
+      "INSERT INTO membres (id_publique, pseudo, mot_de_passe, courriel, temps_creation, fuseau_horaire) VALUES (?, ?, ?, ?, ?, ?)";
+    const [resInsertMembre] = await pool.query(sql, [
       idPublique,
       req.body.pseudo,
       mdpHash,
@@ -114,7 +114,7 @@ router.post("/inscription", verifierPseudo, async (req, res, next) => {
 
     // Sauvegarde du salt
     sql = "INSERT INTO mot_de_passes (id_membre, salt) VALUES (?, ?)";
-    await pool.query(sql, [idmembre, salt]);
+    await pool.query(sql, [resInsertMembre.insertId, salt]);
 
     // Querie pour reponse
     res.status(201).json({
@@ -129,6 +129,7 @@ router.post("/inscription", verifierPseudo, async (req, res, next) => {
 });
 router.post('/deconnexion', authentifierToken, async(req, res, next)=>{
   idMembre = req.membre.id
+  console.log('deconnexion idmembre', idMembre)
   //id_appareil = req.body.id_appareil?req.body.id_appareil:undefined
   const sql = `UPDATE tokens_rafraichissement SET blacklist = TRUE WHERE id_membre = ?`
   try {

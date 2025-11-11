@@ -15,7 +15,7 @@ let { pool } = require('../../PDO');
 router.get('/', authentifierToken, async (req, res) => {    
     const { type } = req.query;
 
-    let query = 'SELECT id_publique, type, id_metier, statut, date_envoi, message, source, payload  FROM notifications WHERE id_receveur = ?';
+    let query = "SELECT id_publique, type, id_metier, statut, date_envoi, message, source, payload  FROM notifications WHERE id_receveur = ? AND type != 'messages'";
     let params = [req.membre.id];  // On filtre les notifications par l'id de l'utilisateur
     
     if (type) {
@@ -134,9 +134,9 @@ router.get('/', authentifierToken, async (req, res) => {
   router.delete('/:notificationId', authentifierToken, async (req,res,next)=>{
     const {id} = req.membre
     const {notificationId} = req.params
-    const sql = 'DELETE FROM notifications WHERE id_publique = ? AND id_receveur = ?'
+    const sql = 'DELETE FROM notifications WHERE id_publique = ?'
     try {
-      await pool.execute(sql,[notificationId, id])
+      await pool.execute(sql,[notificationId])
       res.status(204).json({message:"on l'a rangé ou personne ne regarde; rangé quoi?"})
     } catch (error) {
       res.status(500).json({ message: 'erreur lors de la suppression de la notification', error });

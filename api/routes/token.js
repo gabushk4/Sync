@@ -7,11 +7,11 @@ require("dotenv").config();
 
 router.post('/', authentifierRefreshToken, async(req, res, next)=>{
     try {
-        const payload = req.refresh; // injecté par authentifierRefreshToken
-
+        const {payload, refreshToken} = req; // injecté par authentifierRefreshToken
+        console.log('authentifierRefreshToken', payload)
         const [rows] = await pool.query(
-            'SELECT * FROM tokens_rafraichissement WHERE id_membre = ? AND blacklist = 0',
-            [payload.id_membre]
+            'SELECT * FROM tokens_rafraichissement WHERE id_membre = ? AND token = ? AND blacklist = 0',
+            [payload.id_membre, refreshToken]
         );
 
         if (rows.length === 0) {
@@ -20,7 +20,7 @@ router.post('/', authentifierRefreshToken, async(req, res, next)=>{
         }
 
         const accessToken = jwt.sign(
-            { id: payload.id_membre, pseudo: payload.pseudo, type: 'access' },
+            { id: payload.id_membre, pseudo:payload.pseudo_membre, type: 'access' },
             process.env.ACCESS_TOKEN_SECRET,
             { expiresIn: '1h' }
         );

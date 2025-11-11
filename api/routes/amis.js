@@ -50,30 +50,6 @@ router.get("/", authentifierToken, async (req, res, next) => {
   }
 });
 
-// Ajouter un ami
-router.post("/", authentifierToken, async (req, res, next) => {
-  try {
-    const { idAmi } = req.body;
-    const idMembre = req.membre.id;
-
-    const sql = `INSERT INTO amis (id_membre, id_ami) VALUES (?, ?)`;
-    await pool.query(sql, [idMembre, idAmi]);
-
-    res.status(201).json({
-      message: "Ami ajouté avec succès",
-      ami: {
-        method: "GET",
-        url: `/membres/${idAmi}`,
-      },
-    });
-  } catch (err) {
-    res.status(500).json({
-      message: "Une erreur au niveau de la base de donnée est survenue",
-      erreur: err.message,
-    });
-  }
-});
-
 router.get("/demandes", authentifierToken, async (req, res, next) => {
   try {
     const idMembre = req.membre.id;
@@ -104,10 +80,9 @@ router.get("/demandes", authentifierToken, async (req, res, next) => {
   }
 });
 
-// Envoyer une demande d'ami
 router.post("/demandes", authentifierToken, async (req, res, next) => {
   try {
-    const idDemandeur = req.membre.id;
+    const idDemandeurPrive = req.membre.id;
     const pseudoDemandeur = req.membre.pseudo;
     const idDestinatairePublique = req.body.id_destinataire;
     
@@ -120,10 +95,10 @@ router.post("/demandes", authentifierToken, async (req, res, next) => {
     if (!resIdDestinataire.length) {
       return res.status(404).json({ message: "Destinataire non trouvé" });
     }
-    const idDestinataire = resIdDestinataire[0].id;
+    const idDestinatairePrive = resIdDestinataire[0].id;
 
     //Verification d'amitié
-    if (idDemandeur === idDestinataire)
+    if (idDemandeurPrive === idDestinatairePrive)
       return res.status(400).json({
         message: "Impossible de s'ajouter sois-même en ami",
       });
@@ -132,26 +107,26 @@ router.post("/demandes", authentifierToken, async (req, res, next) => {
       "post /demandes -> idDestinatairePublique",
       idDestinatairePublique,
       "idDestinatairePrivé",
-      idDestinataire
+      idDestinatairePrive
     );
     //INSERT dans la table demandes_amis
-    const idDemande = generateIdWithQueue(10, true, true, 'D', "demandes_amis")
+    const idDemandePublique = await generateIdWithQueue(10, true, true, 'D', "demandes_amis")
     sql = `INSERT INTO demandes_amis (id_publique, id_demandeur, id_destinataire) VALUES (?, ?, ?)`;
-    const [resDemande] = await pool.query(sql, [idDemande, idDemandeur, idDestinataire]);
+    const [resDemande] = await pool.query(sql, [idDemandePublique, idDemandeurPrive, idDestinatairePrive]);
 
     //Envoyer une notif
     const [reponsePushToken] = await pool.query(
       "SELECT push_token FROM membres WHERE id = ?",
-      [idDestinataire]
+      [idDestinatairePrive]
     );
     const { push_token } = reponsePushToken[0];
 
-    const p = {
+    const payload = {
         actions:[
             {
                 label:'accepter',
                 method:'PATCH',
-                url:`/amis/demandes/${resDemande.insertId}`,
+                url:`/amis/demandes/${idDemandePublique}`,
                 body:{
                     statut:'acceptee'
                 }
@@ -159,7 +134,7 @@ router.post("/demandes", authentifierToken, async (req, res, next) => {
             {
                 label:'refuser',
                 method:'PATCH',
-                url:`/amis/demandes/${resDemande.insertId}`,
+                url:`/amis/demandes/${idDemandePublique}`,
                 body:{
                     statut:'refusee'
                 }
@@ -167,15 +142,13 @@ router.post("/demandes", authentifierToken, async (req, res, next) => {
         ]
     }
 
-    const payload = JSON.stringify(p)
-
     envoyerNotification(
       push_token,
       "amis",
       `une belle rencontre commence`,
       `${pseudoDemandeur} veut devenir ton ami`,
-      idDemandeur,
-      idDestinataire,
+      idDemandeurPrive,
+      idDestinatairePrive,
       payload,
       resDemande.insertId
     );
@@ -191,13 +164,10 @@ router.post("/demandes", authentifierToken, async (req, res, next) => {
   }
 });
 
-router.patch(
-  "/demandes/:idDemande",
-  authentifierToken,
-  async (req, res, next) => {
+router.patch( "/demandes/:idDemandePublique", authentifierToken, async (req, res, next) => {
     try {
       const { statut } = req.body; 
-      const idDemande = req.params.idDemande;
+      const idDemandePublique = req.params.idDemandePublique;
 
       // Vérifiez si le statut est valide
       if (!["acceptee", "refusee"].includes(statut)) {
@@ -210,22 +180,19 @@ router.patch(
       }
 
       const sql = `UPDATE demandes_amis SET statut = ? WHERE id_publique = ?`;
-      await pool.query(sql, [statut, idDemande]);
+      await pool.query(sql, [statut, idDemandePublique]);
 
       if (statut === "acceptee") {
-        const [reponse] = await pool.query(
-          "SELECT id_demandeur, id_destinataire FROM demandes_amis WHERE id_publique = ?",
-          [idDemande]
+        const [reponsePrivee] = await pool.query(
+          "SELECT id, id_demandeur, id_destinataire FROM demandes_amis WHERE id_publique = ?",
+          [idDemandePublique]
         );
-        const { id_demandeur, id_destinataire } = reponse[0];
-
         await pool.query("INSERT INTO amis (id_membre, id_ami) VALUES (?,?)", [
-          id_destinataire,
-          id_demandeur,
+          reponsePrivee[0].id_destinataire,
+          reponsePrivee[0].id_demandeur,
         ]);
 
-        await pool.query('DELETE FROM notifications WHERE id_metier = ?', [idDemande])  
-        
+        await pool.query('DELETE FROM notifications WHERE id_metier = ?', [reponsePrivee[0].id])        
       }
 
       return res
@@ -242,12 +209,8 @@ router.patch(
   }
 );
 
-router.delete(
-  "/demandes/:idDemande",
-  authentifierToken,
-  async (req, res, next) => {
+router.delete( "/demandes/:idDemandePublique", authentifierToken, async (req, res, next) => {
     try {
-      const idMembre = req.membre.id;
       const idDemande = req.params.idDemande;
 
       const sql = `DELETE FROM demandes_amis WHERE id_publique = ?`;
@@ -263,33 +226,27 @@ router.delete(
   }
 );
 
-// Modifier les informations d'un ami (éventuellement, si vous avez des informations personnalisées pour chaque ami)
-router.patch(
-  "/:idmembre_publique",
-  authentifierToken,
-  async (req, res, next) => {
-    try {
-      const idAmi = req.params.id;
-      const idMembre = req.membre.id;
-      const { couleur } = req.body;
+// Modifier les informations personnalisées d'un ami
+router.patch( "/:idmembre_publique", authentifierToken, async (req, res, next) => {
+  try {
+    const idAmi = req.params.id;
+    const idMembre = req.membre.id;
+    const { couleur } = req.body;
 
-      const update = `UPDATE membres
-                        SET nom = ?, prenom = ?
-                        WHERE id = (
-                            SELECT id_ami 
-                            FROM amis 
-                            WHERE id_membre = ? AND id_ami = ?)`;
-      await pool.query(update, [nom, prenom, idMembre, idAmi]);
+    const update = `UPDATE membres SET nom = ?, prenom = ?
+                      WHERE id = (
+                        SELECT id_ami FROM amis WHERE id_membre = ? AND id_ami = ?
+                      )`;
+    await pool.query(update, [nom, prenom, idMembre, idAmi]);
 
-      res.status(200).json({ message: "Ami mis à jour avec succès" });
-    } catch (err) {
-      res.status(500).json({
-        message: "Une erreur au niveau de la base de donnée est survenue",
-        erreur: err.message,
-      });
-    }
+    res.status(200).json({ message: "Ami mis à jour avec succès" });
+  } catch (err) {
+    res.status(500).json({
+      message: "Une erreur au niveau de la base de donnée est survenue",
+      erreur: err.message,
+    });
   }
-);
+});
 
 // Supprimer un ami
 router.delete("/:idami", authentifierToken, async (req, res, next) => {
@@ -314,7 +271,5 @@ router.delete("/:idami", authentifierToken, async (req, res, next) => {
     });
   }
 });
-
-// Récupérer les demandes d'amis
 
 module.exports = router;

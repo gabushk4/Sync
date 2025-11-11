@@ -2,15 +2,16 @@ const {DateTime} = require('luxon')
 
 function AppliquerExceptions(occurences, exceptions){
     const map = new Map()
-
+    //console.log('exceptions', exceptions)
     for (const occ of occurences){
-        const key = occ.id + DateTime.fromSQL(occ.debut).toISO()
+        const key = occ.id + occ.debut
+        //console.log('occ key', key)
         map.set(key, occ)
     }
 
     for (const ex of exceptions){
-        const key = ex.id_parent + DateTime.fromSQL(ex.debut).toISO()
-
+        const key = ex.id_parent + ex.debut
+        //console.log('ex key', key)
         if(ex.type === 'annule'){
             map.delete(key)
         }
@@ -18,12 +19,17 @@ function AppliquerExceptions(occurences, exceptions){
             map.set(key, {
                 ...map.get(key),
                 ...ex,
-                url:`/evenements/exceptions/${ex.id}`
+                type:'exception',
+                string:`/evenements/exceptions/${ex.id}`
             })
         }
     }
 
-     return Array.from(map.values()).sort((a, b) => DateTime.fromSQL(a.debut).toMillis() - DateTime.fromSQL(b.debut).toMillis());
+    const occurencesFiltrees = Array.from(map.values()).sort((a, b) => DateTime.fromSQL(a.debut).toMillis() - DateTime.fromSQL(b.debut).toMillis());
+
+    //console.log('AppliquerExceptions occurencesFiltrees: ', occurencesFiltrees)
+
+    return occurencesFiltrees
 }
 
 module.exports = AppliquerExceptions

@@ -8,10 +8,11 @@ const path = require('path')
 const membresRoutes = require("./api/routes/membres");
 const notificationsRoutes = require("./api/routes/notifications");
 const evenementsRoutes = require("./api/routes/evenements");
-const messagesRoutes = require("./api/routes/evenements");
+const messagesRoutes = require("./api/routes/messages");
 const amisRoutes = require("./api/routes/amis")
 const imagesRoutes = require("./api/routes/images")
 const tokenRoute = require('./api/routes/token')
+const signalementsRoute = require('./api/routes/signalements')
 
 app.use(morgan("dev")); 
 
@@ -52,6 +53,7 @@ app.use("/amis", amisRoutes)
 app.use('/images', imagesRoutes);
 app.use('/img', express.static(imagePath));
 app.use('/token', tokenRoute)
+app.use('/signalements', signalementsRoute)
 
 //route for 404 not found
 app.use((req, res, next) => {
