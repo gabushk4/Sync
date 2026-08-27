@@ -37,7 +37,7 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
     
     if (hostUri) {
       const ip = hostUri.split(':')[0];
-      return process.env.USING_REMOTE
+      return process.env.EXPO_PUBLIC_USING_REMOTE
         ? 'https://dev.syncalkemy.ca'
         : `http://${ip}:3100`;
     }
