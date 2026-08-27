@@ -36,8 +36,8 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
     const hostUri = Constants.expoConfig?.hostUri
     
     if (hostUri) {
-      const ip = hostUri.split(':')[0];
-      return process.env.EXPO_PUBLIC_USING_REMOTE
+      const ip = hostUri.split(':')[0]; //prendre lip seulement [ip, port]
+      return process.env.EXPO_PUBLIC_USING_REMOTE === 'true'
         ? 'https://dev.syncalkemy.ca'
         : `http://${ip}:3100`;
     }
