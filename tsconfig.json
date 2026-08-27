@@ -13,5 +13,5 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-  ]
+, "app/(tabs)/home/index.tsx", "app/(auth)/login.tsx", "app/(auth)/register.tsx", "contextes/contextePalette.tsx", "components/timeline.tsx"  ]
 }
