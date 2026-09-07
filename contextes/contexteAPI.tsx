@@ -1,17 +1,15 @@
-import axios, { AxiosHeaders, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from "axios";
-import { createContext, useContext, useEffect, useState } from "react";
-import { useAccessToken } from "./contexteToken";
-import * as SecureStore from 'expo-secure-store';
-import log from "@/functions/log";
-import catcher from "@/functions/catcher";
-import { useAuth } from "./contexteAuth";
 import { authEvents } from "@/events/authEvents";
-import Constants from 'expo-constants'
+import catcher from "@/functions/catcher";
+import axios, { AxiosHeaders, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from "axios";
+import Constants from 'expo-constants';
+import * as SecureStore from 'expo-secure-store';
+import { createContext, useContext, useEffect, useRef } from "react";
+import { useAccessToken } from "./contexteToken";
 
 import { requestListener } from "@/events/requestEvents";
 import { useMockMode } from "./contexteMockMode";
 
-import { resolveMock } from "@/functions/resolveMock"
+import { resolveMock } from "@/functions/resolveMock";
 
 interface APIContextType {
   api: AxiosInstance;
@@ -55,13 +53,12 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
     timeout: 10000,
   });
 
-  let refreshPromise: Promise<string> | null = null;
+  const refreshPromiseRef = useRef<Promise<string> | null>(null);
 
   const refreshAccessToken = async (): Promise<string> => {
-    //blocks any other refreshToken request if one is on going
-    if (refreshPromise) return refreshPromise; 
+    if (refreshPromiseRef.current) return refreshPromiseRef.current;
 
-    refreshPromise = (async () => { //Mutex
+    refreshPromiseRef.current = (async () => {
       const refreshToken = await SecureStore.getItemAsync('refresh_token');
       if (!refreshToken) throw new Error('Aucun refresh token');
 
@@ -72,9 +69,9 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
     })();
 
     try {
-      return await refreshPromise; //returns the mutex
+      return await refreshPromiseRef.current; //returns the mutex
     } finally {
-      refreshPromise = null; 
+      refreshPromiseRef.current = null;
     }
   };
 
@@ -101,68 +98,75 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }
 
-  api.interceptors.request.use(
-    async (config) => {
-      requestListener?.setFetching(true)
-      
-      if (config.method === 'GET' && !config.params?.resource)
-        throw Error('cannot get without resource parameter')      
-      
-      const token = await getToken()
-      if(token)
-        config.headers.Authorization = `Bearer ${token}`
+  useEffect(() => {
+    const requestInterceptor = api.interceptors.request.use(
+      async (config) => {
+        requestListener?.setFetching(true)
 
-      if (isMockMode)
-        config.adapter = mockAdapter
+        if (config.method === 'GET' && !config.params?.resource)
+          throw Error('cannot get without resource parameter')
 
-      return config
-    },
-    (error) => {
-      requestListener?.setFetching(false)
-      catcher(error, "erreur à l'envoie de la requête")
-    }
-  )
+        const token = await getToken()
+        if (token)
+          (config.headers as any).Authorization = `Bearer ${token}`
 
-  api.interceptors.response.use(
-    response => {
-      //console.log('res:',response.config.url, response.status)
-      requestListener?.setFetching(false)     
-      return response;
-    },
-    async error => {
-      requestListener?.setFetching(false)
-      const requeteOriginale: AxiosRequestConfigWithRetry = error.config;
+        if (isMockMode)
+          config.adapter = mockAdapter
 
-      if (!error.response) {
+        return config
+      },
+      (error) => {
+        requestListener?.setFetching(false)
+        catcher(error, "erreur à l'envoie de la requête")
         return Promise.reject(error)
-      };
+      }
+    )
 
-      if (requeteOriginale.url?.includes('/token')) {
+    const responseInterceptor = api.interceptors.response.use(
+      response => {
+        requestListener?.setFetching(false)
+        return response;
+      },
+      async error => {
+        requestListener?.setFetching(false)
+        const requeteOriginale: AxiosRequestConfigWithRetry = error.config;
+
+        if (!error.response) {
+          return Promise.reject(error)
+        };
+
+        if (requeteOriginale.url?.includes('/token')) {
+          return Promise.reject(error);
+        }
+
+        if ((error.response.status === 401) && !requeteOriginale._retry) {
+          requeteOriginale._retry = true;
+
+          try {
+            const access_token = await refreshAccessToken()
+
+            api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+            if (requeteOriginale.headers) {
+              (requeteOriginale.headers as any)['Authorization'] = `Bearer ${access_token}`;
+            }
+
+            return api(requeteOriginale);
+          } catch (refreshError) {
+            await SecureStore.deleteItemAsync('refresh_token');
+            setToken(null);
+            authEvents.emitUnauthorized()
+            return Promise.reject(refreshError);
+          }
+        }
         return Promise.reject(error);
       }
+    )
 
-      if ((error.response.status === 401) && !requeteOriginale._retry) {
-        requeteOriginale._retry = true;
-
-        try {
-          const access_token = await refreshAccessToken()
-
-          api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-          if (requeteOriginale.headers) {
-            requeteOriginale.headers['Authorization'] = `Bearer ${access_token}`;
-          }
-
-          return api(requeteOriginale);
-        } catch (refreshError) {
-          await SecureStore.deleteItemAsync('refresh_token');
-          setToken(null);
-          authEvents.emitUnauthorized()
-          return Promise.reject(refreshError);
-        }
-      }
-      return Promise.reject(error);
+    return () => {
+      api.interceptors.request.eject(requestInterceptor)
+      api.interceptors.response.eject(responseInterceptor)
     }
-  );
+  }, [api, getToken, setToken, isMockMode, APIBaseURL])
 
   return (
     <APIContexte.Provider value={{ api, APIBaseURL }}>

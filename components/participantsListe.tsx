@@ -2,7 +2,7 @@ import React, {useState, useEffect, useCallback } from 'react';
 import { StyleSheet, Text, View, Button, ScrollView, SafeAreaView, FlatList, Image, Pressable, TouchableWithoutFeedback, TouchableOpacity, Modal, useColorScheme} from 'react-native';
 import { BlurView } from 'expo-blur';
 import { DateTime } from 'luxon';
-import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from 'expo-router/react-navigation';
 
 import { usePalette } from '@/contextes/contextePalette';
 import { useModal } from '@/contextes/contexteModals';

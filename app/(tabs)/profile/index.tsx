@@ -1,4 +1,4 @@
-import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from "expo-router/react-navigation";
 import * as Brightness from 'expo-brightness';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';

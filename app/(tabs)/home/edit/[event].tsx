@@ -16,12 +16,10 @@ import { Event } from '@/types/calendar'
 import EventForm, { EventFormHandle } from '@/components/eventForm'
 
 import { usePalette } from '@/contextes/contextePalette'
-import { useAccessToken } from '@/contextes/contexteToken'
 import { useAPI } from '@/contextes/contexteAPI'
 import { DateTime } from 'luxon'
 
 export default function EditEvent() {
-    const { getToken, } = useAccessToken()
     const { api } = useAPI()
     const { colors } = usePalette()
     const { event: eventStringified } = useLocalSearchParams<{ event: string }>()
@@ -72,8 +70,6 @@ export default function EditEvent() {
             return
         }
 
-        // La conversion vers le format serveur se fait UNE FOIS, ici,
-        // à partir des DateTime que le formulaire vient de nous donner.
         const debutServeur = formaterDatePourServeur(values.start.toUTC())
         const finServeur = formaterDatePourServeur(values.end.toUTC())
 
@@ -88,8 +84,6 @@ export default function EditEvent() {
 
         if (champsModifies.length === 0) return
 
-        // Ces deux-là sont toujours envoyés, même sans changement détecté,
-        // pour satisfaire le contrat API existant.
         data.debut = data.debut ?? debutServeur
         data.fin = data.fin ?? finServeur
 

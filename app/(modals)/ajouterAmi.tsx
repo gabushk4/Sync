@@ -58,7 +58,7 @@ export default function ajouterAmi() {
 
     const s = StyleSheet.create({
         page: {
-            ...StyleSheet.absoluteFillObject,
+            ...StyleSheet.absoluteFill,
             justifyContent: 'space-evenly',
             width: PAGE_W,
             alignItems: 'center',

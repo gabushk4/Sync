@@ -2,7 +2,7 @@ import { useActionFabContext} from "@/contextes/contextActionFAB";
 import { useNavFabContext } from "@/contextes/contexteNavFAB";
 import { usePalette } from "@/contextes/contextePalette";
 import Icon from "@react-native-vector-icons/ionicons";
-import { BottomTabBar, type BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { BottomTabBar, type BottomTabBarProps } from 'expo-router/js-tabs';
 import { useRouter } from "expo-router";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from 'react-native';

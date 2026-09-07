@@ -1,4 +1,3 @@
-// ToastAbs.js
 import Toast, {ToastShowParams} from 'react-native-toast-message';
 
 const queue: ToastShowParams[] = [];

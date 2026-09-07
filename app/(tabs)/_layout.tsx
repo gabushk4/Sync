@@ -1,7 +1,7 @@
 import React from 'react';
-import Ionicons from "@react-native-vector-icons/ionicons";
+import Icons from "@react-native-vector-icons/ionicons";
 import { Link, Tabs } from 'expo-router';
-import { Image, Pressable, View, Text, StyleSheet } from 'react-native';
+import { Image, Pressable, View, Text, StyleSheet, ColorValue } from 'react-native';
 
 import { usePalette } from '@/contextes/contextePalette'
 import { useColorScheme } from '@/components/useColorScheme';
@@ -14,10 +14,10 @@ import { useNotifications } from '@/contextes/contexteNotifications';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
-  name: React.ComponentProps<typeof Ionicons>['name'];
-  color: string;
+  name: React.ComponentProps<typeof Icons>['name'];
+  color: ColorValue;
 }) {
-  return <Ionicons size={24} style={{ marginBottom: -4, }} {...props} />;
+  return <Icons size={24} style={{ marginBottom: -4, }} {...props} />;
 }
 
 export default function TabLayout() {

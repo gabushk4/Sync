@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import {View, FlatList, TouchableOpacity, Image, Text, useColorScheme, } from 'react-native';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "expo-router/react-navigation";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 
@@ -37,9 +37,6 @@ export default function ListeAmis(){
     const { fonts } = useFont()
     const colorScheme = useColorScheme()
     
-    const navigation = useNavigation()
-    const {APIBaseURL} = useAPI()
-    const {getToken} = useAccessToken()
     const { invites } = useInvites()  
     
     const { type, inviterUrl } = useLocalSearchParams()
@@ -57,12 +54,7 @@ export default function ListeAmis(){
 
     const getAmis = async ()=>{
         try {
-            const token = await getToken()
-            const response = await api.get('/amis', {
-                headers:{
-                    'Authorization':`Bearer ${token}`
-                }
-            })
+            const response = await api.get('/amis')
             
             const data = response.data.map((ami: Friend)=>{
                 const amitie = convertirUTCversLocale(ami.temps_amitie )
@@ -81,10 +73,7 @@ export default function ListeAmis(){
 
     const deleteAmi = async (idPublique: string)=>{
         try {
-            const token = await getToken()
-            const response = await api.delete(`/amis/${idPublique}`, {headers:{
-                'Authorization':`Bearer ${token}`
-            }})
+            const response = await api.delete(`/amis/${idPublique}`)
             const amisC = [...amis]
             const nouvAmis = amisC.filter(a=>a.id != idPublique)
             setAmis([...nouvAmis])

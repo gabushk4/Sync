@@ -10,20 +10,18 @@ import { FabProvider as ActionFABProvider } from '@/contextes/contextActionFAB'
 import { PaletteProvider, usePalette } from '@/contextes/contextePalette';
 import { RouteAbsProvider } from '@/contextes/contexteRoute';
 import { AccessTokenProvider, useAccessToken } from '@/contextes/contexteToken';
-import { ThemeProvider } from '@react-navigation/native';
+import { ThemeProvider } from "expo-router/react-navigation";
 
 //Contexts
 
 //Dependencies
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Device from 'expo-device';
-//import * as Notifs from 'expo-notifications';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import * as SplashScreen from 'expo-splash-screen';
 import { DateTime } from 'luxon';
 import 'react-native-reanimated';
-import {router} from 'expo-router'
 
 //Components
 import ToastAvertissement from '@/components/toastAvertissement';

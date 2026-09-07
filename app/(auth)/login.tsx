@@ -18,7 +18,7 @@ import { useRouteAbs } from '@/contextes/contexteRoute';
 import { useAccessToken } from '@/contextes/contexteToken';
 import catcher from '@/functions/catcher';
 import log from '@/functions/log.js';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from "expo-router/react-navigation";
 import { useFont } from '@/contextes/contexteFont';
 import {LinkAbs, createLinkStyles} from '@/abstractions/linkAbs';
 import { useAuth } from '@/contextes/contexteAuth';

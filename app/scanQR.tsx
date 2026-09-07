@@ -2,7 +2,7 @@ import { Camera, CameraView, } from 'expo-camera';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Image, Linking, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
-import { useFocusEffect, useIsFocused, useNavigation, } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused, useNavigation, } from "expo-router/react-navigation";
 import axios from 'axios';
 import Toast from 'react-native-toast-message';
 

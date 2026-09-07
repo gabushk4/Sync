@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet, Platform, useColorScheme, FlatList, RefreshControl } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { useAnimatedStyle, useSharedValue, withReanimatedTimer, withRepeat, withSequence, withSpring, withTiming } from "react-native-reanimated";
-import { useFocusEffect, useIsFocused } from "@react-navigation/native";
+import { useFocusEffect, useIsFocused } from "expo-router/react-navigation";
 import axios, { AxiosResponse } from "axios";
 import Toast from "react-native-toast-message";
 import { DateTime } from "luxon";

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { View, Image, Text, TouchableOpacity, useColorScheme} from "react-native";
 import Animated, {withSpring, withSequence, useAnimatedStyle, useSharedValue, withRepeat, withTiming, Easing} from "react-native-reanimated";
 import { usePalette } from "@/contextes/contextePalette";
-import { useNavigation } from "@react-navigation/native";
 import { useFont } from "@/contextes/contexteFont";
 import { router } from "expo-router";
 import { useAuth } from "@/contextes/contexteAuth";
@@ -10,7 +9,6 @@ import { useAuth } from "@/contextes/contexteAuth";
 export default function ChargementEcran({}){
     const { colors } = usePalette() 
     const { fonts } = useFont()
-    const navigation = useNavigation()
     const colorScheme = useColorScheme()
     const {signOut} = useAuth()
 

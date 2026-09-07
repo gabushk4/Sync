@@ -1,6 +1,7 @@
-import Toast from "react-native-toast-message"
+import ToastAbs from "@/abstractions/toastAbs"
 import log from "./log"
 import { useModal } from "../contextes/contexteModals"
+import {customToasts} from "@/constants/toastConfig"
 
 export default function catcher(error, titre='erreur'){   
     //const {ouvirModal} = useModal()
@@ -56,8 +57,8 @@ export default function catcher(error, titre='erreur'){
     //log("titre", titre, "message", message)
     if(error.response){
       log('Erreur serveur', /* error.response.data */)
-        Toast.show({
-          type:'persoErreur',
+        ToastAbs.show({
+          type:customToasts.error,
           text1:titre,
           text2:error.response.data.message??message,
           position:'top',
@@ -66,8 +67,8 @@ export default function catcher(error, titre='erreur'){
         //TODO ajouter au contexte logs
     }else{  
       log('catcher toast erreur')      
-      Toast.show({
-        type:'persoErreur',
+      ToastAbs.show({
+        type:customToasts.error,
         text1:titre,
         text2:message,
         position:'top',

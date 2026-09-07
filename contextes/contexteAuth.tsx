@@ -22,7 +22,7 @@ const AuthContexte = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { setToken, resetTokens } = useAccessToken();
     const { getMembre, resetMembre, setMockMembre } = useMembre();
-    const {isMockMode} = useMockMode()
+    const { isMockMode } = useMockMode()    
 
     const [state, setState] = useState<AuthState>('loading');
 
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     setState('unauthenticated');
                     return;
                 }
-
+                
                 await getMembre();
                 setState('authenticated');
             } catch (error: any) {

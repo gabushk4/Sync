@@ -1,4 +1,4 @@
-import toastConfig from "@/constants/toastConfig";
+import {toastConfig} from "@/constants/toastConfig";
 import { Stack } from "expo-router";
 
 import Toast from "react-native-toast-message";
