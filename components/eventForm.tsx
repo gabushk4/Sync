@@ -24,7 +24,7 @@ import DateTimeSelecteur from './datetimeSelecteurs'
 import MenuDeroulant from './menuDeroulant'
 import ParticipantsListe from './participantsListe'
 import Animated from 'react-native-reanimated'
-import { Ionicons } from '@expo/vector-icons'
+import Icon from "@react-native-vector-icons/ionicons";
 import SwitchAbs from '@/abstractions/switchAbs'
 import { Participant } from '@/types/invites'
 import { useInvites } from '@/contextes/contexteInvites'
@@ -437,15 +437,15 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
                 <Animated.Text style={s.label}>{eventPrivate ? 'privé' : 'public'}</Animated.Text>
                 {mode != 'details'
                     ?   <View style={{ alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}>                    
-                            <Ionicons name='lock-open' color={eventPrivate ? colors.muted : colors.text} size={24}/>
+                            <Icon name='lock-open' color={eventPrivate ? colors.muted : colors.text} size={24}/>
                             <SwitchAbs
                                 value={eventPrivate}
                                 onChange={() => { setPrivate((prev) => !prev) }}
                                 trackColor={{false:colors.muted, true:colors.muted}}
                             />
-                            <Ionicons name='lock-closed' color={eventPrivate ? colors.text : colors.muted} size={24}/>
+                            <Icon name='lock-closed' color={eventPrivate ? colors.text : colors.muted} size={24}/>
                         </View>
-                    : <Ionicons name={eventPrivate ? 'lock-closed' : 'lock-open' } color={colors.text} size={32} />
+                    : <Icon name={eventPrivate ? 'lock-closed' : 'lock-open' } color={colors.text} size={32} />
                     
                 }
                 

@@ -1,7 +1,7 @@
 import { useActionFabContext} from "@/contextes/contextActionFAB";
 import { useNavFabContext } from "@/contextes/contexteNavFAB";
 import { usePalette } from "@/contextes/contextePalette";
-import { Ionicons } from "@expo/vector-icons";
+import Icon from "@react-native-vector-icons/ionicons";
 import { BottomTabBar, type BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useRouter } from "expo-router";
 import React from "react";
@@ -51,7 +51,7 @@ export function CustomTabBar(props: BottomTabBarProps) {
                 style={s.fab}
                 >
                     {
-                        NavConfig.icon ?? <Ionicons name="add" color={colors.text} size={24}/>
+                        NavConfig.icon ?? <Icon name="add" color={colors.text} size={24}/>
                     }
                 </TouchableOpacity>
             )}
@@ -61,7 +61,7 @@ export function CustomTabBar(props: BottomTabBarProps) {
                     style={s.fab}
                 >
                     {
-                        ActionConfig.icon ?? <Ionicons name="checkmark" color={colors.text} size={24}/>
+                        ActionConfig.icon ?? <Icon name="checkmark" color={colors.text} size={24}/>
                     }
                 </TouchableOpacity>
             )}

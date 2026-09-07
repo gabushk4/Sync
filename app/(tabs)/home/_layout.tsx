@@ -1,6 +1,6 @@
 import RequestStatus from "@/components/requestStatus";
 import { useFont } from "@/contextes/contexteFont";
-import { Ionicons } from "@expo/vector-icons";
+
 import { Stack } from "expo-router";
 import { View } from "react-native";
 

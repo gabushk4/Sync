@@ -8,7 +8,7 @@ import Animated, { createAnimatedComponent, useAnimatedProps, useAnimatedStyle, 
 import { scheduleOnRN } from 'react-native-worklets';
 import { interpolatePath, parse, withBouncing } from 'react-native-redash';
 import Toast from 'react-native-toast-message';
-import { Ionicons } from '@expo/vector-icons';
+import Icon from "@react-native-vector-icons/ionicons";
 import Svg, { Path } from 'react-native-svg';
 
 import { path1 as closeMenuPath1, path2 as closeMenuPath2, path3 as closeMenuPath3 } from '@/svgs/closeMenu';
@@ -273,7 +273,7 @@ export default function ProfilEcran(){
      */
     useActionFab({
         action: ouvrirModalQRCode,
-        icon:<Ionicons name='qr-code' color={colors.text} size={24}/>
+        icon:<Icon name='qr-code' color={colors.text} size={24}/>
     })
 
     useEffect(()=>{
@@ -461,13 +461,13 @@ export default function ProfilEcran(){
                         </AnimatedTouchableOpacity>
                         {/* Hamburger menu options */}
                         <AnimatedTouchableOpacity style={[s.floatingButton, s.floatingOption, paramsOptionAnimated]}>
-                            <Ionicons name='cog' color={colors.text} size={28} />
+                            <Icon name='cog' color={colors.text} size={28} />
                         </AnimatedTouchableOpacity>
                         <AnimatedTouchableOpacity
                             style={[s.floatingButton, s.floatingOption, editOptionAnimated]}
                             onPress={()=> router.push('/(tabs)/profile/edit')}
                         >
-                            <Ionicons name='pencil' color={colors.text} size={28} />
+                            <Icon name='pencil' color={colors.text} size={28} />
                         </AnimatedTouchableOpacity>
                         <AnimatedTouchableOpacity
                             style={[s.floatingButton, s.floatingOption, { borderColor: colors.error }, logOutOptionAnimated]}
@@ -475,7 +475,7 @@ export default function ProfilEcran(){
                                 router.push('/(modals)/confirmSignOut')    
                             }}
                         >
-                            <Ionicons name='log-out' color={colors.error} size={28} />
+                            <Icon name='log-out' color={colors.error} size={28} />
                         </AnimatedTouchableOpacity>
                 </View>
         </View>         

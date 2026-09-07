@@ -3,7 +3,7 @@ import { useFont } from '@/contextes/contexteFont'
 import { usePalette } from '@/contextes/contextePalette'
 import log from '@/functions/log'
 import { Recurrence } from '@/types/calendar'
-import { Ionicons } from '@expo/vector-icons'
+import Icon from "@react-native-vector-icons/ionicons";
 import { Picker } from '@react-native-picker/picker'
 import RNPickerSelect from 'react-native-picker-select'
 import React, { useRef, useState } from 'react'
@@ -146,7 +146,7 @@ export default function MenuDeroulant({ values, selected, onSelection, disabled 
             {values.find((v) => v.value === selectedValue)?.title}
           </Text>
           {!disabled &&
-            <Ionicons name={iosDropDownVisible ? 'chevron-down' : 'chevron-forward'} color={colors.muted} />
+            <Icon name={iosDropDownVisible ? 'chevron-down' : 'chevron-forward'} color={colors.muted} />
           }
         </TouchableOpacity>
 
@@ -227,7 +227,7 @@ export default function MenuDeroulant({ values, selected, onSelection, disabled 
         }}
       >
         <Text style={s.textTrigger}>{values.find((v) => v.value === selectedValue)?.title}</Text>
-        <Ionicons name='chevron-down' color={colors.muted} size={CHEVRON_SIZE}/>
+        <Icon name='chevron-down' color={colors.muted} size={CHEVRON_SIZE}/>
       </TouchableOpacity>
 
       <Modal

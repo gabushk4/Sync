@@ -5,7 +5,6 @@ import { convertirTimestampDateLongue, convertirTimestampHeure } from "@/functio
 import log from "@/functions/log";
 import ceilBy5 from '@/functions/ceilBy5';
 
-import { Ionicons } from "@expo/vector-icons";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 import { DateTime } from "luxon";
 import { useEffect, useRef, useState } from "react";

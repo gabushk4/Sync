@@ -19,7 +19,7 @@ import { convertirTimestampDateCourte, convertirTimestampHeure, convertirTimesta
 import Haptics from "@/abstractions/haptics"
 
 import { withSpringConfig, withTimingConfig } from "@/constants/ReanimatedConfs"
-import { Ionicons } from "@expo/vector-icons"
+import Icon from "@react-native-vector-icons/ionicons";
 import AppIcon from "@/svgs/appIcon"
 import { Gesture } from "react-native-gesture-handler"
 
@@ -228,11 +228,11 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
     const typeIcon = () => {
         switch (item.type) {
             case "amis":
-                return <Ionicons name="person-outline" color={colors.muted} size={20} />
+                return <Icon name="person-outline" color={colors.muted} size={20} />
             case "sync":
                 return <AppIcon fill={colors.muted} size={20} />
             case "evenements":
-                return <Ionicons name="calendar-clear-outline" color={colors.muted} size={20} />
+                return <Icon name="calendar-clear-outline" color={colors.muted} size={20} />
             default:
                 return null
         }
@@ -331,8 +331,8 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                 disabled={repondue}
             >
                 {action.label === "accepter"
-                    ? <Ionicons name="checkmark" color={buttonColor} size={28} />
-                    : <Ionicons name='close' color={buttonColor} size={28}/>
+                    ? <Icon name="checkmark" color={buttonColor} size={28} />
+                    : <Icon name='close' color={buttonColor} size={28}/>
                 }
                 
             </TouchableOpacity>

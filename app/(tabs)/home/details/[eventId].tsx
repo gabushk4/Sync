@@ -23,7 +23,7 @@ import { useNavFab } from "@/hooks/useNavFAB";
 import { seedData } from "@/seed";
 import { defaultEvent, Event } from "@/types/calendar";
 import { UrlDescriptor } from "@/types/url";
-import { Ionicons } from "@expo/vector-icons";
+import Icon from "@react-native-vector-icons/ionicons";
 import { DateTime } from "luxon";
 
 export default function Details(){
@@ -176,7 +176,7 @@ export default function Details(){
     )
 
     useNavFab({
-            icon: <Ionicons name="pencil" size={24} color={colors.text} />,
+            icon: <Icon name="pencil" size={24} color={colors.text} />,
             href: '/(tabs)/home/edit/[event]' as const,
             params: FABParams
         })
@@ -221,7 +221,7 @@ export default function Details(){
                 else
                     quitterEvenement()
             }}>
-                <Ionicons name='trash-sharp' color={colors.error} size={28}/>
+                <Icon name='trash-sharp' color={colors.error} size={28}/>
             </TouchableOpacity>
         </View>
     )

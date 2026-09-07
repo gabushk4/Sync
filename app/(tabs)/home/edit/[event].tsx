@@ -7,7 +7,7 @@ import { use, useCallback, useEffect, useRef, useState } from 'react'
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router'
 import {Alert, Text, View, } from 'react-native'
 import Toast from 'react-native-toast-message'
-import { Ionicons } from '@expo/vector-icons'
+import Icon from "@react-native-vector-icons/ionicons";
 
 import { useActionFab } from '@/hooks/useActionFAB'
 
@@ -165,7 +165,7 @@ export default function EditEvent() {
 
     useActionFab({
         action: verifAvantPatch,
-        icon: <Ionicons name="checkmark" color={colors.text} size={28} />,
+        icon: <Icon name="checkmark" color={colors.text} size={28} />,
     })
 
     return (

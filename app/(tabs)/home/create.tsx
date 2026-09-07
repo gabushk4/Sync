@@ -16,7 +16,7 @@ import EventForm from "@/components/eventForm";
 import catcher from "@/functions/catcher";
 import log from "@/functions/log";
 import { defaultEvent, Event } from "@/types/calendar";
-import { Ionicons } from "@expo/vector-icons";
+import Icon from "@react-native-vector-icons/ionicons";
 
 import { EventFormHandle } from "@/components/eventForm";
 import formaterDatePourServeur from "@/functions/formaterDatePourServeur";
@@ -108,7 +108,7 @@ export default function CreateEvent({ }) {
 
     useActionFab({
         action: postEvenement,
-        icon: <Ionicons name="checkmark" color={colors.text} size={28} />
+        icon: <Icon name="checkmark" color={colors.text} size={28} />
     })
 
     useFocusEffect(useCallback(()=>{  

@@ -1,10 +1,10 @@
 import React from 'react'
 import { TouchableOpacity, Text } from 'react-native'
-import { Ionicons } from '@expo/vector-icons'
 import * as Clipboard from 'expo-clipboard'
 import Toast from 'react-native-toast-message'
 import { usePalette } from '@/contextes/contextePalette'
 import { useFont } from '@/contextes/contexteFont'
+import Icon from "@react-native-vector-icons/ionicons";
 
 type Props = {
     code: string;
@@ -28,7 +28,7 @@ export default function MemberCode({ code, size = 16 } : Props) {
             }}
         >
             <Text style={[{ fontSize: size, color: colors.muted, fontFamily: fonts.body }]}>#{code}</Text>
-            <Ionicons name='copy' color={colors.muted}/>
+            <Icon name='copy' color={colors.muted}/>
         </TouchableOpacity>
     )
 }

@@ -48,8 +48,7 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
       : 'https://syncalkemy.ca'
   }
 
-  const APIBaseURL = getApiBaseUrl()
-    
+  const APIBaseURL = getApiBaseUrl()    
 
   const api = axios.create({
     baseURL: APIBaseURL,
