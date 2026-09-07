@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from "@react-native-vector-icons/ionicons";
 import { Link, Tabs } from 'expo-router';
 import { Image, Pressable, View, Text, StyleSheet } from 'react-native';
 
