@@ -12,6 +12,8 @@ import catcher from '@/functions/catcher';
 import { usePalette } from '@/contextes/contextePalette';
 import { useFont } from '@/contextes/contexteFont';
 import { router } from 'expo-router';
+import ToastAbs from '@/abstractions/toastAbs';
+import { toastTypes } from '@/constants/toastConfig';
 
 export default function AddFriendForm() {
     const { colors } = usePalette()
@@ -38,8 +40,8 @@ export default function AddFriendForm() {
             );
 
             if (response.status === 201) {
-                Toast.show({
-                    type: 'persoSucces',
+                ToastAbs.show({
+                    type: toastTypes.success,
                     text1: 'demande d\'ami envoyée',
                     text2: 'je sens que c\'est le début d\'un lien unique, presque magique!',
                     autoHide: true,

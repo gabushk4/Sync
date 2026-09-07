@@ -9,6 +9,8 @@ import catcher from '@/functions/catcher'
 import Toast from 'react-native-toast-message'
 import { useFont } from '@/contextes/contexteFont'
 import log from '@/functions/log'
+import ToastAbs from '@/abstractions/toastAbs'
+import { toastTypes } from '@/constants/toastConfig'
 
 type Props = {
     intro: string;
@@ -35,9 +37,9 @@ export default function DemandeConfirmerCourriel({intro} : Props){
                 }
             })
             if(reponse.status == 200)
-                Toast.show({
-                    type:'persoSucces',
-                    text2:'courriel envoyé'
+                ToastAbs.show({
+                    type: toastTypes.success,
+                    text2: 'courriel envoyé'
                 })
         } catch (error) {
             catcher(error, "erreur à l'envoie")

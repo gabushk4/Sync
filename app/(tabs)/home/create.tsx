@@ -23,6 +23,8 @@ import formaterDatePourServeur from "@/functions/formaterDatePourServeur";
 import { convertirLocalVersUTC } from "@/functions/convertirUTCenLocal";
 import { DateTime } from "luxon";
 import { Participant } from "@/types/invites";
+import { toastTypes } from "@/constants/toastConfig";
+import ToastAbs from "@/abstractions/toastAbs";
 
 export default function CreateEvent({ }) {
     const { colors } = usePalette()
@@ -84,8 +86,8 @@ export default function CreateEvent({ }) {
                 )
 
                 if (response.status == 201) {
-                    Toast.show({
-                        type: 'persoSucces',
+                    ToastAbs.show({
+                        type: toastTypes.success,
                         text1: 'évènement ajouté',
                         text2: 'tu peux te détendre, c\'est enregistré',
                         autoHide: true,
@@ -93,7 +95,7 @@ export default function CreateEvent({ }) {
                     router.replace('/(tabs)/home')
                 }
             } else {
-                Toast.show({ type: 'persoErreur', text2: errorMessage })
+                ToastAbs.show({ type: toastTypes.error, text2: errorMessage })
             }
         } catch (error: any) {
             catcher(error, 'erreur lors de l\'upload')

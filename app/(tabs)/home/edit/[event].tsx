@@ -18,6 +18,8 @@ import EventForm, { EventFormHandle } from '@/components/eventForm'
 import { usePalette } from '@/contextes/contextePalette'
 import { useAPI } from '@/contextes/contexteAPI'
 import { DateTime } from 'luxon'
+import { toastTypes } from '@/constants/toastConfig'
+import ToastAbs from '@/abstractions/toastAbs'
 
 export default function EditEvent() {
     const { api } = useAPI()
@@ -145,8 +147,8 @@ export default function EditEvent() {
             })
 
             if (reponse.status === 201) {
-                Toast.show({
-                    type: 'persoSucces',
+                ToastAbs.show({
+                    type: toastTypes.success,
                     text1: 'Évènement modifié',
                     text2: `Champs modifiés : ${champsModifies.join(', ')}`,
                 })

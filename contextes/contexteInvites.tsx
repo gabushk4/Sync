@@ -5,6 +5,7 @@ import log from "@/functions/log";
 import React, { createContext, useContext, useState } from 'react';
 import Toast from "react-native-toast-message";
 import { InviterUrl, SupprimerUrl, Participant } from "@/types/invites";
+import ToastAbs from "@/abstractions/toastAbs";
 
 type InvitesContextValue = {
     invites: Participant[]
@@ -54,7 +55,7 @@ export const InvitesProvider: React.FC<React.PropsWithChildren<{}>> = ({ childre
                 const response = await api.post(url, {participants: invitations})
                 log('ajouterInvite res:', response.data)
 
-                Toast.show({
+                ToastAbs.show({
                     type: 'persoSucces',
                     text1: 'invitations envoyées',
                     text2: text2Str,
@@ -89,7 +90,7 @@ export const InvitesProvider: React.FC<React.PropsWithChildren<{}>> = ({ childre
             try {
                 const response = await api.delete(`${supprimerUrl}/${inviteSupp.id}`)
                 if(response.status == 200){
-                    Toast.show({
+                    ToastAbs.show({
                         type: 'persoSucces',
                         text2: response.data?.message,
                     })

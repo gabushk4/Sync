@@ -1,7 +1,7 @@
 import ToastAbs from "@/abstractions/toastAbs"
 import log from "./log"
 import { useModal } from "../contextes/contexteModals"
-import {customToasts} from "@/constants/toastConfig"
+import {toastTypes} from "@/constants/toastConfig"
 
 export default function catcher(error, titre='erreur'){   
     //const {ouvirModal} = useModal()
@@ -58,7 +58,7 @@ export default function catcher(error, titre='erreur'){
     if(error.response){
       log('Erreur serveur', /* error.response.data */)
         ToastAbs.show({
-          type:customToasts.error,
+          type:toastTypes.error,
           text1:titre,
           text2:error.response.data.message??message,
           position:'top',
@@ -68,7 +68,7 @@ export default function catcher(error, titre='erreur'){
     }else{  
       log('catcher toast erreur')      
       ToastAbs.show({
-        type:customToasts.error,
+        type:toastTypes.error,
         text1:titre,
         text2:message,
         position:'top',

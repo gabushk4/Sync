@@ -5,6 +5,8 @@ import Toast from 'react-native-toast-message'
 import { usePalette } from '@/contextes/contextePalette'
 import { useFont } from '@/contextes/contexteFont'
 import Icon from "@react-native-vector-icons/ionicons";
+import ToastAbs from '@/abstractions/toastAbs'
+import { toastTypes } from '@/constants/toastConfig'
 
 type Props = {
     code: string;
@@ -20,8 +22,8 @@ export default function MemberCode({ code, size = 16 } : Props) {
             style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}
             onPress={() => {
                 Clipboard.setStringAsync(code)
-                Toast.show({
-                    type: 'persoSucces',
+                ToastAbs.show({
+                    type: toastTypes.success,
                     text1: 'ajouté au presse-papier',
                     text2: code
                 })

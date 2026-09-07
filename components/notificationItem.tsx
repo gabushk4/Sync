@@ -22,6 +22,8 @@ import { withSpringConfig, withTimingConfig } from "@/constants/ReanimatedConfs"
 import Icon from "@react-native-vector-icons/ionicons";
 import AppIcon from "@/svgs/appIcon"
 import { Gesture } from "react-native-gesture-handler"
+import ToastAbs from "@/abstractions/toastAbs"
+import { toastTypes } from "@/constants/toastConfig"
 
 type Action = {
     label: string
@@ -111,8 +113,8 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
 
             if (response.status === 200) {
                 notifRefresh?.forceRefresh()
-                Toast.show({
-                    type: "persoSucces",
+                ToastAbs.show({
+                    type: toastTypes.success,
                     text2: response.data.message,
                 })
             }

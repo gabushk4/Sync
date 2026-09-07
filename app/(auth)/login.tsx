@@ -24,6 +24,8 @@ import {LinkAbs, createLinkStyles} from '@/abstractions/linkAbs';
 import { useAuth } from '@/contextes/contexteAuth';
 import ServerStatus from '@/components/serverStatus';
 import { MOCK_MODE_AVAILABLE, useMockMode } from '@/contextes/contexteMockMode';
+import { toastTypes } from '@/constants/toastConfig';
+import ToastAbs from '@/abstractions/toastAbs';
 
 export default function ConnexionEcran(){
     const largeur = Dimensions.get("window").width - 32
@@ -66,9 +68,9 @@ export default function ConnexionEcran(){
             const { access_token, refresh_token } = response.data;
             await signIn(access_token, refresh_token); 
 
-            Toast.show({
-            type: 'persoSucces',
-            text1: `bienvenue ${pseudo}`,
+            ToastAbs.show({
+                type: toastTypes.success,
+                text1: `bienvenue ${pseudo}`,
             });
         } catch (error: any) {
             log('Erreur connexion:', error.message);

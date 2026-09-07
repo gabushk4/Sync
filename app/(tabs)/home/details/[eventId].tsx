@@ -25,6 +25,8 @@ import { defaultEvent, Event } from "@/types/calendar";
 import { UrlDescriptor } from "@/types/url";
 import Icon from "@react-native-vector-icons/ionicons";
 import { DateTime } from "luxon";
+import { toastTypes } from "@/constants/toastConfig";
+import ToastAbs from "@/abstractions/toastAbs";
 
 export default function Details(){
     const { colors } = usePalette()
@@ -106,8 +108,8 @@ export default function Details(){
 
             log('evenements supprimé', reponse.status)
 
-            Toast.show({
-                type:'persoSucces',
+            ToastAbs.show({
+                type:toastTypes.success,
                 text1:'effacé',
                 text2:'on l\'a bien rangé là où personne ne regarde; rangé quoi? aucune idée',
                 position:'top'
@@ -128,8 +130,8 @@ export default function Details(){
                 }
             })
             if(reponse.status === 201){
-                Toast.show({
-                    type:'persoSucces',
+                ToastAbs.show({
+                    type:toastTypes.success,
                     text2:reponse.data.message
                 })
                 router.back()

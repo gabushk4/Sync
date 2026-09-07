@@ -18,6 +18,8 @@ import { useHeaderHeight } from '@/contextes/contexteHeader';
 import catcher from '@/functions/catcher';
 import { router } from 'expo-router';
 import BetaTag from '@/components/betaTag';
+import { toastTypes } from "@/constants/toastConfig";
+import ToastAbs from "@/abstractions/toastAbs";
 
 export default function InscriptionEcran({
     
@@ -103,10 +105,10 @@ export default function InscriptionEcran({
             })
             
             if(response.status == 201){
-                Toast.show({
-                    type:'persoSucces',
-                    text1:'inscription réussie',
-                    text2:'bienvenue à toi, tu fais parti de quelque chose de grand!'
+                ToastAbs.show({
+                    type: toastTypes.success,
+                    text1: 'inscription réussie',
+                    text2: 'bienvenue à toi, tu fais parti de quelque chose de grand!'
                 })
             }
             setTimeout(()=>{
