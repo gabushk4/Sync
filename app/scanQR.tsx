@@ -18,7 +18,7 @@ import { useFont } from '@/contextes/contexteFont';
 import catcher from '@/functions/catcher';
 import log from '@/functions/log';
 import { router } from 'expo-router';
-import {toastConfig, customToasts} from '@/constants/toastConfig';
+import {toastConfig, toastTypes} from '@/constants/toastConfig';
 
 interface QRCodeData {
   method: 'get' | 'post' | 'put' | 'delete' | 'patch';
@@ -209,7 +209,7 @@ export default function ScannerQRCode(): React.ReactElement {
 
         if (!notifFeedback.notif_sent) {
           ToastAbs.show({
-            type: customToasts.warning,
+            type: toastTypes.warning,
             text1: 'notification non envoyée',
             text2: notifFeedback.message
           })
@@ -242,7 +242,7 @@ export default function ScannerQRCode(): React.ReactElement {
             color: colors.text,
           }}
         >
-          Demande permission caméra... Si tu as accepté, ça peut prendre du temps avant de se
+          Permission d'usage de la caméra non-accordée... Si tu as accepté, ça peut prendre du temps avant de se
           mettre à jour; il faut être patient: attente({secondes}s/20s)
         </Text>
       </View>

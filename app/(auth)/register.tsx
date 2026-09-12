@@ -20,6 +20,7 @@ import { router } from 'expo-router';
 import BetaTag from '@/components/betaTag';
 import { toastTypes } from "@/constants/toastConfig";
 import ToastAbs from "@/abstractions/toastAbs";
+import KeyboardDismisser from "@/abstractions/keyboardDismisser";
 
 export default function InscriptionEcran({
     
@@ -247,12 +248,12 @@ export default function InscriptionEcran({
     })
 
     return (
-        <Pressable
-            style={{flex:1}}
+        <KeyboardDismisser
             onPress={() => {
-                if (refScrollView.current)
-                    refScrollView.current?.scrollTo({ y: 0, animated: true }) 
-                Keyboard.dismiss()                
+                const ref = refScrollView.current
+                if (ref != null) {
+                    ref.scrollTo({y:0, animated:true})
+                }
             }}
         >
             <KeyboardAvoidingView
@@ -457,7 +458,7 @@ export default function InscriptionEcran({
                     </View>
             </ScrollView>        
             </KeyboardAvoidingView>
-        </Pressable>
+        </KeyboardDismisser>
     );
     
 }
