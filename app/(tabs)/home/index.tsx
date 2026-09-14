@@ -1,28 +1,24 @@
 import { useAPI } from '@/contextes/contexteAPI';
 import { useGestionScroll } from '@/contextes/contexteGestionListes';
 import { usePalette } from '@/contextes/contextePalette';
-import { useRouteAbs } from '@/contextes/contexteRoute';
-import { useAccessToken } from '@/contextes/contexteToken';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useModal } from '@/contextes/contexteModals'
 
 import { useNavFab } from '@/hooks/useNavFAB';
 import { router, useFocusEffect } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Animated, { ReduceMotion, scrollTo, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue, withDecay, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DateTime } from 'luxon';
 
 import { Dimensions, Easing, Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { getCommonFreeSlots } from '@/functions/availability';
 import catcher from '@/functions/catcher';
 import { convertirLocalVersUTC, convertirUTCversLocale } from '@/functions/convertirUTCenLocal';
 import formaterDatePourServeur from '@/functions/formaterDatePourServeur';
 import log from '@/functions/log';
-import {getCommonFreeSlots} from '@/functions/availability'
 
 
 import EventsList from '@/components/eventsList';
@@ -35,11 +31,10 @@ import { useTimeline } from '@/contextes/contexteTimeline';
 
 //dummy datas
 //import {seedData} from '@/seed'
-import { BlurView } from 'expo-blur';
-import AutoRefresh from '@/functions/autoRefresh';
-import { AxiosResponse } from 'axios';
-import { Event, Friend } from '@/types/calendar';
 import { withSpringConfig } from '@/constants/ReanimatedConfs';
+import AutoRefresh from '@/functions/autoRefresh';
+import { Friend } from '@/types/calendar';
+import { BlurView } from 'expo-blur';
 
 //Constants
 const WIDTH_COL = 80;
@@ -52,15 +47,13 @@ const LIST_HEIGHT = 104
 const { width: WIN_W, height: WIN_H } = Dimensions.get('window') 
 
 export default function Home() {
+  const { t, i18n } = useTranslation('home')
   const { colors } = usePalette()
   const { fonts } = useFont()
-  const { getToken } = useAccessToken()
-  const { ajouterEcran } = useRouteAbs() 
   const { api } = useAPI()
   const colorScheme = useColorScheme()
   const { initialiserOffset, afficherRetourMaintenant, onPan, offset: offsetX, LEFT_GO_TO_BEFORE, LEFT_GO_TO_AFTER } = useGestionScroll()
   const { pxHeures, pxHeuresShared, L_HEURES } = useTimeline();
-  const insets = useSafeAreaInsets()
   const { membre } = useMembre()
 
   const MAX_OFFSET_X = (24.78 * (pxHeures + L_HEURES)) - WIN_W
@@ -167,7 +160,7 @@ export default function Home() {
         setUserEvents(evenementsFinal)
       }
     } catch (error) {
-      catcher(error, 'erreur en formattant les évènements du membre')
+      catcher(error, t('errors.formatMemberEvents'))
     }
   }
 
@@ -219,7 +212,7 @@ export default function Home() {
         evAmisOffset.value -= 1
     } catch (error) {
       setChargementEchec(true)
-      catcher(error, 'erreur en formattant les evenements d\'amis')
+      catcher(error, t('errors.formatFriendEvents'))
     }
   }
 
@@ -357,7 +350,7 @@ export default function Home() {
         onData: modifierEvenementsMembreFetched,
         onError: (error) => {
           log("impossible de charger les évènements du membre", error)
-          catcher(error, "impossible de charger les évènements du membre")
+          catcher(error, t('errors.loadMemberEvents'))
         }
       })
 
@@ -369,7 +362,7 @@ export default function Home() {
         onData: modifierEvenementsAmisFetched,
         onError: (error) => {
           log("impossible de charger les évènements d'amis", error)
-          catcher(error, "impossible de charger les évènements d'amis")
+          catcher(error, t('errors.loadFriendEvents'))
         }
       })      
 
@@ -517,7 +510,7 @@ export default function Home() {
             {friends.length === 0 ? (
               <View style={s.addFriendPlaceholderContainer}>
                 <Text style={s.addFriendPlaceholderText}>
-                    ajoutes des amis ici:
+                  {t('friendsListEmptyState')}
                 </Text>
                 <TouchableOpacity onPress={()=>{
                     router.push('/(modals)/ajouterAmi')
@@ -602,7 +595,7 @@ export default function Home() {
           </TouchableOpacity>
           <View style={{padding:8, backgroundColor:colors.primary, borderWidth:1, borderColor:colors.border, borderRadius:8}}>
             <Text style={{ color: colors.text, fontFamily:fonts.title }}>
-              {todayDateTime?.setLocale('fr').toFormat('d MMM')} 
+              {todayDateTime?.setLocale(i18n.language).toFormat('d MMM')} 
             </Text>
           </View>
           <TouchableOpacity style={s.arrow} onPress={avancerDate}>
@@ -625,7 +618,7 @@ export default function Home() {
           <TouchableOpacity onPress={retourMaintenant} style={s.backToNowInner}>
             <Text style={{ color: colors.text, fontSize: 12 }}>
               {currentTime?.day !== todayDateTime?.day
-                ? currentTime?.toFormat('d MMM')
+                ? currentTime?.setLocale(i18n.language).toFormat('d MMM')
                 : currentTime?.toFormat('HH:mm')}
             </Text>
           </TouchableOpacity>

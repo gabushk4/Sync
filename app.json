@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "sync",
-    "userInterfaceStyle": "automatic",    
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true
     },
@@ -30,7 +30,8 @@
       "expo-font",
       "expo-secure-store",
       "expo-splash-screen",
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true

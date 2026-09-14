@@ -1,8 +1,9 @@
 import RequestStatus from "@/components/requestStatus";
 import { Stack } from "expo-router";
-import { View } from "react-native";
+import { useTranslation } from 'react-i18next';
 
 export default function FeedLayout() {
+    const { t } = useTranslation('feed')
     return (
         <Stack
             screenOptions={{
@@ -10,7 +11,7 @@ export default function FeedLayout() {
             }}
         >
             <Stack.Screen
-                name="index" options={{headerTitle:"fil d'actualités"}}
+                name="index" options={{headerTitle:t('navigation.title')}}
             />
         </Stack>
     )

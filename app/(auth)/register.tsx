@@ -1,7 +1,7 @@
-import { useFocusEffect, useNavigation } from "expo-router/react-navigation";
+import { useFocusEffect } from "expo-router/react-navigation";
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Dimensions, Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
-import Toast from 'react-native-toast-message';
+import { useTranslation } from 'react-i18next';
+import { Dimensions, Image, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
 //import getUniqueId from 'react-native-device-info'
 
 import { useAPI } from '@/contextes/contexteAPI';
@@ -11,20 +11,20 @@ import { useRouteAbs } from '@/contextes/contexteRoute';
 import log from '@/functions/log';
 
 import Haptics from '@/abstractions/haptics.js';
+import KeyboardDismisser from "@/abstractions/keyboardDismisser";
 import { LinkAbs } from '@/abstractions/linkAbs';
 import TextInputAbs from '@/abstractions/textInputAbs';
+import ToastAbs from "@/abstractions/toastAbs";
+import BetaTag from '@/components/betaTag';
 import ServerStatus from '@/components/serverStatus';
-import { useHeaderHeight } from '@/contextes/contexteHeader';
+import { toastTypes } from "@/constants/toastConfig";
 import catcher from '@/functions/catcher';
 import { router } from 'expo-router';
-import BetaTag from '@/components/betaTag';
-import { toastTypes } from "@/constants/toastConfig";
-import ToastAbs from "@/abstractions/toastAbs";
-import KeyboardDismisser from "@/abstractions/keyboardDismisser";
 
 export default function InscriptionEcran({
     
 }){
+    const { t } = useTranslation('auth')
     const courrRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
     const mdpLong = 12
     const largeur = Dimensions.get("window").width - 32
@@ -108,8 +108,8 @@ export default function InscriptionEcran({
             if(response.status == 201){
                 ToastAbs.show({
                     type: toastTypes.success,
-                    text1: 'inscription réussie',
-                    text2: 'bienvenue à toi, tu fais parti de quelque chose de grand!'
+                    text1: t('register.successTitle'),
+                    text2: t('register.successMessage')
                 })
             }
             setTimeout(()=>{
@@ -117,7 +117,7 @@ export default function InscriptionEcran({
             }, 300)    
           } catch (error : any) {
             log('Erreur inscription :', error.message)
-            catcher(error, 'erreur à l\'inscription')
+            catcher(error, t('errors.registerFailed'))
           }
     }    
 
@@ -265,8 +265,7 @@ export default function InscriptionEcran({
                 <View style={s.disclaimerContainer}>
                     <BetaTag/>
                     <Text style={s.disclaimerText}>
-                        Utilisez un mot de passe différent de vos autres comptes pour éviter toute fuite.
-                        Choisissez un pseudo sans informations personnelles eg.: nom, prénom, etc.
+                        {t('register.passwordDisclaimer')}
                     </Text>
                 </View>        
                     <ScrollView
@@ -283,7 +282,7 @@ export default function InscriptionEcran({
                         onLayout={(e) => {
                             inputPositions.current.pseudo = e.nativeEvent.layout.y
                         }}
-                        placeholder='pseudo'
+                        placeholder={t('register.usernamePlaceholder')}
                         returnKeyType='next'
                         value={pseudo}
                         onChangeText={(text)=>setPseudo(text)}
@@ -299,7 +298,7 @@ export default function InscriptionEcran({
                     <TextInputAbs
                         ref={refCourriel}
                         style={{borderColor:courrielValide?colors.border:colors.error, width: largeur}}
-                        placeholder='courriel | courr@exemple.com'
+                        placeholder={t('register.emailPlaceholder')}
                         returnKeyType='next'
                         onChangeText={(text) =>{
                             setCourriel(text); 
@@ -328,7 +327,7 @@ export default function InscriptionEcran({
                             autoComplete='new-password'
                             textContentType='newPassword'
                             returnKeyType='next'
-                            placeholder='mot de passe'
+                            placeholder={t('register.passwordPlaceholder')}
                             onFocus={()=>{
                                 setShowPassRules(true)
                                 scrollToInput('pass')
@@ -390,18 +389,18 @@ export default function InscriptionEcran({
                     {showPassRules && 
                         <View style={s.passRules}
                         >
-                            <Text id='longMinText' style={[s.invalid, mdpLongValide && s.valid]}>Long. min: {mdpLong}</Text>
+                            <Text id='longMinText' style={[s.invalid, mdpLongValide && s.valid]}>{t('register.passwordMinLength', { length: mdpLong })}</Text>
                             <View style={[s.separateur, {backgroundColor:colors.text}]}></View>
-                            <Text id='carSpeciauxText' style={[s.invalid, mdpCarSpeciauxValide && s.valid]}>Car. Spéciaux</Text>
+                            <Text id='carSpeciauxText' style={[s.invalid, mdpCarSpeciauxValide && s.valid]}>{t('register.specialCharacters')}</Text>
                             <View style={[s.separateur, {backgroundColor:colors.text}]}></View>
-                            <Text id='majMinText' style={[s.invalid, mdpMinMajValide && s.valid]}>Maj. et min.</Text>        
+                            <Text id='majMinText' style={[s.invalid, mdpMinMajValide && s.valid]}>{t('register.upperAndLowercase')}</Text>        
                         </View>
                     }
                     <TextInputAbs
                         ref={refMdp2}
                         style={ {borderColor:pass2Valid?colors.border:colors.error, width:largeur}}
                         returnKeyType='done'
-                        placeholder='confirmation du mot de passe'
+                        placeholder={t('register.confirmPasswordPlaceholder')}
                         onChangeText={(pass2)=>{
                             if(pass2 === pass){
                                 setPass2Valid(true)
@@ -428,7 +427,7 @@ export default function InscriptionEcran({
                     />
                     {showPass2Rule && 
                             <View style={s.passRules}>
-                            <Text id='mdp2valide' style={[{textAlign:'center', width:'100%'}, s.invalid, pass2Valid && s.valid]}>Les mots de passes {!pass2Valid?"ne sont pas":"sont" } identiques</Text>      
+                            <Text id='mdp2valide' style={[{textAlign:'center', width:'100%'}, s.invalid, pass2Valid && s.valid]}>{t(pass2Valid ? 'register.passwordsMatch' : 'register.passwordsDoNotMatch')}</Text>      
                         </View>
                     }
                     <View style={s.boutonConteneur}>
@@ -439,7 +438,7 @@ export default function InscriptionEcran({
                                 setPass2('')
                             }}
                         >
-                            <Text style={{color:colors.text, fontSize:18, fontFamily:fonts.body}}>annuler</Text>
+                            <Text style={{color:colors.text, fontSize:18, fontFamily:fonts.body}}>{t('register.cancel')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[s.button, {backgroundColor:isInactive?'transparent':colors.secondary, }]} 
                             disabled={isInactive}
@@ -447,13 +446,13 @@ export default function InscriptionEcran({
                                 inscrire()
                             }}>
                             <Text style={{color:isInactive?colors.muted:colors.text, fontSize:18, fontFamily:fonts.body}}>
-                                s'inscrire
+                                {t('register.submit')}
                             </Text>
                         </TouchableOpacity>
                     </View>
                     <View style={{ width:'100%', height:24, alignItems:'center'}}>
                         <LinkAbs href={'/(auth)/login'}>
-                            Déjà inscrit?
+                            {t('register.alreadyRegistered')}
                         </LinkAbs>
                     </View>
             </ScrollView>        

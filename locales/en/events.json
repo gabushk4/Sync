@@ -1,0 +1,62 @@
+{
+  "navigation": {
+    "create": "Create an event",
+    "details": "Details",
+    "edit": "Edit"
+  },
+  "details": {
+    "recurringEditTitle": "Edit recurring event",
+    "recurringEditMessage": "Do you want to edit the event series or only this occurrence?",
+    "editSeries": "The series",
+    "editOccurrence": "This occurrence",
+    "deletedTitle": "Deleted",
+    "deletedMessage": "It has been filed away where nobody looks; what was filed? No idea."
+  },
+  "edit": {
+    "defaultError": "Unable to edit the event",
+    "titleTooShort": "The title must be at least 4 characters long",
+    "validationErrorTitle": "Error editing the event",
+    "updatedTitle": "Event updated",
+    "modifiedFields": "Modified fields: {{fields}}"
+  },
+  "create": {
+    "unknownError": "Unknown error",
+    "titleTooShort": "The title must be more than 4 characters long; title: {{title}}",
+    "createdTitle": "Event added",
+    "createdMessage": "You can relax, it has been saved"
+  },
+  "form": {
+    "titlePlaceholder": "title...",
+    "descriptionPlaceholder": "description...",
+    "showMore": "more",
+    "dateFrom": "from",
+    "dateTo": "to",
+    "recurrenceLabel": "recurrence",
+    "repeatedUntil": "event repeats every {{unit}} until:",
+    "private": "private",
+    "public": "public",
+    "participants": "participants"
+  },
+  "recurrence": {
+    "never": "never",
+    "daily": "daily",
+    "weekly": "weekly",
+    "monthly": "monthly",
+    "yearly": "yearly",
+    "units": {
+      "daily": "days",
+      "weekly": "weeks",
+      "monthly": "months",
+      "yearly": "years"
+    }
+  },
+  "errors": {
+    "deleteFailed": "Error deleting the event",
+    "leaveFailed": "Unable to leave the event",
+    "loadFailed": "Error loading the event",
+    "updateFailed": "Error updating the event",
+    "createFailed": "Error while creating the event",
+    "participantLoadFailed": "Unable to load participant {{id}}",
+    "participantsLoadFailed": "Error loading participants"
+  }
+}

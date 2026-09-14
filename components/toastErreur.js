@@ -1,10 +1,11 @@
-import React from "react";
-import {View, Text, StyleSheet, Animated, Image, useColorScheme} from 'react-native';
-import { usePalette } from "@/contextes/contextePalette";
-import { useFont } from "@/contextes/contexteFont";
 import Haptics from "@/abstractions/haptics";
+import { useFont } from "@/contextes/contexteFont";
+import { usePalette } from "@/contextes/contextePalette";
+import { useTranslation } from 'react-i18next';
+import { Image, Text, useColorScheme, View } from 'react-native';
 
 export default function ToastErreur({text1, text2, ...rest}){
+    const { t } = useTranslation()
     const { colors } = usePalette();
     const { fonts } = useFont();
     const colorScheme = useColorScheme()
@@ -27,8 +28,8 @@ export default function ToastErreur({text1, text2, ...rest}){
                     />
                 </View>
                 <View style={{flexDirection:'column', alignItems:'flex-start', width:'80%', height:'100%', padding:4}}>
-                    <Text style={{color:colors.error, fontFamily:fonts.title, fontSize:20,}}>{text1?text1:'erreur'}</Text>
-                    <Text style={{color:colors.text, fontFamily: fonts.body, fontSize:16,}}>{text2?text2:'une erreur sans message est survenue'}</Text>
+                    <Text style={{color:colors.error, fontFamily:fonts.title, fontSize:20,}}>{text1?text1:t('common:toast.error')}</Text>
+                    <Text style={{color:colors.text, fontFamily: fonts.body, fontSize:16,}}>{text2?text2:t('common:toast.errorWithoutMessage')}</Text>
                 </View>                
             </View>
             <View style={{height:'20%', width:'100%', backgroundColor:  colors.primary, alignItems:'center', flexDirection:'row', justifyContent:'center'}}>
@@ -37,7 +38,7 @@ export default function ToastErreur({text1, text2, ...rest}){
                     style={{height:'90%', width:24}}
                     resizeMode="contain"
                 />
-                <Text style={{color:colors.muted, fontFamily:fonts.body, fontSize:14}}>pour signaler un bug!</Text>
+                <Text style={{color:colors.muted, fontFamily:fonts.body, fontSize:14}}>{t('common:toast.reportBug')}</Text>
             </View>
         </View>
     )

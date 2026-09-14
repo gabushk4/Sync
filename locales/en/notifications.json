@@ -1,0 +1,20 @@
+{
+	"types": {
+		"amis": "friends",
+		"sync": "sync",
+		"evenements": "events"
+	},
+	"expiration": {
+		"label": "expiration",
+		"expired": "expired"
+	},
+	"list": {
+		"emptyState": "There's nothing for you...\nTake this moment for yourself!",
+		"deselect": "Deselect",
+		"unread": "Unread"
+	},
+	"errors": {
+		"actionFailed": "Error performing the action",
+		"deleteFailed": "Unable to delete notification"
+	}
+}

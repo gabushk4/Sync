@@ -1,0 +1,37 @@
+{
+	"friendRequestSentTitle": "Friend request sent",
+	"friendRequestSentMessage": "I have a feeling this is the beginning of a unique, almost magical bond!",
+	"copiedToClipboard": "Copied to clipboard"
+	,"signOut": {
+		"title": "Sign out",
+		"confirmation": "Do you really want to sign out?",
+		"confirm": "Yes"
+	},
+	"loading": "Loading",
+	"serverWaking": "Please wait; the server is taking a while to wake up",
+	"returnToLogin": "Return to login",
+	"serverStatus": "Server status",
+	"toast": {
+		"success": "Success!",
+		"error": "Error",
+		"errorWithoutMessage": "An error occurred without a message",
+		"reportBug": "Report a bug!",
+		"warning": "Warning",
+		"warningWithoutMessage": "A warning occurred without a message"
+	},
+	"tabs": {
+		"home": "Sync",
+		"feed": "Feed",
+		"feedTitle": "News feed",
+		"inbox": "Messages",
+		"inboxTitle": "Conversations",
+		"profile": "Profile",
+		"profileTitle": "Profile"
+	},
+	"demo": {
+		"modalTitle": "Modal",
+		"openCode": "Open up the code for this screen:",
+		"changeText": "Change any of the text, save the file, and your app will automatically update.",
+		"reloadHelp": "Tap here if your app doesn't automatically update after making changes"
+	}
+}

@@ -1,12 +1,11 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { usePalette } from '@/contextes/contextePalette';
-import PingServeur from './pingServeur';
-import { useAPI } from '@/contextes/contexteAPI';
-import { useMembre } from '@/contextes/contexteMembre';
 import { useFont } from '@/contextes/contexteFont';
+import { usePalette } from '@/contextes/contextePalette';
+import { useTranslation } from 'react-i18next';
+import { StyleSheet, Text, View } from 'react-native';
+import PingServeur from './pingServeur';
 
 export default function ServerStatus() { 
+    const { t } = useTranslation();
     const { colors } = usePalette();
     const { fonts } = useFont();
 
@@ -32,7 +31,7 @@ export default function ServerStatus() {
 
     return (
         <View style={s.container}>
-            <Text style={s.title}>Statut du serveur {process.env.NODE_ENV == 'development'?`dev using remote {${process.env.EXPO_PUBLIC_USING_REMOTE}}`:''}</Text>
+            <Text style={s.title}>{t('common:serverStatus')}{process.env.NODE_ENV == 'development'?` dev using remote {${process.env.EXPO_PUBLIC_USING_REMOTE}}`:''}</Text>
             <View style={s.status}>
                 <PingServeur/>
             </View>

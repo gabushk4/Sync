@@ -1,26 +1,23 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet, Platform, useColorScheme, FlatList, RefreshControl } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, { useAnimatedStyle, useSharedValue, withReanimatedTimer, withRepeat, withSequence, withSpring, withTiming } from "react-native-reanimated";
 import { useFocusEffect, useIsFocused } from "expo-router/react-navigation";
-import axios, { AxiosResponse } from "axios";
-import Toast from "react-native-toast-message";
-import { DateTime } from "luxon";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from 'react-i18next';
+import { FlatList, Image, RefreshControl, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
+import Animated, { useAnimatedStyle, withRepeat, withSpring, withTiming } from "react-native-reanimated";
 
-import { usePalette } from "@/contextes/contextePalette";
-import { useNotifications, Notification } from "@/contextes/contexteNotifications";
-import { useFont } from "@/contextes/contexteFont";
 import { useAPI } from "@/contextes/contexteAPI";
+import { useFont } from "@/contextes/contexteFont";
+import { Notification, useNotifications } from "@/contextes/contexteNotifications";
+import { usePalette } from "@/contextes/contextePalette";
 import { useAccessToken } from "@/contextes/contexteToken";
 
-import catcher from '@/functions/catcher'
-import log from "@/functions/log";
 
 import NotificationItem from "@/components/notificationItem";
-import Spinner from "@/svgs/spinner";
 import { withTimingConfig } from "@/constants/ReanimatedConfs";
+import Spinner from "@/svgs/spinner";
 
 export default function NotificationsList({}){
+    const { t } = useTranslation('notifications')
     const { colors } = usePalette()
     const { fonts } = useFont() 
     const colorScheme = useColorScheme()
@@ -30,7 +27,7 @@ export default function NotificationsList({}){
     const {APIBaseURL, api} = useAPI()
     const {getToken} = useAccessToken()
 
-    const rienTexte = "y'a rien pour toi...\nalors prends ce moment pour toi!"
+    const rienTexte = t('list.emptyState')
 
     const icones = {
         corbeille: colorScheme === 'dark' ?require('@/assets/icones/corbeille-dark-icon.png'):require('@/assets/icones/corbeille-light-icon.png'),
@@ -148,7 +145,7 @@ export default function NotificationsList({}){
                 }}
             >
                 {selectionner &&<Text style={{color:colors.muted, fontSize:14, }}>
-                    déselectionner
+                    {t('list.deselect')}
                 </Text>}
             </TouchableOpacity>
             <LinearGradient
@@ -202,7 +199,7 @@ export default function NotificationsList({}){
                     }}
                 >
                     <Text style={[s.titreCategorie, {color:colors.text, fontFamily:fonts.title, }]}>
-                        sync
+                        {t('types.sync')}
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[s.conteneurCategorie, { borderColor:colors.border, backgroundColor:filtreSelec === 'amis'?colors.secondary:colors.primary}]}
@@ -218,7 +215,7 @@ export default function NotificationsList({}){
                     }}
                 >
                     <Text style={[s.titreCategorie, {color:colors.text, fontFamily:fonts.title, }]}>
-                        amis
+                        {t('types.amis')}
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[s.conteneurCategorie, { borderColor:colors.border, backgroundColor:filtreSelec === 'evenements'?colors.secondary:colors.primary}]}
@@ -234,7 +231,7 @@ export default function NotificationsList({}){
                     }}
                 >
                     <Text style={[s.titreCategorie, {color:colors.text, fontFamily:fonts.title, }]}>
-                        evenements
+                        {t('types.evenements')}
                     </Text>
                 </TouchableOpacity>                
                 <TouchableOpacity style={[s.conteneurCategorie, { borderColor:colors.border, backgroundColor:filtreSelec==='non_lues'?colors.secondary:colors.primary}]}
@@ -250,7 +247,7 @@ export default function NotificationsList({}){
                     }}
                 >
                     <Text style={[s.titreCategorie, {color:colors.text, fontFamily:fonts.title, }]}>
-                        non-lues
+                        {t('list.unread')}
                     </Text>
                 </TouchableOpacity>
                     <View style={{position:'absolute', right:2, top:0, height:20, width:20, backgroundColor:colors.error, borderRadius:100, justifyContent:'center', alignItems:'center'}}>

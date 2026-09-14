@@ -1,0 +1,32 @@
+{
+	"list": {
+		"title": "Friends",
+		"invite": "Invite",
+		"friendSince": "friend since {{date}}",
+		"emptyState": "Add friends using the option:"
+	},
+	"add": {
+		"codeLabel": "Friend code",
+		"scanLabel": "Scan a QR code"
+	},
+	"tabs": {
+		"addFriend": "Add a friend",
+		"qrCode": "My QR code"
+	},
+	"emailConfirmation": {
+		"friendRequestsIntro": "before sending friend requests",
+		"title": "Confirm your email",
+		"existenceMessage": "I need to make sure you exist...",
+		"checkInbox": "Check your inbox for a confirmation request (you really only need to click a button)",
+		"emailRegistered": "Registered email:",
+		"notReceived": "Didn't receive it? Tap here to resend an email",
+		"resend": "Resend email",
+		"sent": "Email sent"
+	},
+	"errors": {
+		"loadFailed": "Error while getting friends",
+		"deleteFailed": "Unable to delete friend",
+		"requestFailed": "The request could not be sent",
+		"emailFailed": "Error sending email"
+	}
+}

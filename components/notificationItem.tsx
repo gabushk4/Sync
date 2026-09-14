@@ -1,29 +1,29 @@
-import React, { useEffect, useRef, useState } from "react"
-import { View, Text, TouchableOpacity, Image, StyleSheet, Platform, useColorScheme } from "react-native"
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated"
-import axios from "axios"
-import Toast from "react-native-toast-message"
-import { DateTime } from "luxon"
+import axios from "axios";
+import { DateTime } from "luxon";
+import { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
+import { Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 
-import { usePalette } from "@/contextes/contextePalette"
-import { useNotifications, Notification, NotificationPayload } from "@/contextes/contexteNotifications"
-import { useFont } from "@/contextes/contexteFont"
-import { useAPI } from "@/contextes/contexteAPI"
-import { useAccessToken } from "@/contextes/contexteToken"
+import { useAPI } from "@/contextes/contexteAPI";
+import { useFont } from "@/contextes/contexteFont";
+import { Notification, NotificationPayload, useNotifications } from "@/contextes/contexteNotifications";
+import { usePalette } from "@/contextes/contextePalette";
+import { useAccessToken } from "@/contextes/contexteToken";
 
-import catcher from "@/functions/catcher"
-import log from "@/functions/log"
-import { convertirUTCversLocale } from "@/functions/convertirUTCenLocal"
-import { convertirTimestampDateCourte, convertirTimestampHeure, convertirTimestampQuand } from "@/functions/convertirTimestamp"
+import catcher from "@/functions/catcher";
+import { convertirTimestampDateCourte, convertirTimestampHeure, convertirTimestampQuand } from "@/functions/convertirTimestamp";
+import { convertirUTCversLocale } from "@/functions/convertirUTCenLocal";
+import log from "@/functions/log";
 
-import Haptics from "@/abstractions/haptics"
+import Haptics from "@/abstractions/haptics";
 
-import { withSpringConfig, withTimingConfig } from "@/constants/ReanimatedConfs"
+import ToastAbs from "@/abstractions/toastAbs";
+import { withSpringConfig, withTimingConfig } from "@/constants/ReanimatedConfs";
+import { toastTypes } from "@/constants/toastConfig";
+import AppIcon from "@/svgs/appIcon";
 import Icon from "@react-native-vector-icons/ionicons";
-import AppIcon from "@/svgs/appIcon"
-import { Gesture } from "react-native-gesture-handler"
-import ToastAbs from "@/abstractions/toastAbs"
-import { toastTypes } from "@/constants/toastConfig"
+import { Gesture } from "react-native-gesture-handler";
 
 type Action = {
     label: string
@@ -39,6 +39,7 @@ type ItemProps = {
 }
 
 export default function NotificationItem({ item, index, vu }: ItemProps) {
+    const { t } = useTranslation('notifications')
     const { colors } = usePalette()
     const { fonts } = useFont()
     const colorScheme = useColorScheme()
@@ -120,7 +121,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
             }
         } catch (error) {
             log("une erreur en actionnant la notif", error)
-            catcher(error, "erreur à l'action")
+            catcher(error, t('errors.actionFailed'))
         }
     }
 
@@ -138,7 +139,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
             setNotificationsSelec((prev) => prev.filter((current) => !ids.includes(current)))            
         } catch (err) {
             log("erreur en supprimant une notif", err)
-            catcher(err, 'impossible de supprimer une notification')
+            catcher(err, t('errors.deleteFailed'))
         }
 
         
@@ -182,7 +183,9 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
         }
     })
 
-    const typeLabel = payload?.type.replaceAll("_", " ") ?? ""
+    const typeLabel = payload?.type
+        ? t(`types.${payload.type}`, { defaultValue: payload.type.replaceAll("_", " ") })
+        : ""
 
     const parsedPayload = (() => {
         if (!item.payload) return null
@@ -266,7 +269,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
     let expirationLabel
 
     if (expired)
-        expirationLabel = "expirée"
+        expirationLabel = t('expiration.expired')
     else if(expiration) {
         const expirationNowDiff = expiration.diff(DateTime.now(), 'days').days
         expirationLabel = expirationNowDiff < 1 ? convertirTimestampHeure(expiration) : convertirTimestampDateCourte(expiration)
@@ -447,7 +450,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                                     },
                                 ]}
                             >
-                                expiration
+                                {t('expiration.label')}
                             </Animated.Text>
                             <Animated.Text
                                 style={[

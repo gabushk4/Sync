@@ -1,59 +1,48 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
+import '../i18n';
 
 //Providers
-import { APIProvider, useAPI } from '@/contextes/contexteAPI';
+import { FabProvider as ActionFABProvider } from '@/contextes/contextActionFAB';
+import { APIProvider } from '@/contextes/contexteAPI';
 import { FontProvider, useFont } from '@/contextes/contexteFont';
-import { MembreProvider, useMembre } from '@/contextes/contexteMembre';
+import { MembreProvider } from '@/contextes/contexteMembre';
 import { ModalProvider } from '@/contextes/contexteModals';
 import { FabProvider as NavFABProvider } from '@/contextes/contexteNavFAB';
-import { FabProvider as ActionFABProvider } from '@/contextes/contextActionFAB'
 import { PaletteProvider, usePalette } from '@/contextes/contextePalette';
 import { RouteAbsProvider } from '@/contextes/contexteRoute';
-import { AccessTokenProvider, useAccessToken } from '@/contextes/contexteToken';
+import { AccessTokenProvider } from '@/contextes/contexteToken';
 import { ThemeProvider } from "expo-router/react-navigation";
 
 //Contexts
 
 //Dependencies
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Device from 'expo-device';
-import { Stack, useRouter, router } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { DateTime } from 'luxon';
 import 'react-native-reanimated';
 
 //Components
-import ToastAvertissement from '@/components/toastAvertissement';
-import ToastErreur from '@/components/toastErreur';
-import ToastSucces from '@/components/toastSucces';
 import Toast from 'react-native-toast-message';
 
 //Functions
+import ChargementEcran from '@/components/chargementEcran';
+import { AuthProvider, useAuth } from '@/contextes/contexteAuth';
 import { GestionScrollProvider } from '@/contextes/contexteGestionListes';
 import { InvitesProvider } from '@/contextes/contexteInvites';
+import { MockModeProvider } from '@/contextes/contexteMockMode';
+import { NotificationProvider } from '@/contextes/contexteNotifications';
 import { TimelineProvider } from '@/contextes/contexteTimeline';
-import catcher from '@/functions/catcher';
-import log from '@/functions/log';
-
 import {
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
-import { AuthProvider, useAuth } from '@/contextes/contexteAuth';
-import ChargementEcran from '@/components/chargementEcran';
-import { NotificationProvider } from '@/contextes/contexteNotifications';
-import { MockModeProvider } from '@/contextes/contexteMockMode';
 
-import {toastConfig} from '@/constants/toastConfig';
+import { toastConfig } from '@/constants/toastConfig';
 
 // This is the default configuration
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
   strict: false, // Reanimated runs in strict mode by default
 });
-
-
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -151,18 +140,6 @@ function RootLayoutNav() {
       return false
     }
   } */
-
-  useEffect(() => { 
-    log('RootLayoutNav render, state actuel:', state);
-    if (state === 'unauthenticated') {
-      SplashScreen.hideAsync();
-      router.replace('/(auth)/login'); // 👈 écrase toute route restaurée périmée
-    } else if (state === 'authenticated') {
-      SplashScreen.hideAsync();
-      router.replace('/(tabs)/home'); // 👈 idem
-    }
-    //router.replace('/(tabs)/home')
-  }, [state]);
 
   if (state === 'loading') {
     return <ChargementEcran/>;

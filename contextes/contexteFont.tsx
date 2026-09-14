@@ -59,6 +59,10 @@ export function FontProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * procure les fonts a l'app entiere pour 
+ * @returns 
+ */
 export function useFont(): FontContextType {
   const ctx = useContext(FontContext);
   if (!ctx) throw new Error('useFont doit être utilisé dans un FontProvider');
