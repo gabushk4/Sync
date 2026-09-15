@@ -44,6 +44,7 @@ import { AuthProvider, useAuth } from '@/contextes/contexteAuth';
 import ChargementEcran from '@/components/chargementEcran';
 import { NotificationProvider } from '@/contextes/contexteNotifications';
 import { MockModeProvider } from '@/contextes/contexteMockMode';
+import { ConversationsProvider } from '@/contextes/contexteConversations';
 
 import {toastConfig} from '@/constants/toastConfig';
 
@@ -69,6 +70,7 @@ export default function RootLayout() {
               <MembreProvider>
                 <AuthProvider> 
                   <NotificationProvider>
+                    <ConversationsProvider>
                     <RouteAbsProvider>
                       <ModalProvider>                  
                         <NavFABProvider>
@@ -84,6 +86,7 @@ export default function RootLayout() {
                         </NavFABProvider>                  
                       </ModalProvider>
                     </RouteAbsProvider>   
+                    </ConversationsProvider>
                   </NotificationProvider>  
                 </AuthProvider>
               </MembreProvider>

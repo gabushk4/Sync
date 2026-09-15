@@ -12,5 +12,12 @@ export function useFriendList(type: FriendListType) {
             return (friends: Participant | Array<Participant>, inviterUrl?:string) => ajouterInvite(friends, inviterUrl)
         case 'consult':
             return (friend: Participant) => router.navigate({ pathname: '/(tabs)/profile/[membreId]', params: { membreId: friend.id } })
+        case 'message':
+            return async (friend: Participant) => {
+                const conversationId = await demarrerConversationAvecAmi(friend.id)
+                if (conversationId) {
+                    router.navigate({ pathname: '/(tabs)/inbox/[conversationId]', params: { conversationId } })
+                }
+            }
     }
 }
