@@ -10,6 +10,9 @@ export default function ProfileLayout() {
             <Stack.Screen
                 name="edit" options={{headerTitle:'éditer le profil'}}
             />
+            <Stack.Screen
+                name="importCalendrier" options = {{headerTitle:'importer un calendrier', headerBackButtonDisplayMode:'minimal'}}
+            />
         </Stack>
     )
 }
