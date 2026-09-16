@@ -1,14 +1,12 @@
-import { useFocusEffect, useIsFocused } from "expo-router/react-navigation";
-import * as Brightness from 'expo-brightness';
-import * as Clipboard from 'expo-clipboard';
-import { router } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Dimensions, DimensionValue, FlexAlignType, Image, ImageSourcePropType, ImageURISource, ImageStyle, Pressable, StyleSheet, Text, TouchableOpacity, useColorScheme, View, ViewStyle } from 'react-native';
-import Animated, { createAnimatedComponent, useAnimatedProps, useAnimatedStyle, useSharedValue, withSpring, withTiming, withDelay, interpolate, runOnJS } from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
-import { interpolatePath, parse, withBouncing } from 'react-native-redash';
-import Toast from 'react-native-toast-message';
 import Icon from "@react-native-vector-icons/ionicons";
+import * as Brightness from 'expo-brightness';
+import { router } from 'expo-router';
+import { useFocusEffect, useIsFocused } from "expo-router/react-navigation";
+import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Alert, Dimensions, DimensionValue, FlexAlignType, Image, ImageSourcePropType, ImageStyle, Pressable, StyleSheet, Text, TouchableOpacity, useColorScheme, View, ViewStyle } from 'react-native';
+import Animated, { createAnimatedComponent, interpolate, useAnimatedProps, useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
+import { interpolatePath, parse } from 'react-native-redash';
 import Svg, { Path } from 'react-native-svg';
 
 import { path1 as closeMenuPath1, path2 as closeMenuPath2, path3 as closeMenuPath3 } from '@/svgs/closeMenu';
@@ -19,7 +17,6 @@ import { useFont } from '@/contextes/contexteFont';
 import { useMembre } from '@/contextes/contexteMembre';
 import { usePalette } from '@/contextes/contextePalette';
 import { useRouteAbs } from '@/contextes/contexteRoute';
-import { useAccessToken } from '@/contextes/contexteToken';
 
 import log from '@/functions/log';
 
@@ -27,15 +24,15 @@ import { useActionFab } from '@/hooks/useActionFAB';
 
 import { FPType, isFpObject } from '@/types/pfp';
 
-import { withSpringConfig, withTimingConfig } from '@/constants/ReanimatedConfs';
-import MemberCode from '@/components/memberCode';
-import { useAuth } from '@/contextes/contexteAuth';
 import Haptics from '@/abstractions/haptics';
+import MemberCode from '@/components/memberCode';
+import { withSpringConfig, withTimingConfig } from '@/constants/ReanimatedConfs';
 
 const MENU_OPTIONS_GAP = 8
 const FLOATING_BTN_HEIGHT = 64
 
 export default function ProfilEcran(){
+    const { t } = useTranslation('profile')
     const { colors } = usePalette()
     const { fonts } = useFont()
     const colorScheme = useColorScheme()
@@ -214,16 +211,16 @@ export default function ProfilEcran(){
         const minBrightness = 0.1
         if(!permission.granted){
             Alert.alert(
-                'sync souhaite ajuster la luminosité de votre écran',
-                'cela permet a un cellulaire de scanner ton qr code plus facilement; \ntu pourras modifier ce choix à tout moment dans tes réglages',
+                t('qrCode.brightnessTitle'),
+                t('qrCode.brightnessMessage'),
                 [
                 {
-                    text: 'Refuser',
+                    text: t('qrCode.deny'),
                     onPress: () => log('Accès refusé'),
                     style: 'cancel',
                 },
                 {
-                    text: 'Autoriser',
+                    text: t('qrCode.allow'),
                     onPress: async() => {await Brightness.requestPermissionsAsync()},
                 },
                 ],
@@ -274,7 +271,7 @@ export default function ProfilEcran(){
 
                 setWidgetsMembre(reponse.data.widgets)
             } catch (error) {
-                catcher(error, 'erreur du chargement des widgets')
+                catcher(error, t('errors.widgetsLoadFailed'))
             }
         } */
 
@@ -380,7 +377,7 @@ export default function ProfilEcran(){
     return (  
         <View style={{height:'100%', width:'100%', backgroundColor:colors.background}}>
             {avertissementVisible && <Animated.View style={[avertissementAnime,{position:'absolute', zIndex:20, height:'100%', width:'100%',alignItems:'center', justifyContent:'center', backgroundColor:colors.card }]}>
-                <Text style={{color:colors.warning, fontFamily:fonts.body, fontSize:28}}>attention les yeux!</Text>
+                <Text style={{color:colors.warning, fontFamily:fonts.body, fontSize:28}}>{t('brightness.warning')}</Text>
             </Animated.View>}
             {/* TODO: make it pressable */}
             <Animated.View style={[s.hamburgerMenuBackdrop, backdropAnimated]}>
@@ -416,7 +413,7 @@ export default function ProfilEcran(){
                                 <Text style={[s.pseudo, { }]}>@{membre.pseudo}</Text>
                                 <MemberCode code={membre.idPublique??''}/>
                             </View>                            
-                            <Text style={[{color:colors.muted, fontSize:14, paddingLeft:4, fontFamily:fonts.body}]}>membre depuis le {membre.tempsCreation}</Text>                
+                            <Text style={[{color:colors.muted, fontSize:14, paddingLeft:4, fontFamily:fonts.body}]}>{t('memberSince', { date: membre.tempsCreation })}</Text>                
                         </Animated.View>
                         <Animated.View>
 

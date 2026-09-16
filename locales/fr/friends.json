@@ -1,0 +1,32 @@
+{
+	"list": {
+		"title": "Amis",
+		"invite": "inviter",
+		"friendSince": "ami depuis le {{date}}",
+		"emptyState": "Ajoute des amis grâce à l'option :"
+	},
+	"add": {
+		"codeLabel": "Code d'ami",
+		"scanLabel": "Scanner un code QR"
+	},
+	"tabs": {
+		"addFriend": "ajouter un ami",
+		"qrCode": "mon code QR"
+	},
+	"emailConfirmation": {
+		"friendRequestsIntro": "avant d'envoyer des demandes d'amis",
+		"title": "Confirme ton courriel",
+		"existenceMessage": "je dois être sûr que tu existes...",
+		"checkInbox": "Regarde dans tes courriels pour une demande de confirmation (il suffit vraiment de cliquer sur un bouton)",
+		"emailRegistered": "Courriel enregistré :",
+		"notReceived": "Rien reçu ? Clique ici pour te renvoyer un courriel",
+		"resend": "Renvoyer un courriel",
+		"sent": "courriel envoyé"
+	},
+	"errors": {
+		"loadFailed": "erreur survenue en obtenant les amis",
+		"deleteFailed": "suppression impossible",
+		"requestFailed": "la demande n'a pas abouti",
+		"emailFailed": "erreur lors de l'envoi"
+	}
+}

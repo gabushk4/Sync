@@ -15,7 +15,7 @@ const MINUTES = 24 * 60
  * @param {Array} bitmap filled with 1s
  * @param {Array} events [{Event}]
  */
-const MINUTES_PER_DAY = 1440
+const MINUTES_PER_DAY = 24*60
 
 const applyBusyTimes = (bitmap, events, date) => {
   const dayStart = date?.startOf('day')

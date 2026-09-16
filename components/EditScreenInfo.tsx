@@ -1,4 +1,4 @@
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 
 import { ExternalLink } from './ExternalLink';
@@ -8,6 +8,7 @@ import { Text, View } from './Themed';
 import Colors from '@/constants/Colors';
 
 export default function EditScreenInfo({ path }: { path: string }) {
+  const { t } = useTranslation();
   return (
     <View>
       <View style={styles.getStartedContainer}>
@@ -15,7 +16,7 @@ export default function EditScreenInfo({ path }: { path: string }) {
           style={styles.getStartedText}
           lightColor="rgba(0,0,0,0.8)"
           darkColor="rgba(255,255,255,0.8)">
-          Open up the code for this screen:
+          {t('common:demo.openCode')}
         </Text>
 
         <View
@@ -29,7 +30,7 @@ export default function EditScreenInfo({ path }: { path: string }) {
           style={styles.getStartedText}
           lightColor="rgba(0,0,0,0.8)"
           darkColor="rgba(255,255,255,0.8)">
-          Change any of the text, save the file, and your app will automatically update.
+          {t('common:demo.changeText')}
         </Text>
       </View>
 
@@ -38,7 +39,7 @@ export default function EditScreenInfo({ path }: { path: string }) {
           style={styles.helpLink}
           href="https://docs.expo.io/get-started/create-a-new-app/#opening-the-app-on-your-phonetablet">
           <Text style={styles.helpLinkText} lightColor={Colors.light.tint}>
-            Tap here if your app doesn't automatically update after making changes
+            {t('common:demo.reloadHelp')}
           </Text>
         </ExternalLink>
       </View>

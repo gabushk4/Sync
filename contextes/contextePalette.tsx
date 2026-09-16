@@ -30,7 +30,7 @@ function buildNavTheme(hue: number, scheme: 'light' | 'dark') {
 // Provider
 export function PaletteProvider({ children }: { children: ReactNode }) {
   const scheme = useColorScheme() ?? 'light';
-  const [hue, setHueState] = useState(260);
+  const [hue, setHueState] = useState(80);
 
   // gets saved hue
   useEffect(() => {
@@ -45,8 +45,8 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
     AsyncStorage.setItem('hue', String(h));
   };
   
-  const colors = generateTheme(hue, scheme);
-  const navTheme = buildNavTheme(hue, scheme);
+  const colors = generateTheme(hue, scheme === 'dark' ? 'dark' : 'light');
+  const navTheme = buildNavTheme(hue, scheme === 'dark' ? 'dark' : 'light');
 
   return (
     <PaletteContext.Provider value={{ colors, hue, setHue, navTheme }}>

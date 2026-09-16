@@ -1,14 +1,15 @@
 import { Stack } from "expo-router";
-import { View } from "react-native";
+import { useTranslation } from 'react-i18next';
 
 export default function ProfileLayout() {
+    const { t } = useTranslation('profile')
     return (
         <Stack>
             <Stack.Screen
-                name="index" options={{headerTitle:'profil'}}
+                name="index" options={{headerTitle:t('navigation.profile')}}
             />
             <Stack.Screen
-                name="edit" options={{headerTitle:'éditer le profil'}}
+                name="edit" options={{headerTitle:t('navigation.edit')}}
             />
             <Stack.Screen
                 name="importCalendrier" options = {{headerTitle:'importer un calendrier', headerBackButtonDisplayMode:'minimal'}}

@@ -1,33 +1,29 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as SecureStore from 'expo-secure-store';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useFocusEffect } from "expo-router/react-navigation";
+import { useCallback, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dimensions, Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
-import Toast from 'react-native-toast-message';
-
 
 import Haptics from '@/abstractions/haptics.js';
 import TextInputAbs from '@/abstractions/textInputAbs';
-import ChargementEcran from '@/components/chargementEcran.js';
-import PingServeur from '@/components/pingServeur.js';
+
 import { useAPI } from '@/contextes/contexteAPI';
-import { useHeaderHeight } from '@/contextes/contexteHeader.js';
-import { useMembre } from '@/contextes/contexteMembre';
-import { useModal } from '@/contextes/contexteModals';
+import { useAuth } from '@/contextes/contexteAuth';
+import { useFont } from '@/contextes/contexteFont';
 import { usePalette } from '@/contextes/contextePalette';
 import { useRouteAbs } from '@/contextes/contexteRoute';
-import { useAccessToken } from '@/contextes/contexteToken';
+
 import catcher from '@/functions/catcher';
 import log from '@/functions/log.js';
-import { useFocusEffect, useNavigation } from "expo-router/react-navigation";
-import { useFont } from '@/contextes/contexteFont';
-import {LinkAbs, createLinkStyles} from '@/abstractions/linkAbs';
-import { useAuth } from '@/contextes/contexteAuth';
-import ServerStatus from '@/components/serverStatus';
-import { MOCK_MODE_AVAILABLE, useMockMode } from '@/contextes/contexteMockMode';
-import { toastTypes } from '@/constants/toastConfig';
+
+import { createLinkStyles, LinkAbs } from '@/abstractions/linkAbs';
 import ToastAbs from '@/abstractions/toastAbs';
 
+import ServerStatus from '@/components/serverStatus';
+
+import { toastTypes } from '@/constants/toastConfig';
+
 export default function ConnexionEcran(){
+    const { t } = useTranslation('auth')
     const largeur = Dimensions.get("window").width - 32
     const refMdp = useRef<TextInput>(null)
     const refPseudo = useRef<TextInput>(null)
@@ -40,7 +36,6 @@ export default function ConnexionEcran(){
     const { api } = useAPI()
     const {ajouterEcran} = useRouteAbs()
     const { signIn } = useAuth()
-    const {setMockMode} = useMockMode()
 
     const icones = {
         afficher:colorsScheme === 'dark'?require('@/assets/icones/afficher-dark-icon.png'):require('@/assets/icones/afficher-light-icon.png'),
@@ -70,11 +65,11 @@ export default function ConnexionEcran(){
 
             ToastAbs.show({
                 type: toastTypes.success,
-                text1: `bienvenue ${pseudo}`,
+                text1: t('login.welcome', { pseudo }),
             });
         } catch (error: any) {
             log('Erreur connexion:', error.message);
-            catcher(error, 'connexion impossible');
+            catcher(error, t('errors.loginFailed'));
             setMdp('');
         } finally {
             setEnChargement(false);
@@ -145,7 +140,7 @@ export default function ConnexionEcran(){
                     <Text style={[s.title]}>sync</Text>
                     <TextInputAbs  
                         ref={refPseudo}
-                        placeholder='pseudo' 
+                        placeholder={t('login.usernamePlaceholder')} 
                         value={pseudo}
                         returnKeyType='next'
                         onChangeText={(text) => {
@@ -162,7 +157,7 @@ export default function ConnexionEcran(){
                     <View style={{width: largeur, justifyContent:'center'}}>
                         <TextInputAbs
                             ref={refMdp}
-                            placeholder='mot de passe'
+                            placeholder={t('login.passwordPlaceholder')}
                             secureTextEntry={masquerMdp}
                             value={mdp}
                             onChangeText={(text) => {
@@ -192,19 +187,19 @@ export default function ConnexionEcran(){
                                 setMdp('')
                             }}
                         >
-                            <Text style={{color:colors.text, fontSize:18, fontFamily:fonts.body}}>annuler</Text>
+                            <Text style={{color:colors.text, fontSize:18, fontFamily:fonts.body}}>{t('login.cancel')}</Text>
                         </TouchableOpacity>     
                         <TouchableOpacity 
                             disabled={estDesactive}
                             style={[s.bouton,{backgroundColor:estDesactive?'transparent':colors.secondary}]}  
                             onPress={() => connecter()}
                         >
-                        <Text style={{color:estDesactive?colors.muted:colors.text, fontSize:18, fontFamily:fonts.title}}>se connecter</Text>
+                        <Text style={{color:estDesactive?colors.muted:colors.text, fontSize:18, fontFamily:fonts.title}}>{t('login.submit')}</Text>
                         </TouchableOpacity>   
                     </View> 
                     <View style={{ width:'100%', height:24, alignItems:'center', justifyContent:'space-evenly', gap:16}}>
                         <LinkAbs href={'/(auth)/register'}>
-                            pas encore de compte?
+                            {t('login.noAccount')}
                         </LinkAbs>
                         <TouchableOpacity
                             onPress={()=>{
@@ -212,18 +207,9 @@ export default function ConnexionEcran(){
                             }}
                         >
                             <Text style={linkStyle.link}>
-                                mot de passe oublié?
+                                {t('login.forgotPassword')}
                             </Text>
                         </TouchableOpacity>
-                        {MOCK_MODE_AVAILABLE &&
-                            <TouchableOpacity
-                                onPress={()=>setMockMode(true)}
-                            >
-                                <Text style={linkStyle.link}>
-                                    mock mode
-                                </Text>
-                            </TouchableOpacity>
-                        }
                     </View>  
                     
             </KeyboardAvoidingView>    

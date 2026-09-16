@@ -1,26 +1,21 @@
-import React, {useState, useEffect, useCallback } from 'react';
-import { StyleSheet, Text, View, Button, ScrollView, SafeAreaView, FlatList, Image, Pressable, TouchableWithoutFeedback, TouchableOpacity, Modal, useColorScheme} from 'react-native';
-import { BlurView } from 'expo-blur';
-import { DateTime } from 'luxon';
-import { useFocusEffect, useIsFocused } from 'expo-router/react-navigation';
+import { useFocusEffect } from 'expo-router/react-navigation';
+import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Image, ScrollView, StyleSheet, TouchableOpacity, useColorScheme, View } from 'react-native';
 
-import { usePalette } from '@/contextes/contextePalette';
-import { useModal } from '@/contextes/contexteModals';
 import { useAPI } from '@/contextes/contexteAPI';
 import { useInvites } from '@/contextes/contexteInvites';
-import { useAccessToken } from '@/contextes/contexteToken';
+import { usePalette } from '@/contextes/contextePalette';
 
 import ParticipantLigne from '@/components/participantLigne';
-import ModalBase from '@/components/modalBase';
-import ListeAmis from '@/app/(modals)/listeAmis';
 
 import catcher from '@/functions/catcher';
 import log from '@/functions/log';
 
-import { InviterUrl, SupprimerUrl, Participant } from '@/types/invites';
+import { withTimingConfig } from '@/constants/ReanimatedConfs';
+import { Participant } from '@/types/invites';
 import { router } from 'expo-router';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { withTimingConfig } from '@/constants/ReanimatedConfs';
 
 type Props = {
     participantsUrl: string | undefined;
@@ -29,6 +24,7 @@ type Props = {
 const LINE_HEIGHT = 56
 
 export default function ParticipantsListe({ participantsUrl } : Props){
+    const { t } = useTranslation('events')
     const { colors } = usePalette();
     const { api } = useAPI()
     
@@ -60,7 +56,7 @@ export default function ParticipantsListe({ participantsUrl } : Props){
                 setParticipants(participants)
             } catch (error) {
                 log('getParticipants', error)
-                catcher(error, 'erreur au chargement des participants')
+                catcher(error, t('errors.participantsLoadFailed'))
             }
             if (invites.length > 0) {
                 log("getParticipants invites", invites)

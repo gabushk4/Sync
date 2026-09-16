@@ -1,6 +1,7 @@
 import ModalBase from "@/components/modalBase";
 import { useEffect, useRef, useState } from "react";
-import { Dimensions, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useFont } from '@/contextes/contexteFont';
@@ -9,29 +10,30 @@ import { usePalette } from "@/contextes/contextePalette";
 
 import log from "@/functions/log";
 
+import Haptics from "@/abstractions/haptics";
 import QRCodeAbs from "@/abstractions/QrCodeAbs";
 import AddFriendForm from "@/components/addFriendForm";
 import DemandeConfirmerCourriel from "@/components/demandeConfirmerCourriel";
 import { useLocalSearchParams } from "expo-router";
 import { ScrollView } from "react-native-gesture-handler";
 import Animated, { interpolate, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
-import Haptics from "@/abstractions/haptics";
 
 
 const PAGES_DEF = [
     {
         id: 'addFriend',
-        title: 'ajouter un ami',
+        titleKey: 'addFriend',
         page: <AddFriendForm/>
     },
     {
         id: 'qrCode',
-        title: 'mon code QR',
+        titleKey: 'qrCode',
         page: <QRCodeAbs/>
     }
 ]
 
 export default function ajouterAmi() {
+    const { t } = useTranslation('friends')
     const { colors } = usePalette();
     const { fonts } = useFont();    
     const { membre, getMembre } = useMembre();
@@ -113,7 +115,7 @@ export default function ajouterAmi() {
                                 scrollViewRef.current?.scrollTo({x: WIN_W * index})
                             }}
                         >
-                            <Animated.Text key={index} style={s.title}>{p.title}</Animated.Text>
+                            <Animated.Text key={index} style={s.title}>{t(`tabs.${p.titleKey}`)}</Animated.Text>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -141,7 +143,7 @@ export default function ajouterAmi() {
         </ModalBase>
     ) : (
         <ModalBase>
-            <DemandeConfirmerCourriel intro="avant d'envoyer des demandes d'amis" />
+            <DemandeConfirmerCourriel intro={t('emailConfirmation.friendRequestsIntro')} />
         </ModalBase>
     );
 }

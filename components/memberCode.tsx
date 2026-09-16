@@ -1,12 +1,11 @@
-import React from 'react'
-import { TouchableOpacity, Text } from 'react-native'
-import * as Clipboard from 'expo-clipboard'
-import Toast from 'react-native-toast-message'
-import { usePalette } from '@/contextes/contextePalette'
-import { useFont } from '@/contextes/contexteFont'
-import Icon from "@react-native-vector-icons/ionicons";
 import ToastAbs from '@/abstractions/toastAbs'
 import { toastTypes } from '@/constants/toastConfig'
+import { useFont } from '@/contextes/contexteFont'
+import { usePalette } from '@/contextes/contextePalette'
+import Icon from "@react-native-vector-icons/ionicons"
+import * as Clipboard from 'expo-clipboard'
+import { useTranslation } from 'react-i18next'
+import { Text, TouchableOpacity } from 'react-native'
 
 type Props = {
     code: string;
@@ -14,6 +13,7 @@ type Props = {
 }
 
 export default function MemberCode({ code, size = 16 } : Props) {
+    const { t } = useTranslation()
     const { colors } = usePalette()
     const { fonts } = useFont()
     
@@ -24,7 +24,7 @@ export default function MemberCode({ code, size = 16 } : Props) {
                 Clipboard.setStringAsync(code)
                 ToastAbs.show({
                     type: toastTypes.success,
-                    text1: 'ajouté au presse-papier',
+                    text1: t('common:copiedToClipboard'),
                     text2: code
                 })
             }}
