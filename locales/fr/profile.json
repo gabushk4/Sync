@@ -1,7 +1,8 @@
 {
 	"navigation": {
 		"profile": "profil",
-		"edit": "éditer le profil"
+		"edit": "éditer le profil",
+		"settings": "paramètres"
 	},
 	"edit": {
 		"usernameLabel": "pseudo",
@@ -11,17 +12,17 @@
 	},
 	"qrCode": {
 		"brightnessTitle": "Sync souhaite ajuster la luminosité de votre écran",
-		"brightnessMessage": "Cela permet à un téléphone de scanner ton QR code plus facilement ;\nTu pourras modifier ce choix à tout moment dans tes réglages",
-		"deny": "Refuser",
-		"allow": "Autoriser"
+		"brightnessMessage": "cela permet à un téléphone de scanner ton QR code plus facilement ;\nTu pourras modifier ce choix à tout moment dans tes réglages",
+		"deny": "refuser",
+		"allow": "autoriser"
 	},
 	"brightness": {
-		"warning": "Attention les yeux !"
+		"warning": "attention les yeux !"
 	},
-	"memberSince": "Membre depuis le {{date}}",
+	"memberSince": "membre depuis le {{date}}",
 	"memberIdLabel": "identifiant du membre",
 	"errors": {
-		"widgetsLoadFailed": "Erreur lors du chargement des widgets",
+		"widgetsLoadFailed": "erreur lors du chargement des widgets",
 		"updateFailed": "impossible de modifier le profil"
 	}
 }

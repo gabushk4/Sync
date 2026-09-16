@@ -1,7 +1,8 @@
 {
 	"navigation": {
-		"profile": "Profile",
-		"edit": "Edit profile"
+		"profile": "profile",
+		"edit": "edit profile",
+		"settings": "settings"
 	},
 	"edit": {
 		"usernameLabel": "username",
@@ -10,18 +11,18 @@
 		"bioPlaceholder": "a few words about you"
 	},
 	"qrCode": {
-		"brightnessTitle": "Sync wants to adjust your screen brightness",
-		"brightnessMessage": "This makes it easier for a phone to scan your QR code;\nYou can change this choice at any time in your settings",
-		"deny": "Deny",
-		"allow": "Allow"
+		"brightnessTitle": "sync wants to adjust your screen brightness",
+		"brightnessMessage": "this makes it easier for a phone to scan your QR code;\nyou can change this choice at any time in your settings",
+		"deny": "deny",
+		"allow": "allow"
 	},
 	"brightness": {
-		"warning": "Watch your eyes!"
+		"warning": "watch your eyes!"
 	},
-	"memberSince": "Member since {{date}}",
+	"memberSince": "member since {{date}}",
 	"memberIdLabel": "member ID",
 	"errors": {
-		"widgetsLoadFailed": "Error loading widgets",
-		"updateFailed": "Unable to update profile"
+		"widgetsLoadFailed": "error loading widgets",
+		"updateFailed": "unable to update profile"
 	}
 }

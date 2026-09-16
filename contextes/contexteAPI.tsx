@@ -113,6 +113,7 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
       async error => { // si une erreur survient
         requestListener?.setFetching(false) //utile pour écouter si le client ne fait plus appel
         const requeteOriginale: AxiosRequestConfigWithRetry = error.config;
+        console.log("error response", error.response)
 
         if (!error.response) {
           return Promise.reject(error)
