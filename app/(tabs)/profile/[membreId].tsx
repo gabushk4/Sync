@@ -6,7 +6,7 @@ import catcher from '@/functions/catcher';
 import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next'
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 export default function MemberProfil() {
     const { t } = useTranslation('profile')
