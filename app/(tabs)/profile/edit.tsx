@@ -10,9 +10,11 @@ import log from "@/functions/log";
 import { useActionFab } from "@/hooks/useActionFAB";
 import { FPType } from "@/types/pfp";
 import { useState } from "react";
-import { Image, ImageSourcePropType, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from "react-native";
+import { useTranslation } from 'react-i18next';
+import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 
 export default function EditProfil() {
+    const { t } = useTranslation('profile')
     const { colors } = usePalette()
     const { fonts } = useFont()
     const colorScheme = useColorScheme()
@@ -44,7 +46,7 @@ export default function EditProfil() {
         try {
             await patchProfil(pseudoNouv, bioNouv, fpNouv)    
         } catch (err) {
-            catcher(err, "impossible de modifier le profil")
+            catcher(err, t('errors.updateFailed'))
         }        
     }
 
@@ -94,21 +96,21 @@ export default function EditProfil() {
                     </TouchableOpacity>
                 </View>
                 <View style={s.separator}/>
-                <Text style={s.label}>pseudo</Text>
+                <Text style={s.label}>{t('edit.usernameLabel')}</Text>
                 <TextInputAbs
                     value={pseudo}
                     onChangeText={setPseudo}
                     style={s.input}
-                    placeholder="pseudo"                
+                    placeholder={t('edit.usernamePlaceholder')}                
                 />
 
-                <Text style={s.label}>bio</Text>
+                <Text style={s.label}>{t('edit.bioLabel')}</Text>
                 <TextInputAbs
                     value={bio}
                     onChangeText={setBio}
                     style={[s.input, s.bioInput]}
                     multiline
-                    placeholder="quelques mots sur toi"                    
+                    placeholder={t('edit.bioPlaceholder')}                    
                 />
 
                 

@@ -1,45 +1,34 @@
 import TextInputAbs from '@/abstractions/textInputAbs'
 import { useFont } from '@/contextes/contexteFont'
-import { usePalette } from '@/contextes/contextePalette'
 import { useMembre } from '@/contextes/contexteMembre'
+import { usePalette } from '@/contextes/contextePalette'
 
 import { Event, Recurrence } from '@/types/calendar'
 
-import Haptics from '@/abstractions/haptics'
 
+import ceilBy5 from '@/functions/ceilBy5'
 import { convertirTimestampDateCourte, convertirTimestampDateLongue, convertirTimestampHeure } from '@/functions/convertirTimestamp'
 import { convertirUTCversLocale } from '@/functions/convertirUTCenLocal'
-import formaterDatePourServeur from '@/functions/formaterDatePourServeur'
 import log from '@/functions/log'
-import TraduireRecurrence from '@/functions/traduireRecurrence'
-import ceilBy5 from '@/functions/ceilBy5'
 
 import RNDateTimePicker from '@react-native-community/datetimepicker'
 import { useFocusEffect } from 'expo-router'
-import React, { forwardRef, SetStateAction, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { Image, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View, Switch, Keyboard } from 'react-native'
 import { DateTime } from 'luxon'
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native'
 
+import SwitchAbs from '@/abstractions/switchAbs'
+import { useInvites } from '@/contextes/contexteInvites'
+import { Participant } from '@/types/invites'
+import Icon from "@react-native-vector-icons/ionicons"
+import Animated from 'react-native-reanimated'
 import DateTimeSelecteur from './datetimeSelecteurs'
 import MenuDeroulant from './menuDeroulant'
 import ParticipantsListe from './participantsListe'
-import Animated from 'react-native-reanimated'
-import { Ionicons } from '@expo/vector-icons'
-import SwitchAbs from '@/abstractions/switchAbs'
-import { Participant } from '@/types/invites'
-import { useInvites } from '@/contextes/contexteInvites'
 
 const MAX_LONG_TITLE = 50
 const MAX_LONG_DESC = 2000
-const recVals = [
-        {title:'jamais', value:null},
-        {title:'quotidien', value:'DAILY'}, 
-        {title:'hebdomadaire', value:'WEEKLY'},
-        {title:'mensuel', value:'MONTHLY'},
-        {title:'annuel', value:'YEARLY'},
-        //{title:'personnalisé', value:'perso'}
-    ]
-
 /**
  * NOTE POUR TOI : adapte les types (Props, Event, Recurrence, etc.) à tes
  * définitions réelles — je les ai gardés identiques à ton fichier original.
@@ -81,6 +70,7 @@ const dtNow = DateTime.now()
 const EventForm = forwardRef<EventFormHandle, Props>(
     
 function EventForm({ event, prefills, constraints, mode }, ref) {
+    const { t } = useTranslation('events')
     const { colors } = usePalette()
     const { fonts } = useFont()
     const { membre } = useMembre()
@@ -121,13 +111,21 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
 
     const [montrerRecPicker, setMontrerRecPicker] = useState(Platform.OS === 'ios')
     const [recurrence, setRecurrence] = useState<Recurrence>({
-        title: 'jamais',
+        title: t('recurrence.never'),
         value: event.regle_recurrence ?? null,
     })
     const [finRecurrence, setFinRecurrence] = useState<DateTime | null>(dtNow)
 
     const [descriptionTruncated, setDescriptionTruncated] = useState<boolean>(false)
     const [showTextModal, setShowTextModal] = useState<boolean>(false)
+
+    const recVals = [
+        { title: t('recurrence.never'), value: null },
+        { title: t('recurrence.daily'), value: 'DAILY' },
+        { title: t('recurrence.weekly'), value: 'WEEKLY' },
+        { title: t('recurrence.monthly'), value: 'MONTHLY' },
+        { title: t('recurrence.yearly'), value: 'YEARLY' },
+    ]
         
     const [eventParticipantsControlUrl, setEventParicipantsControlUrl] = useState<string|undefined>(undefined)
 
@@ -280,7 +278,7 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
                         }}
                         maxLength={MAX_LONG_TITLE}
                         autoFocus={mode === 'create'}
-                        placeholder="titre..."
+                        placeholder={t('form.titlePlaceholder')}
                         placeholderTextColor={colors.muted}
                         returnKeyType="next"
                         onSubmitEditing={() => refDescription.current?.focus()}
@@ -305,7 +303,7 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
                         </Text>
                         {descriptionTruncated && (
                             <TouchableOpacity style={s.expandText} onPress={() => setShowTextModal(true)}>
-                                <Text style={[s.label, { fontSize: 16, color: colors.secondary }]}>plus</Text>
+                                <Text style={[s.label, { fontSize: 16, color: colors.secondary }]}>{t('form.showMore')}</Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -315,7 +313,7 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
                             ref={refDescription}
                             style={[s.input, { fontSize: 18, height: 'auto' }]}
                             value={description}
-                            placeholder="description..."
+                            placeholder={t('form.descriptionPlaceholder')}
                             placeholderTextColor={colors.muted}
                             multiline={true}
                             numberOfLines={5}
@@ -338,12 +336,12 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
             {mode === 'details' ? (
                 <View style={[s.dateTimeContainer, {height:'auto'}]}>
                     <Text style={s.dateText}>
-                        {hasSecondDate && 'du'} {convertirTimestampDateLongue(event.debut)}{' '}
+                        {hasSecondDate && t('form.dateFrom')} {convertirTimestampDateLongue(event.debut)}{' '}
                         {hasSecondDate && <Text>{convertirTimestampHeure(event.debut)}</Text>}
                     </Text>
                     {hasSecondDate ? (
                         <Text style={s.dateText}>
-                            {hasSecondDate && 'au'} {convertirTimestampDateLongue(event.fin)} {convertirTimestampHeure(event.fin)}
+                            {hasSecondDate && t('form.dateTo')} {convertirTimestampDateLongue(event.fin)} {convertirTimestampHeure(event.fin)}
                         </Text>
                     ) : (
                         <Text style={[s.dateText, { fontSize:20, textAlign: 'center', width: '100%' }]}>
@@ -368,14 +366,14 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
 
             <View style={{ gap: 8 }}>
                 <View style={[s.champ, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 4 }]}>
-                    <Text style={s.label}>récurrence</Text>
+                    <Text style={s.label}>{t('form.recurrenceLabel')}</Text>
                     <MenuDeroulant
                         disabled={mode === 'details'}
                         values={recVals}
                         selected={recurrence}
                         onSelection={(val: string | null) => {
                             const obj = recVals.find((v) => v.value === val)
-                            setRecurrence({ title: obj?.title ?? 'jamais', value: obj?.value ?? null })
+                            setRecurrence({ title: obj?.title ?? t('recurrence.never'), value: obj?.value ?? null })
                             switch (val) {
                                 
                                 case 'DAILY':
@@ -399,7 +397,7 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
                 {recurrence?.value != null && (
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                         <Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 16, width: '50%' }}>
-                            évènement répété chaque <Text style={{ color: colors.text }}>{TraduireRecurrence(recurrence.value)}</Text> jusqu'au:
+                            {t('form.repeatedUntil', { unit: t(`recurrence.units.${recurrence.value?.toLowerCase()}`) })}
                         </Text>
                         {Platform.OS === 'android' && (
                             <TouchableOpacity
@@ -434,25 +432,25 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
             </View>
 
             <View style={[s.champ, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', alignSelf: 'flex-end' }]}>
-                <Animated.Text style={s.label}>{eventPrivate ? 'privé' : 'public'}</Animated.Text>
+                <Animated.Text style={s.label}>{eventPrivate ? t('form.private') : t('form.public')}</Animated.Text>
                 {mode != 'details'
                     ?   <View style={{ alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}>                    
-                            <Ionicons name='lock-open' color={eventPrivate ? colors.muted : colors.text} size={24}/>
+                            <Icon name='lock-open' color={eventPrivate ? colors.muted : colors.text} size={24}/>
                             <SwitchAbs
                                 value={eventPrivate}
                                 onChange={() => { setPrivate((prev) => !prev) }}
                                 trackColor={{false:colors.muted, true:colors.muted}}
                             />
-                            <Ionicons name='lock-closed' color={eventPrivate ? colors.text : colors.muted} size={24}/>
+                            <Icon name='lock-closed' color={eventPrivate ? colors.text : colors.muted} size={24}/>
                         </View>
-                    : <Ionicons name={eventPrivate ? 'lock-closed' : 'lock-open' } color={colors.text} size={32} />
+                    : <Icon name={eventPrivate ? 'lock-closed' : 'lock-open' } color={colors.text} size={32} />
                     
                 }
                 
             </View>
 
             <View style={s.champ}>
-                <Text style={s.label}>participants</Text>
+                <Text style={s.label}>{t('form.participants')}</Text>
                 <View style={{width: '100%', borderRadius: 8, minHeight:32, maxHeight:192 }}>
                     <ParticipantsListe participantsUrl={eventParticipantsControlUrl} />
                 </View>

@@ -1,13 +1,11 @@
 import catcher from '@/functions/catcher'
-import { convertirLocalVersUTC } from '@/functions/convertirUTCenLocal'
-import log from '@/functions/log'
 import formaterDatePourServeur from '@/functions/formaterDatePourServeur'
 
-import { use, useCallback, useEffect, useRef, useState } from 'react'
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router'
-import {Alert, Text, View, } from 'react-native'
-import Toast from 'react-native-toast-message'
-import { Ionicons } from '@expo/vector-icons'
+import Icon from "@react-native-vector-icons/ionicons"
+import { router, useLocalSearchParams } from 'expo-router'
+import { useRef } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Alert, View } from 'react-native'
 
 import { useActionFab } from '@/hooks/useActionFAB'
 
@@ -15,13 +13,14 @@ import { Event } from '@/types/calendar'
 
 import EventForm, { EventFormHandle } from '@/components/eventForm'
 
-import { usePalette } from '@/contextes/contextePalette'
-import { useAccessToken } from '@/contextes/contexteToken'
+import ToastAbs from '@/abstractions/toastAbs'
+import { toastTypes } from '@/constants/toastConfig'
 import { useAPI } from '@/contextes/contexteAPI'
+import { usePalette } from '@/contextes/contextePalette'
 import { DateTime } from 'luxon'
 
 export default function EditEvent() {
-    const { getToken, } = useAccessToken()
+    const { t } = useTranslation('events')
     const { api } = useAPI()
     const { colors } = usePalette()
     const { event: eventStringified } = useLocalSearchParams<{ event: string }>()
@@ -43,7 +42,7 @@ export default function EditEvent() {
     const verifAvantPatch = (): void => {
         const values = formRef.current?.getValues()
         let valid = true
-        let message = "impossible d'éditer l'évènement"
+        let message = t('edit.defaultError')
         if (!values) return
 
         const data: Partial<Event> & Record<string, any> = {}
@@ -64,16 +63,14 @@ export default function EditEvent() {
 
         if (values.titre.length < 4) {
             valid = false
-            message = "le titre doit avoir au moins 4 caractères"
+            message = t('edit.titleTooShort')
         }
 
         if (!valid) {
-            catcher({message}, "erreur à l'édition")
+            catcher({message}, t('edit.validationErrorTitle'))
             return
         }
 
-        // La conversion vers le format serveur se fait UNE FOIS, ici,
-        // à partir des DateTime que le formulaire vient de nous donner.
         const debutServeur = formaterDatePourServeur(values.start.toUTC())
         const finServeur = formaterDatePourServeur(values.end.toUTC())
 
@@ -88,8 +85,6 @@ export default function EditEvent() {
 
         if (champsModifies.length === 0) return
 
-        // Ces deux-là sont toujours envoyés, même sans changement détecté,
-        // pour satisfaire le contrat API existant.
         data.debut = data.debut ?? debutServeur
         data.fin = data.fin ?? finServeur
 
@@ -100,11 +95,11 @@ export default function EditEvent() {
 
         if (event && event.type === 'recurrence' && event.regle_recurrence) {
             Alert.alert(
-                "édition d'une récurrence",
-                "voulez-vous éditer la série d'évènements ou seulement celui-ci?",
+                t('details.recurringEditTitle'),
+                t('details.recurringEditMessage'),
                 [
                     {
-                        text: 'la série',
+                        text: t('details.editSeries'),
                         onPress: () => {
                             const rec = (event.regle_recurrence || '').split('\n')
                             const dtStart = values.start.toUTC().toFormat("yyyyMMdd'T'HHmmss'Z'")
@@ -120,7 +115,7 @@ export default function EditEvent() {
                         },
                     },
                     {
-                        text: 'celui-ci',
+                        text: t('details.editOccurrence'),
                         onPress: () => {
                             url = { method: 'POST', string: `/evenements/exceptions` }
                             data.id_parent = event.id
@@ -151,21 +146,21 @@ export default function EditEvent() {
             })
 
             if (reponse.status === 201) {
-                Toast.show({
-                    type: 'persoSucces',
-                    text1: 'Évènement modifié',
-                    text2: `Champs modifiés : ${champsModifies.join(', ')}`,
+                ToastAbs.show({
+                    type: toastTypes.success,
+                    text1: t('edit.updatedTitle'),
+                    text2: t('edit.modifiedFields', { fields: champsModifies.join(', ') }),
                 })
                 router.back()
             }
         } catch (error) {
-            catcher(error, "erreur en éditant l'évènement")
+            catcher(error, t('errors.updateFailed'))
         }
     }
 
     useActionFab({
         action: verifAvantPatch,
-        icon: <Ionicons name="checkmark" color={colors.text} size={28} />,
+        icon: <Icon name="checkmark" color={colors.text} size={28} />,
     })
 
     return (

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {View, } from 'react-native'
 import { usePalette } from '@/contextes/contextePalette';
 import { useAPI } from '@/contextes/contexteAPI';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from 'expo-router/react-navigation';
 import log from '@/functions/log';
 
 const PingServeur = () => {

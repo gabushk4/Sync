@@ -9,6 +9,7 @@ import { useAccessToken } from './contexteToken'
 
 import { FPType } from '@/types/pfp'
 import { DateTime } from 'luxon'
+import ToastAbs from '@/abstractions/toastAbs'
 
 //Types
 
@@ -65,8 +66,7 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
                 fp: data.fp_url ?? null,
                 admin: data.role === 'admin',
                 emailConfirme: data.email_confirme ?? false,
-                email: data.courriel
-                
+                email: data.courriel                
             }))
             /* widgetsMembresRef.current = data.widgets
             setWidgetsMembre(data.widgets) */
@@ -77,7 +77,6 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
             setMembre((prev) => ({ ...prev, tempsCreation: t }));
             
         } catch (error : any) {
-            log('get membre', error.message)
             throw error
         }
     }
@@ -138,7 +137,7 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
                 })                
 
                 if(response.status === 200){
-                    Toast.show({
+                    ToastAbs.show({
                         type:'persoSucces',
                         text1:'profil modifié',
                         text2:`champs modifiés: ${modifiedFields.join(', ')}`

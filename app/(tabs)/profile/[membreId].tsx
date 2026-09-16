@@ -1,14 +1,16 @@
 
 import { useLocalSearchParams } from "expo-router"
-import { Text, View } from "react-native"
+import { useTranslation } from 'react-i18next'
+import { Text } from "react-native"
 
 export default function MemberProfil() {
+    const { t } = useTranslation('profile')
 
     const {membreId} = useLocalSearchParams()
 
     return (
         <Text >
-            membre id: {membreId}
+            {t('memberIdLabel')}: {membreId}
         </Text>
     )
 }

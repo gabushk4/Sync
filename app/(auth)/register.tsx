@@ -1,7 +1,7 @@
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect } from "expo-router/react-navigation";
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Dimensions, Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
-import Toast from 'react-native-toast-message';
+import { useTranslation } from 'react-i18next';
+import { Dimensions, Image, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
 //import getUniqueId from 'react-native-device-info'
 
 import { useAPI } from '@/contextes/contexteAPI';
@@ -11,17 +11,20 @@ import { useRouteAbs } from '@/contextes/contexteRoute';
 import log from '@/functions/log';
 
 import Haptics from '@/abstractions/haptics.js';
+import KeyboardDismisser from "@/abstractions/keyboardDismisser";
 import { LinkAbs } from '@/abstractions/linkAbs';
 import TextInputAbs from '@/abstractions/textInputAbs';
+import ToastAbs from "@/abstractions/toastAbs";
+import BetaTag from '@/components/betaTag';
 import ServerStatus from '@/components/serverStatus';
-import { useHeaderHeight } from '@/contextes/contexteHeader';
+import { toastTypes } from "@/constants/toastConfig";
 import catcher from '@/functions/catcher';
 import { router } from 'expo-router';
-import BetaTag from '@/components/betaTag';
 
 export default function InscriptionEcran({
     
 }){
+    const { t } = useTranslation('auth')
     const courrRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
     const mdpLong = 12
     const largeur = Dimensions.get("window").width - 32
@@ -103,10 +106,10 @@ export default function InscriptionEcran({
             })
             
             if(response.status == 201){
-                Toast.show({
-                    type:'persoSucces',
-                    text1:'inscription réussie',
-                    text2:'bienvenue à toi, tu fais parti de quelque chose de grand!'
+                ToastAbs.show({
+                    type: toastTypes.success,
+                    text1: t('register.successTitle'),
+                    text2: t('register.successMessage')
                 })
             }
             setTimeout(()=>{
@@ -114,7 +117,7 @@ export default function InscriptionEcran({
             }, 300)    
           } catch (error : any) {
             log('Erreur inscription :', error.message)
-            catcher(error, 'erreur à l\'inscription')
+            catcher(error, t('errors.registerFailed'))
           }
     }    
 
@@ -245,218 +248,217 @@ export default function InscriptionEcran({
     })
 
     return (
-        <Pressable
-            style={{flex:1}}
+        <KeyboardDismisser
             onPress={() => {
-                if (refScrollView.current)
-                    refScrollView.current?.scrollTo({ y: 0, animated: true }) 
-                Keyboard.dismiss()                
+                const ref = refScrollView.current
+                if (ref != null) {
+                    ref.scrollTo({y:0, animated:true})
+                }
             }}
         >
-        <KeyboardAvoidingView
-            style={s.container}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={0}
-        >
-            <ServerStatus/>
-            <View style={s.disclaimerContainer}>
-                <BetaTag/>
-                <Text style={s.disclaimerText}>
-                    Utilisez un mot de passe différent de vos autres comptes pour éviter toute fuite.
-                    Choisissez un pseudo sans informations personnelles eg.: nom, prénom, etc.
-                </Text>
-            </View>        
-                <ScrollView
-                    ref={refScrollView}
-                    contentContainerStyle={s.formContainer}
-                    keyboardShouldPersistTaps='handled'
-                    onLayout={(e) => {
-                        inputPositions.current['scrollView'] = e.nativeEvent.layout.y 
-                    }}
-                >                
-                <Text style={[s.titre, {color:colors.text, fontFamily:fonts.title}]}>sync</Text>
-                <TextInputAbs
-                    ref={refPseudo}
-                    onLayout={(e) => {
-                        inputPositions.current.pseudo = e.nativeEvent.layout.y
-                    }}
-                    placeholder='pseudo'
-                    returnKeyType='next'
-                    value={pseudo}
-                    onChangeText={(text)=>setPseudo(text)}
-                        onSubmitEditing={() => {
-                        if(refCourriel.current)
-                            refCourriel.current.focus()
-                    }}
-                    style={{ width: largeur }}
-                    onFocus={() => {
-                        scrollToInput('pseudo')
-                    }}
-                />        
-                <TextInputAbs
-                    ref={refCourriel}
-                    style={{borderColor:courrielValide?colors.border:colors.error, width: largeur}}
-                    placeholder='courriel | courr@exemple.com'
-                    returnKeyType='next'
-                    onChangeText={(text) =>{
-                        setCourriel(text); 
-                    }}
-                    value={courriel}
-                        onSubmitEditing={() => {
-                        if(refMdp.current)
-                            refMdp.current.focus()
-                    }}
-                    keyboardType='email-address'
-                    onLayout={(e) => {
-                        inputPositions.current.email = e.nativeEvent.layout.y
-                    }}
-                    onFocus={() => {
-                        scrollToInput('email')
-                    }}
-                />
-                <View style={{ justifyContent: 'center' }}
-                    onLayout={(e) => {
-                        inputPositions.current.pass = e.nativeEvent.layout.y
-                    }}
-                >
+            <KeyboardAvoidingView
+                style={s.container}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={0}
+            >
+                <ServerStatus/>
+                <View style={s.disclaimerContainer}>
+                    <BetaTag/>
+                    <Text style={s.disclaimerText}>
+                        {t('register.passwordDisclaimer')}
+                    </Text>
+                </View>        
+                    <ScrollView
+                        ref={refScrollView}
+                        contentContainerStyle={s.formContainer}
+                        keyboardShouldPersistTaps='handled'
+                        onLayout={(e) => {
+                            inputPositions.current['scrollView'] = e.nativeEvent.layout.y 
+                        }}
+                    >                
+                    <Text style={[s.titre, {color:colors.text, fontFamily:fonts.title}]}>sync</Text>
                     <TextInputAbs
-                        ref={refMdp}
-                        style={{borderColor:mdpValide?colors.border:colors.error, width: largeur, justifyContent:'center'}}
-                        autoComplete='new-password'
-                        textContentType='newPassword'
+                        ref={refPseudo}
+                        onLayout={(e) => {
+                            inputPositions.current.pseudo = e.nativeEvent.layout.y
+                        }}
+                        placeholder={t('register.usernamePlaceholder')}
                         returnKeyType='next'
-                        placeholder='mot de passe'
+                        value={pseudo}
+                        onChangeText={(text)=>setPseudo(text)}
+                            onSubmitEditing={() => {
+                            if(refCourriel.current)
+                                refCourriel.current.focus()
+                        }}
+                        style={{ width: largeur }}
+                        onFocus={() => {
+                            scrollToInput('pseudo')
+                        }}
+                    />        
+                    <TextInputAbs
+                        ref={refCourriel}
+                        style={{borderColor:courrielValide?colors.border:colors.error, width: largeur}}
+                        placeholder={t('register.emailPlaceholder')}
+                        returnKeyType='next'
+                        onChangeText={(text) =>{
+                            setCourriel(text); 
+                        }}
+                        value={courriel}
+                            onSubmitEditing={() => {
+                            if(refMdp.current)
+                                refMdp.current.focus()
+                        }}
+                        keyboardType='email-address'
+                        onLayout={(e) => {
+                            inputPositions.current.email = e.nativeEvent.layout.y
+                        }}
+                        onFocus={() => {
+                            scrollToInput('email')
+                        }}
+                    />
+                    <View style={{ justifyContent: 'center' }}
+                        onLayout={(e) => {
+                            inputPositions.current.pass = e.nativeEvent.layout.y
+                        }}
+                    >
+                        <TextInputAbs
+                            ref={refMdp}
+                            style={{borderColor:mdpValide?colors.border:colors.error, width: largeur, justifyContent:'center'}}
+                            autoComplete='new-password'
+                            textContentType='newPassword'
+                            returnKeyType='next'
+                            placeholder={t('register.passwordPlaceholder')}
+                            onFocus={()=>{
+                                setShowPassRules(true)
+                                scrollToInput('pass')
+                            }}
+                            onBlur={()=>{
+                                log('mdp valide', mdpValide)
+                                if(mdpValide)
+                                    setShowPassRules(false)}}
+                            onSubmitEditing={() => {
+                                setShowPassRules(false)
+                                if(refMdp2.current)
+                                    refMdp2.current.focus()
+                            }}
+                            onChangeText={(mdp)=>{
+                                if(mdp.length >= mdpLong){
+                                    setMdpLongValide(true)
+                                }
+                                else{
+                                    setMdpLongValide(false)
+                                }
+                                const regex = /[!@#$%^&*()?":{}|<>]/
+
+                                if(regex.test(mdp)){
+                                    setMdpCarSpeciauxValide(true)
+                                }
+                                else{
+                                    setMdpCarSpeciauxValide(false)
+                                }
+                                const aMajuscules = /[A-Z]/.test(mdp);
+                                const aMinuscules = /[a-z]/.test(mdp);
+
+                                if(aMajuscules && aMinuscules){
+                                    setMdpMinMajValide(true)
+                                }
+                                else{
+                                    setMdpMinMajValide(false)
+                                }                       
+
+                                setPass(mdp)
+                            }}
+                            placeholderTextColor={colors.muted}
+                            secureTextEntry={hidePass}
+                            value={pass}
+                           
+                            />
+                        {/*Show | Hide password */}
+                        <TouchableOpacity style={{position:'absolute', right:8}}
+                            onPress={()=>{
+                                Haptics.click()
+                                setMasquerMdp((val)=>!val)
+                            }}>
+                                <Image
+                                    source={hidePass?icones.afficher:icones.masquer}
+                                    style={{height:24, width:24, opacity:pass.length > 0 ? 1 : 0.4}}
+                                    resizeMode='contain'
+                                />
+                        </TouchableOpacity>
+                    </View>                
+                    {showPassRules && 
+                        <View style={s.passRules}
+                        >
+                            <Text id='longMinText' style={[s.invalid, mdpLongValide && s.valid]}>{t('register.passwordMinLength', { length: mdpLong })}</Text>
+                            <View style={[s.separateur, {backgroundColor:colors.text}]}></View>
+                            <Text id='carSpeciauxText' style={[s.invalid, mdpCarSpeciauxValide && s.valid]}>{t('register.specialCharacters')}</Text>
+                            <View style={[s.separateur, {backgroundColor:colors.text}]}></View>
+                            <Text id='majMinText' style={[s.invalid, mdpMinMajValide && s.valid]}>{t('register.upperAndLowercase')}</Text>        
+                        </View>
+                    }
+                    <TextInputAbs
+                        ref={refMdp2}
+                        style={ {borderColor:pass2Valid?colors.border:colors.error, width:largeur}}
+                        returnKeyType='done'
+                        placeholder={t('register.confirmPasswordPlaceholder')}
+                        onChangeText={(pass2)=>{
+                            if(pass2 === pass){
+                                setPass2Valid(true)
+                            }
+                            else
+                                setPass2Valid(false)
+                            setPass2(pass2)
+                        }}
                         onFocus={()=>{
-                            setShowPassRules(true)
-                            scrollToInput('pass')
+                            setShowPass2Rule(true) 
+                            scrollToInput('pass2')
                         }}
                         onBlur={()=>{
-                            log('mdp valide', mdpValide)
-                            if(mdpValide)
-                                setShowPassRules(false)}}
-                        onSubmitEditing={() => {
-                            setShowPassRules(false)
-                            if(refMdp2.current)
-                                refMdp2.current.focus()
-                        }}
-                        onChangeText={(mdp)=>{
-                            if(mdp.length >= mdpLong){
-                                setMdpLongValide(true)
-                            }
-                            else{
-                                setMdpLongValide(false)
-                            }
-                            const regex = /[!@#$%^&*()?":{}|<>]/
-
-                            if(regex.test(mdp)){
-                                setMdpCarSpeciauxValide(true)
-                            }
-                            else{
-                                setMdpCarSpeciauxValide(false)
-                            }
-                            const aMajuscules = /[A-Z]/.test(mdp);
-                            const aMinuscules = /[a-z]/.test(mdp);
-
-                            if(aMajuscules && aMinuscules){
-                                setMdpMinMajValide(true)
-                            }
-                            else{
-                                setMdpMinMajValide(false)
-                            }                       
-
-                            setPass(mdp)
+                            log('mdp 2 valide', pass2Valid)
+                            if(pass2Valid)
+                                setShowPass2Rule(false)
                         }}
                         placeholderTextColor={colors.muted}
                         secureTextEntry={hidePass}
-                        value={pass}
-                       
-                        />
-                    {/*Show | Hide password */}
-                    <TouchableOpacity style={{position:'absolute', right:8}}
-                        onPress={()=>{
-                            Haptics.click()
-                            setMasquerMdp((val)=>!val)
-                        }}>
-                            <Image
-                                source={hidePass?icones.afficher:icones.masquer}
-                                style={{height:24, width:24, opacity:pass.length > 0 ? 1 : 0.4}}
-                                resizeMode='contain'
-                            />
-                    </TouchableOpacity>
-                </View>                
-                {showPassRules && 
-                    <View style={s.passRules}
-                    >
-                        <Text id='longMinText' style={[s.invalid, mdpLongValide && s.valid]}>Long. min: {mdpLong}</Text>
-                        <View style={[s.separateur, {backgroundColor:colors.text}]}></View>
-                        <Text id='carSpeciauxText' style={[s.invalid, mdpCarSpeciauxValide && s.valid]}>Car. Spéciaux</Text>
-                        <View style={[s.separateur, {backgroundColor:colors.text}]}></View>
-                        <Text id='majMinText' style={[s.invalid, mdpMinMajValide && s.valid]}>Maj. et min.</Text>        
+                        value={pass2}              
+                        onLayout={(e) => {
+                            inputPositions.current.pass2 = e.nativeEvent.layout.y
+                        }}    
+                    />
+                    {showPass2Rule && 
+                            <View style={s.passRules}>
+                            <Text id='mdp2valide' style={[{textAlign:'center', width:'100%'}, s.invalid, pass2Valid && s.valid]}>{t(pass2Valid ? 'register.passwordsMatch' : 'register.passwordsDoNotMatch')}</Text>      
+                        </View>
+                    }
+                    <View style={s.boutonConteneur}>
+                        <TouchableOpacity style={[s.button, { borderColor:colors.border }]} 
+                            onPress={()=>{
+                                setPass('')
+                                setPseudo('')
+                                setPass2('')
+                            }}
+                        >
+                            <Text style={{color:colors.text, fontSize:18, fontFamily:fonts.body}}>{t('register.cancel')}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[s.button, {backgroundColor:isInactive?'transparent':colors.secondary, }]} 
+                            disabled={isInactive}
+                            onPress={()=> {
+                                inscrire()
+                            }}>
+                            <Text style={{color:isInactive?colors.muted:colors.text, fontSize:18, fontFamily:fonts.body}}>
+                                {t('register.submit')}
+                            </Text>
+                        </TouchableOpacity>
                     </View>
-                }
-                <TextInputAbs
-                    ref={refMdp2}
-                    style={ {borderColor:pass2Valid?colors.border:colors.error, width:largeur}}
-                    returnKeyType='done'
-                    placeholder='confirmation du mot de passe'
-                    onChangeText={(pass2)=>{
-                        if(pass2 === pass){
-                            setPass2Valid(true)
-                        }
-                        else
-                            setPass2Valid(false)
-                        setPass2(pass2)
-                    }}
-                    onFocus={()=>{
-                        setShowPass2Rule(true) 
-                        scrollToInput('pass2')
-                    }}
-                    onBlur={()=>{
-                        log('mdp 2 valide', pass2Valid)
-                        if(pass2Valid)
-                            setShowPass2Rule(false)
-                    }}
-                    placeholderTextColor={colors.muted}
-                    secureTextEntry={hidePass}
-                    value={pass2}              
-                    onLayout={(e) => {
-                        inputPositions.current.pass2 = e.nativeEvent.layout.y
-                    }}    
-                />
-                {showPass2Rule && 
-                        <View style={s.passRules}>
-                        <Text id='mdp2valide' style={[{textAlign:'center', width:'100%'}, s.invalid, pass2Valid && s.valid]}>Les mots de passes {!pass2Valid?"ne sont pas":"sont" } identiques</Text>      
+                    <View style={{ width:'100%', height:24, alignItems:'center'}}>
+                        <LinkAbs href={'/(auth)/login'}>
+                            {t('register.alreadyRegistered')}
+                        </LinkAbs>
                     </View>
-                }
-                <View style={s.boutonConteneur}>
-                    <TouchableOpacity style={[s.button, { borderColor:colors.border }]} 
-                        onPress={()=>{
-                            setPass('')
-                            setPseudo('')
-                            setPass2('')
-                        }}
-                    >
-                        <Text style={{color:colors.text, fontSize:18, fontFamily:fonts.body}}>annuler</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[s.button, {backgroundColor:isInactive?'transparent':colors.secondary, }]} 
-                        disabled={isInactive}
-                        onPress={()=> {
-                            inscrire()
-                        }}>
-                        <Text style={{color:isInactive?colors.muted:colors.text, fontSize:18, fontFamily:fonts.body}}>
-                            s'inscrire
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={{ width:'100%', height:24, alignItems:'center'}}>
-                    <LinkAbs href={'/(auth)/login'}>
-                        Déjà inscrit?
-                    </LinkAbs>
-                </View>
-        </ScrollView>        
-        </KeyboardAvoidingView>   
-        </Pressable>    
-    )
+            </ScrollView>        
+            </KeyboardAvoidingView>
+        </KeyboardDismisser>
+    );
     
 }
 

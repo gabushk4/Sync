@@ -1,24 +1,24 @@
+import axios from 'axios';
 import { Camera, CameraView, } from 'expo-camera';
+import { useFocusEffect, useIsFocused, useNavigation, } from "expo-router/react-navigation";
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Image, Linking, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
-import { useFocusEffect, useIsFocused, useNavigation, } from '@react-navigation/native';
-import axios from 'axios';
 import Toast from 'react-native-toast-message';
 
-import ToastAbs from '@/abstractions/toastAbs';
 import Haptics from '@/abstractions/haptics';
+import ToastAbs from '@/abstractions/toastAbs';
 
-import { useModal } from '@/contextes/contexteModals';
-import { useRouteAbs } from '@/contextes/contexteRoute';
-import { usePalette } from '@/contextes/contextePalette';
-import { useAccessToken } from '@/contextes/contexteToken';
 import { useFont } from '@/contextes/contexteFont';
+import { usePalette } from '@/contextes/contextePalette';
+import { useRouteAbs } from '@/contextes/contexteRoute';
+import { useAccessToken } from '@/contextes/contexteToken';
 
+import { toastConfig, toastTypes } from '@/constants/toastConfig';
 import catcher from '@/functions/catcher';
 import log from '@/functions/log';
 import { router } from 'expo-router';
-import {toastConfig, customToasts} from '@/constants/toastConfig';
 
 interface QRCodeData {
   method: 'get' | 'post' | 'put' | 'delete' | 'patch';
@@ -32,6 +32,7 @@ interface BarcodeScanResult {
 }
 
 export default function ScannerQRCode(): React.ReactElement {
+  const { t } = useTranslation('scanQR')
     const { colors } = usePalette();
     const { fonts } = useFont();
     const isFocused = useIsFocused();
@@ -81,20 +82,20 @@ export default function ScannerQRCode(): React.ReactElement {
 
         if (status !== 'granted') {
             Alert.alert(
-                'demande de permission d\'accès à la caméra',
-                'sync a besoin d\'accéder à la caméra pour scanner le code qr; acceptes-tu?',
+                t('permission.title'),
+                t('permission.message'),
                 [
                     {
-                        text: 'oui',
+                        text: t('permission.allow'),
                         onPress: async () => {
                         const { granted, canAskAgain } = await Camera.requestCameraPermissionsAsync();
                         if (!canAskAgain && !granted)
                             Alert.alert(
-                            'aller dans les règlages',
-                            'il faut une intervention manuel; ne t\'inquiète pas, on n\'utilisera jamais ta caméra sans que tu le saches',
+                            t('permission.settingsTitle'),
+                            t('permission.settingsMessage'),
                             [
                                 {
-                                text: 'j\'y vais',
+                                text: t('permission.openSettings'),
                                 onPress: () => {
                                     Linking.openSettings();
                                 },
@@ -104,7 +105,7 @@ export default function ScannerQRCode(): React.ReactElement {
                         },
                     },
                     {
-                        text: 'non',
+                        text: t('permission.deny'),
                         style: 'cancel',
                     },
                 ]
@@ -161,10 +162,10 @@ export default function ScannerQRCode(): React.ReactElement {
             clearInterval(intervalPermission.current ?? 0);
             ToastAbs.show({
                 type: 'persoAvertissement',
-                text1: 'problème à scanner?',
-                text2: 'tu peux aussi entrer le code d\'ami inscrit en dessous du code qr',
+                text1: t('scanHint.title'),
+                text2: t('scanHint.message'),
                 props: {
-                text3: 'appuie ici pour entrer le code d\'ami',
+                    text3: t('scanHint.action'),
                 },
                 autoHide: false,
                 position: 'bottom',
@@ -200,8 +201,8 @@ export default function ScannerQRCode(): React.ReactElement {
       if (response.status === 201) {
         ToastAbs.show({
           type: 'persoSucces',
-          text1: 'demande d\'ami envoyée',
-          text2: 'je sens que c\'est le début d\'un lien unique, presque magique!',
+          text1: t('common:friendRequestSentTitle'),
+          text2: t('common:friendRequestSentMessage'),
           autoHide: true,
         });
 
@@ -209,14 +210,14 @@ export default function ScannerQRCode(): React.ReactElement {
 
         if (!notifFeedback.notif_sent) {
           ToastAbs.show({
-            type: customToasts.warning,
-            text1: 'notification non envoyée',
+            type: toastTypes.warning,
+            text1: t('scanResult.notificationNotSent'),
             text2: notifFeedback.message
           })
         }
       }
     } catch (error) {
-      catcher(error, `la demande n'a pas passée`);
+      catcher(error, t('errors.requestFailed'));
       setScanne(false);
       setTimeout(() => {
         cScan.current = false;
@@ -242,8 +243,7 @@ export default function ScannerQRCode(): React.ReactElement {
             color: colors.text,
           }}
         >
-          Demande permission caméra... Si tu as accepté, ça peut prendre du temps avant de se
-          mettre à jour; il faut être patient: attente({secondes}s/20s)
+          {t('permission.pending', { seconds: secondes })}
         </Text>
       </View>
     );

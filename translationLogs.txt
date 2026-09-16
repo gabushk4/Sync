@@ -1,0 +1,14 @@
+home/index.tsx
+Dates formatées par Luxon : contenu généré dynamiquement, localisé selon la langue active.
+Noms d’amis et titres d’événements : données utilisateur, laissées intactes.
+Logs, commentaires, routes et valeurs techniques : exclus conformément aux règles.
+
+home/details/eventId.tsx
+event.title, event.description et les données affichées par EventForm : contenu potentiellement saisi par l’utilisateur.
+reponse.data.message : message dynamique fourni par l’API.
+Logs, commentaires, routes et valeurs techniques : volontairement laissés tels quels.
+
+home/edit/event.tsx
+Titre, description et valeurs du formulaire : données saisies par l’utilisateur.
+Liste des champs modifiés : contenu dynamique passé via {{fields}}.
+Routes, valeurs d’enum, logs et commentaires : éléments techniques exclus.

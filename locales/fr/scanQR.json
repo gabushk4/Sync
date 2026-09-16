@@ -1,0 +1,23 @@
+{
+	"permission": {
+		"title": "demande de permission d'accès à la caméra",
+		"message": "Sync a besoin d'accéder à la caméra pour scanner le code QR ; acceptes-tu ?",
+		"allow": "oui",
+		"settingsTitle": "aller dans les réglages",
+		"settingsMessage": "Une intervention manuelle est nécessaire ; ne t'inquiète pas, nous n'utiliserons jamais ta caméra sans que tu le saches",
+		"openSettings": "j'y vais",
+		"deny": "non",
+		"pending": "Permission d'usage de la caméra non accordée... Si tu as accepté, cela peut prendre du temps avant la mise à jour ; merci de patienter : attente ({{seconds}} s/20 s)"
+	},
+	"scanHint": {
+		"title": "problème à scanner ?",
+		"message": "Tu peux aussi entrer le code d'ami inscrit sous le code QR",
+		"action": "Appuie ici pour entrer le code d'ami"
+	},
+	"scanResult": {
+		"notificationNotSent": "notification non envoyée"
+	},
+	"errors": {
+		"requestFailed": "la demande n'a pas abouti"
+	}
+}

@@ -1,25 +1,24 @@
-import React, { useCallback, useState } from "react";
-import {View, FlatList, TouchableOpacity, Image, Text, useColorScheme, } from 'react-native';
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
+import { useFocusEffect } from "expo-router/react-navigation";
+import { useCallback, useState } from "react";
+import { useTranslation } from 'react-i18next';
+import { FlatList, Image, Text, TouchableOpacity, useColorScheme, View, } from 'react-native';
 
 import catcher from "@/functions/catcher";
-import log from "@/functions/log";
 import { convertirTimestampDateLongue } from "@/functions/convertirTimestamp";
 import { convertirUTCversLocale } from "@/functions/convertirUTCenLocal";
+import log from "@/functions/log";
 
 import { useAPI } from "@/contextes/contexteAPI";
 import { useFont } from "@/contextes/contexteFont";
 import { useInvites } from "@/contextes/contexteInvites";
-import { useAccessToken } from "@/contextes/contexteToken";
 import { usePalette } from "@/contextes/contextePalette";
 
 import ModalBase from "@/components/modalBase";
 
-import { FriendListType, useFriendList } from "@/hooks/useFriendList";
 import { modalEvents } from "@/events/modalEvents";
+import { FriendListType, useFriendList } from "@/hooks/useFriendList";
 
 import { Participant } from "@/types/invites";
 
@@ -32,14 +31,12 @@ type Friend = {
 }
 
 export default function ListeAmis(){
+    const { t } = useTranslation('friends')
     const {api} = useAPI()
     const { colors } = usePalette()
     const { fonts } = useFont()
     const colorScheme = useColorScheme()
     
-    const navigation = useNavigation()
-    const {APIBaseURL} = useAPI()
-    const {getToken} = useAccessToken()
     const { invites } = useInvites()  
     
     const { type, inviterUrl } = useLocalSearchParams()
@@ -57,12 +54,7 @@ export default function ListeAmis(){
 
     const getAmis = async ()=>{
         try {
-            const token = await getToken()
-            const response = await api.get('/amis', {
-                headers:{
-                    'Authorization':`Bearer ${token}`
-                }
-            })
+            const response = await api.get('/amis')
             
             const data = response.data.map((ami: Friend)=>{
                 const amitie = convertirUTCversLocale(ami.temps_amitie )
@@ -75,21 +67,18 @@ export default function ListeAmis(){
 
             setAmis(data)
         } catch (error) {
-            catcher(error, 'erreur survenue en obtenant les amis')
+            catcher(error, t('errors.loadFailed'))
         }
     }
 
     const deleteAmi = async (idPublique: string)=>{
         try {
-            const token = await getToken()
-            const response = await api.delete(`/amis/${idPublique}`, {headers:{
-                'Authorization':`Bearer ${token}`
-            }})
+            const response = await api.delete(`/amis/${idPublique}`)
             const amisC = [...amis]
             const nouvAmis = amisC.filter(a=>a.id != idPublique)
             setAmis([...nouvAmis])
         } catch (error) {
-            catcher(error, 'supression impossible')
+            catcher(error, t('errors.deleteFailed'))
         }
     }
 
@@ -107,7 +96,7 @@ export default function ListeAmis(){
             <View style={{height:'100%', width:'100%'}}>
                 <View style={{flexDirection:'row', justifyContent:'center', alignItems:'center'}}>
                     <View style={{width:'100%', alignItems:'center'}}>
-                        <Text style={{color:colors.text, fontFamily:fonts.body, fontSize:20}}>Amis</Text>
+                        <Text style={{color:colors.text, fontFamily:fonts.body, fontSize:20}}>{t('list.title')}</Text>
                     </View>
                     {select &&
                         <TouchableOpacity style={{position:'absolute', right:16,}} 
@@ -118,7 +107,7 @@ export default function ListeAmis(){
                                     modalEvents.emitClosing()
                                 }
                             }}>
-                            <Text style={{color:colors.text, fontFamily:fonts.body, fontSize:16}}>inviter</Text>
+                            <Text style={{color:colors.text, fontFamily:fonts.body, fontSize:16}}>{t('list.invite')}</Text>
                         </TouchableOpacity>
                     }
                 </View>
@@ -156,7 +145,7 @@ export default function ListeAmis(){
                                     </View>
                                     <View style={{width:'60%', justifyContent:'center'}}>
                                         <Text style={{fontFamily:fonts.body, color:colors.text, fontSize:16}}>{item.pseudo}</Text>
-                                        <Text style={{fontFamily:fonts.body, color:colors.muted, fontSize:14}}>ami depuis le {dateAmitie.substring(dateAmitie.indexOf('.')+2)}</Text>
+                                        <Text style={{fontFamily:fonts.body, color:colors.muted, fontSize:14}}>{t('list.friendSince', { date: dateAmitie.substring(dateAmitie.indexOf('.')+2) })}</Text>
                                     </View>
                                     <View style={{width:'15%', height:'100%', justifyContent:'center', alignItems:'center'}}>
                                     {!select && <TouchableOpacity style={{width:'88%', height:'72%', justifyContent:'center', alignItems:'center'}}
@@ -178,7 +167,7 @@ export default function ListeAmis(){
                 {amis.length < 1 &&
                     <View style={{height:'100%', width:'100%', justifyContent:'center', alignItems:'center', gap:8}}>
                         <Text style={{color:colors.text, fontFamily:fonts.title, fontSize:18}}>
-                            ajoutes des amis grâce a l'option:
+                            {t('list.emptyState')}
                         </Text>
                         <TouchableOpacity onPress={()=>{
                             router.push('/(modals)/ajouterAmi')

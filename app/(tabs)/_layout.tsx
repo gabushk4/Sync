@@ -1,27 +1,26 @@
+import Icons from "@react-native-vector-icons/ionicons";
+import { Tabs } from 'expo-router';
 import React from 'react';
-import { Ionicons } from '@expo/vector-icons';
-import { Link, Tabs } from 'expo-router';
-import { Image, Pressable, View, Text, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { ColorValue, View } from 'react-native';
 
-import { usePalette } from '@/contextes/contextePalette'
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
-import BetaTag from '@/components/betaTag';
 import { CustomTabBar } from '@/components/customTabBar';
+import { useColorScheme } from '@/components/useColorScheme';
 import { useFont } from '@/contextes/contexteFont';
-import RequestStatus from '@/components/requestStatus';
 import { useNotifications } from '@/contextes/contexteNotifications';
+import { usePalette } from '@/contextes/contextePalette';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
-  name: React.ComponentProps<typeof Ionicons>['name'];
-  color: string;
+  name: React.ComponentProps<typeof Icons>['name'];
+  color: ColorValue;
 }) {
-  return <Ionicons size={24} style={{ marginBottom: -4, }} {...props} />;
+  return <Icons size={24} style={{ marginBottom: -4, }} {...props} />;
 }
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { t } = useTranslation();
   const { colors } = usePalette()
   const { fonts } = useFont()
   const {notifications, nonLues} = useNotifications()
@@ -43,8 +42,8 @@ export default function TabLayout() {
         name="home"        
         options={{
           href:"/(tabs)/home",
-          title: 'sync',
-          headerTitle:'sync',
+          title: t('common:tabs.home'),
+          headerTitle:t('common:tabs.home'),
           tabBarIcon: ({ color }) => <TabBarIcon name={'grid-outline'} color={color} />,          
         }}
       />
@@ -52,8 +51,8 @@ export default function TabLayout() {
         name="feed"
         options={{
           href:'/(tabs)/feed',
-          title: 'fil',
-          headerTitle:'actualités',
+          title: t('common:tabs.feed'),
+          headerTitle:t('common:tabs.feedTitle'),
           tabBarIcon: ({ color }) => <TabBarIcon name="list-outline" color={color} />,
           tabBarBadge: notifications.length > 0 ? nonLues > 0 ? nonLues : '' : undefined  
         }}
@@ -72,8 +71,8 @@ export default function TabLayout() {
         name="inbox"        
         options={{
           href:'/(tabs)/inbox',
-          title: 'messages',
-          headerTitle:'conversations',
+          title: t('common:tabs.inbox'),
+          headerTitle:t('common:tabs.inboxTitle'),
           tabBarIcon: ({ color }) => <TabBarIcon name="chatbox-ellipses-outline" color={color} />,          
         }}
       />
@@ -81,8 +80,8 @@ export default function TabLayout() {
         name="profile"
         options={{
           href:'/(tabs)/profile',
-          title: 'profil',
-          headerTitle:'profile',
+          title: t('common:tabs.profile'),
+          headerTitle:t('common:tabs.profileTitle'),
           tabBarIcon: ({ color }) => <TabBarIcon name="person-circle-outline" color={color} />,
         }}
       />

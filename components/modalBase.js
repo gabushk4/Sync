@@ -1,4 +1,4 @@
-import { useFocusEffect, useIsFocused } from "@react-navigation/native"
+import { useFocusEffect, useIsFocused } from "expo-router/react-navigation"
 import { BlurView } from "expo-blur"
 import React, { useEffect, useState } from "react"
 import { Image, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, useColorScheme, View } from "react-native"

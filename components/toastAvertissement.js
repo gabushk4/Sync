@@ -1,10 +1,11 @@
-import React from "react";
-import {View, Text, StyleSheet, Animated, Image, TouchableOpacity} from 'react-native';
-import { usePalette } from "@/contextes/contextePalette";
-import { useFont } from "@/contextes/contexteFont";
 import Haptics from "@/abstractions/haptics";
+import { useFont } from "@/contextes/contexteFont";
+import { usePalette } from "@/contextes/contextePalette";
+import { useTranslation } from 'react-i18next';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ToastAvertissement({text1, text2, props, ...rest}){
+    const { t } = useTranslation()
     const { colors } = usePalette();
     const { fonts } = useFont();
     const text3 = props.text3?props.text3:false
@@ -25,8 +26,8 @@ export default function ToastAvertissement({text1, text2, props, ...rest}){
                     />
                 </View>
                 <View style={{flexDirection:'column', alignItems:'flex-start', width:'80%', height:'100%', paddingVertical:4}}>
-                    <Text style={{color:colors.warning, fontFamily:fonts.title, fontSize:20, }}>{text1?text1:'avertissement'}</Text>
-                    <Text style={{color:colors.text, fontFamily:fonts.body, fontSize:16}}>{text2?text2:'un avertissement sans message est survenue'}</Text>
+                    <Text style={{color:colors.warning, fontFamily:fonts.title, fontSize:20, }}>{text1?text1:t('common:toast.warning')}</Text>
+                    <Text style={{color:colors.text, fontFamily:fonts.body, fontSize:16}}>{text2?text2:t('common:toast.warningWithoutMessage')}</Text>
                     
                 </View>
             

@@ -1,16 +1,16 @@
-import React from 'react'
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { useTranslation } from 'react-i18next'
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 import ModalBase from '@/components/modalBase'
-import { usePalette } from '@/contextes/contextePalette'
-import { useFont } from '@/contextes/contexteFont'
-import { Ionicons } from '@expo/vector-icons'
-import { router } from 'expo-router'
 import { useAuth } from '@/contextes/contexteAuth'
+import { useFont } from '@/contextes/contexteFont'
+import { usePalette } from '@/contextes/contextePalette'
+import Ionicons from "@react-native-vector-icons/ionicons"
 
 
 
 export default function ConfirmSignOut({ }) {
+    const { t } = useTranslation()
     const { colors } = usePalette()
     const { fonts } = useFont()
     const { signOut } = useAuth()
@@ -59,15 +59,15 @@ export default function ConfirmSignOut({ }) {
     return (
         <ModalBase>
             <View style={s.container}>
-                <Text style={s.title}>déconnexion</Text>
-                <Text style={[s.text, {marginTop:32}]}>voulez-vous vraiment vous déconnecter?</Text>
+                <Text style={s.title}>{t('common:signOut.title')}</Text>
+                <Text style={[s.text, {marginTop:32}]}>{t('common:signOut.confirmation')}</Text>
                 <View style={s.btnContainer}>
                     <TouchableOpacity style={[s.btn, {}]}
                         onPress={() => {
                             signOut()
                         }}
                     >
-                        <Text style={s.text}>oui</Text>
+                        <Text style={s.text}>{t('common:signOut.confirm')}</Text>
                         <Ionicons name='log-out' color={colors.error} size={20}/>
                     </TouchableOpacity>
                 </View>

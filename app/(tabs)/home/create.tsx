@@ -1,7 +1,7 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useColorScheme, View } from 'react-native';
-import Toast from "react-native-toast-message";
 
 import { useActionFab } from "@/hooks/useActionFAB";
 
@@ -16,15 +16,18 @@ import EventForm from "@/components/eventForm";
 import catcher from "@/functions/catcher";
 import log from "@/functions/log";
 import { defaultEvent, Event } from "@/types/calendar";
-import { Ionicons } from "@expo/vector-icons";
+import Icon from "@react-native-vector-icons/ionicons";
 
+import ToastAbs from "@/abstractions/toastAbs";
 import { EventFormHandle } from "@/components/eventForm";
-import formaterDatePourServeur from "@/functions/formaterDatePourServeur";
+import { toastTypes } from "@/constants/toastConfig";
 import { convertirLocalVersUTC } from "@/functions/convertirUTCenLocal";
-import { DateTime } from "luxon";
+import formaterDatePourServeur from "@/functions/formaterDatePourServeur";
 import { Participant } from "@/types/invites";
+import { DateTime } from "luxon";
 
 export default function CreateEvent({ }) {
+    const { t } = useTranslation('events')
     const { colors } = usePalette()
     const colorScheme = useColorScheme()
     const { fonts } = useFont()
@@ -59,11 +62,11 @@ export default function CreateEvent({ }) {
             log('post event', values)
 
             let valid = true
-            let errorMessage = "Erreur inconnue"
+            let errorMessage = t('create.unknownError')
 
             if (values.titre && values.titre.length < 4) {
                 valid = false
-                errorMessage = `Le titre doit avoir plus que 4 caractères; titre: ${values.titre}`
+                errorMessage = t('create.titleTooShort', { title: values.titre })
             }
 
             if (valid) {
@@ -84,19 +87,19 @@ export default function CreateEvent({ }) {
                 )
 
                 if (response.status == 201) {
-                    Toast.show({
-                        type: 'persoSucces',
-                        text1: 'évènement ajouté',
-                        text2: 'tu peux te détendre, c\'est enregistré',
+                    ToastAbs.show({
+                        type: toastTypes.success,
+                        text1: t('create.createdTitle'),
+                        text2: t('create.createdMessage'),
                         autoHide: true,
                     })
                     router.replace('/(tabs)/home')
                 }
             } else {
-                Toast.show({ type: 'persoErreur', text2: errorMessage })
+                ToastAbs.show({ type: toastTypes.error, text2: errorMessage })
             }
         } catch (error: any) {
-            catcher(error, 'erreur lors de l\'upload')
+            catcher(error, t('errors.createFailed'))
             if (error.response?.status == 409) {
                 const evenementEnConflit = error.response.data.evenement
                 log('evenement en conflit', evenementEnConflit)
@@ -108,7 +111,7 @@ export default function CreateEvent({ }) {
 
     useActionFab({
         action: postEvenement,
-        icon: <Ionicons name="checkmark" color={colors.text} size={28} />
+        icon: <Icon name="checkmark" color={colors.text} size={28} />
     })
 
     useFocusEffect(useCallback(()=>{  

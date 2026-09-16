@@ -1,0 +1,9 @@
+{
+  "friendsListEmptyState": "Add friends here:",
+  "errors": {
+    "formatMemberEvents": "Error formatting the member's events",
+    "formatFriendEvents": "Error formatting friends' events",
+    "loadMemberEvents": "Unable to load the member's events",
+    "loadFriendEvents": "Unable to load friends' events"
+  }
+}
