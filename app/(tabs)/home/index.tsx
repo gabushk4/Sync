@@ -46,8 +46,12 @@ const AnimatedStyleMinVal = 0.1
 const LIST_HEIGHT = 104
 const { width: WIN_W, height: WIN_H } = Dimensions.get('window') 
 
+/**
+ * 
+ * @returns 
+ */
 export default function Home() {
-  const { t, i18n } = useTranslation('home')
+  const { t } = useTranslation('home')
   const { colors } = usePalette()
   const { fonts } = useFont()
   const { api } = useAPI()
@@ -595,7 +599,7 @@ export default function Home() {
           </TouchableOpacity>
           <View style={{padding:8, backgroundColor:colors.primary, borderWidth:1, borderColor:colors.border, borderRadius:8}}>
             <Text style={{ color: colors.text, fontFamily:fonts.title }}>
-              {todayDateTime?.setLocale(i18n.language).toFormat('d MMM')} 
+              {todayDateTime?.toFormat('d MMM')}
             </Text>
           </View>
           <TouchableOpacity style={s.arrow} onPress={avancerDate}>
@@ -618,7 +622,7 @@ export default function Home() {
           <TouchableOpacity onPress={retourMaintenant} style={s.backToNowInner}>
             <Text style={{ color: colors.text, fontSize: 12 }}>
               {currentTime?.day !== todayDateTime?.day
-                ? currentTime?.setLocale(i18n.language).toFormat('d MMM')
+                ? currentTime?.toFormat('d MMM')
                 : currentTime?.toFormat('HH:mm')}
             </Text>
           </TouchableOpacity>

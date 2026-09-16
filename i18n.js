@@ -1,7 +1,7 @@
 // i18n.js
-import * as Localization from 'expo-localization';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { DEFAULT_LANGUAGE } from './locales/config';
 
 import frAuth from './locales/fr/auth.json';
 import frCalendar from './locales/fr/calendar.json';
@@ -36,7 +36,7 @@ i18n.use(initReactI18next).init({
   },
     ns: ['common', 'home', 'events', 'profile', 'settings', 'auth', 'scanQR', 'friends', 'feed', 'notifications', 'inbox', 'calendar', ],
   defaultNS: 'common',
-  lng: Localization.getLocales()[0].languageCode,
+  lng: DEFAULT_LANGUAGE,
   fallbackLng: 'fr',
   interpolation: { escapeValue: false },
 });

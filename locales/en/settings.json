@@ -1,1 +1,8 @@
-{}
+{
+    "title":"settings",
+    "language":"language",
+    "english":"english",
+    "french":"french",
+    "timezone":"timezone",
+    "local":"local timezone"
+}

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import '../i18n';
 
 //Providers
@@ -30,6 +30,7 @@ import { GestionScrollProvider } from '@/contextes/contexteGestionListes';
 import { InvitesProvider } from '@/contextes/contexteInvites';
 import { MockModeProvider } from '@/contextes/contexteMockMode';
 import { NotificationProvider } from '@/contextes/contexteNotifications';
+import { SettingsProvider, useSettings } from '@/contextes/contexteSettings';
 import { TimelineProvider } from '@/contextes/contexteTimeline';
 import {
   configureReanimatedLogger,
@@ -37,6 +38,7 @@ import {
 } from 'react-native-reanimated';
 
 import { toastConfig } from '@/constants/toastConfig';
+import { initLocalization } from '@/locales/initLocale';
 
 // This is the default configuration
 configureReanimatedLogger({
@@ -55,7 +57,8 @@ export default function RootLayout() {
         <AccessTokenProvider>
           <MockModeProvider>
             <APIProvider>
-              <MembreProvider>
+              <SettingsProvider>
+                <MembreProvider>
                 <AuthProvider> 
                   <NotificationProvider>
                     <RouteAbsProvider>
@@ -75,7 +78,8 @@ export default function RootLayout() {
                     </RouteAbsProvider>   
                   </NotificationProvider>  
                 </AuthProvider>
-              </MembreProvider>
+                </MembreProvider>
+              </SettingsProvider>
             </APIProvider>
           </MockModeProvider>
         </AccessTokenProvider>            
@@ -86,12 +90,19 @@ export default function RootLayout() {
 
 function AppLoader() {
   const { fontsLoaded } = useFont();  
+  const { settings, hydrated: settingsLoaded } = useSettings();
+  const [localeLoaded, setLocaleLoaded] = useState(false);
 
   useEffect(() => {
-    if (fontsLoaded) SplashScreen.hideAsync();
-  }, [fontsLoaded]);
+    if (!settingsLoaded) return;
+    initLocalization(settings.language).finally(() => setLocaleLoaded(true));
+  }, [settingsLoaded]);
 
-  if (!fontsLoaded) return null;
+  useEffect(() => {
+    if (fontsLoaded && localeLoaded) SplashScreen.hideAsync();
+  }, [fontsLoaded, localeLoaded]);
+
+  if (!fontsLoaded || !settingsLoaded || !localeLoaded) return null;
 
   return <RootLayoutNav />;
 }

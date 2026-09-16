@@ -7,7 +7,7 @@ import Icon from "@react-native-vector-icons/ionicons";
 import { Picker } from '@react-native-picker/picker'
 import RNPickerSelect from 'react-native-picker-select'
 import React, { useRef, useState } from 'react'
-import { FlatList, Modal, Platform, Pressable, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, useColorScheme, View } from 'react-native'
+import { FlatList, Modal, Platform, Pressable, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, useColorScheme, View, ViewProps } from 'react-native'
 import Animated, {createAnimatedComponent, Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 
 
@@ -15,14 +15,15 @@ type Props = {
   values: Recurrence[]
   selected: Recurrence | { value: string | null }
   onSelection: (val: string | null) => void
-  disabled: boolean
+  disabled: boolean,
+  style?: ViewProps['style']
 }
 
 const CHEVRON_SIZE = 20
 const ITEM_HEIGHT = 40
 const ITEM_NUMBER = 4
 
-export default function MenuDeroulant({ values, selected, onSelection, disabled }: Props) {
+export default function MenuDeroulant({ values, selected, onSelection, disabled, style }: Props) {
   const { colors } = usePalette()
   const { fonts } = useFont()
   const colorScheme = useColorScheme()
@@ -66,7 +67,6 @@ export default function MenuDeroulant({ values, selected, onSelection, disabled 
       borderWidth: 1,
       borderColor:colors.border,
       width: 'auto',
-      minWidth: 128,
       alignSelf: 'flex-end',
       gap:16
     },
@@ -120,7 +120,8 @@ export default function MenuDeroulant({ values, selected, onSelection, disabled 
   
     textTrigger: {
       fontSize: disabled ? 18 : 16,
-      color:colors.text
+      color: colors.text,
+      maxWidth: '90%',
     },
   
     layoutFill: {
@@ -131,18 +132,19 @@ export default function MenuDeroulant({ values, selected, onSelection, disabled 
 
   if (Platform.OS === 'ios') {
     return (
-      <View>
+      <View style={style}>
         <TouchableOpacity
           style={[
             s.trigger,
             disabled
               ? s.triggerDisabled
-              : { backgroundColor: colors.primary, borderColor: colors.border, flexDirection:'row', justifyContent:'space-between', gap:8 },
+              : { backgroundColor: colors.primary, borderColor: colors.border, flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
+            
           ]}
           onPress={() => setIosDropDownVisible(true)}
           disabled={disabled}
         >
-          <Text style={[s.textTrigger, { color: colors.text, fontFamily: fonts.body }]}>
+          <Text numberOfLines={1} style={[s.textTrigger, { color: colors.text, fontFamily: fonts.body }]}>
             {values.find((v) => v.value === selectedValue)?.title}
           </Text>
           {!disabled &&
@@ -202,7 +204,8 @@ export default function MenuDeroulant({ values, selected, onSelection, disabled 
   return (
     <View
       style={[
-        s.androidTriggerContainer,        
+        s.androidTriggerContainer,     
+        style
       ]}
     >
       <TouchableOpacity

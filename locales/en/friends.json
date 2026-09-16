@@ -15,17 +15,17 @@
 	},
 	"emailConfirmation": {
 		"friendRequestsIntro": "before sending friend requests",
-		"title": "Confirm your email",
-		"existenceMessage": "I need to make sure you exist...",
-		"checkInbox": "Check your inbox for a confirmation request (you really only need to click a button)",
-		"emailRegistered": "Registered email:",
-		"notReceived": "Didn't receive it? Tap here to resend an email",
-		"resend": "Resend email",
-		"sent": "Email sent"
+		"title": "confirm your email",
+		"existenceMessage": "i need to make sure you exist...",
+		"checkInbox": "check your inbox for a confirmation request (you really only need to click a button)",
+		"emailRegistered": "registered email:",
+		"notReceived": "didn't receive it? Tap here to resend an email",
+		"resend": "resend email",
+		"sent": "email sent"
 	},
 	"errors": {
-		"loadFailed": "Error while getting friends",
-		"deleteFailed": "Unable to delete friend",
+		"loadFailed": "error while getting friends",
+		"deleteFailed": "unable to delete friend",
 		"requestFailed": "The request could not be sent",
 		"emailFailed": "Error sending email"
 	}
