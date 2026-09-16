@@ -7,7 +7,7 @@ import { useFont } from "@/contextes/contexteFont";
 import log from "@/functions/log";
 import { router } from "expo-router";
 import { DateTime } from "luxon";
-import React, { useState } from "react";
+import { useState } from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
 import Animated, { SharedValue, useAnimatedStyle } from "react-native-reanimated";
 
@@ -45,11 +45,12 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
                 ? { left: Math.min(Math.max((listOffset.value - left) + pxHeures, pxHeures), width as number - (freeSlotTextWidth + pxHeures)) }
                 : { top: Math.min(Math.max((listOffset.value - top) + pxHeures, pxHeures), height as number - (freeSlotTextHeight + pxHeures)) })
         }))
-    const s = StyleSheet.create({
+   const s = StyleSheet.create({
         freeSlot:{
             borderWidth: 1, 
             borderRadius:8,
             borderColor: colors.success,
+            backgroundColor: colors.success + '33', // <- AJOUT POUR L'US-15 (Opacité hex 33 = ~20%)
             alignItems: 'center',
             justifyContent: 'center',            
         },

@@ -1,29 +1,28 @@
-import React, { useEffect, useRef, useState } from "react"
-import { View, Text, TouchableOpacity, Image, StyleSheet, Platform, useColorScheme } from "react-native"
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated"
 import axios from "axios"
-import Toast from "react-native-toast-message"
 import { DateTime } from "luxon"
+import { useEffect, useState } from "react"
+import { Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native"
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated"
 
-import { usePalette } from "@/contextes/contextePalette"
-import { useNotifications, Notification, NotificationPayload } from "@/contextes/contexteNotifications"
-import { useFont } from "@/contextes/contexteFont"
 import { useAPI } from "@/contextes/contexteAPI"
+import { useFont } from "@/contextes/contexteFont"
+import { Notification, NotificationPayload, useNotifications } from "@/contextes/contexteNotifications"
+import { usePalette } from "@/contextes/contextePalette"
 import { useAccessToken } from "@/contextes/contexteToken"
 
 import catcher from "@/functions/catcher"
-import log from "@/functions/log"
-import { convertirUTCversLocale } from "@/functions/convertirUTCenLocal"
 import { convertirTimestampDateCourte, convertirTimestampHeure, convertirTimestampQuand } from "@/functions/convertirTimestamp"
+import { convertirUTCversLocale } from "@/functions/convertirUTCenLocal"
+import log from "@/functions/log"
 
 import Haptics from "@/abstractions/haptics"
 
-import { withSpringConfig, withTimingConfig } from "@/constants/ReanimatedConfs"
-import Icon from "@react-native-vector-icons/ionicons";
-import AppIcon from "@/svgs/appIcon"
-import { Gesture } from "react-native-gesture-handler"
 import ToastAbs from "@/abstractions/toastAbs"
+import { withSpringConfig, withTimingConfig } from "@/constants/ReanimatedConfs"
 import { toastTypes } from "@/constants/toastConfig"
+import AppIcon from "@/svgs/appIcon"
+import Icon from "@react-native-vector-icons/ionicons"
+import { Gesture } from "react-native-gesture-handler"
 
 type Action = {
     label: string
@@ -227,8 +226,9 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
         backgroundColor.value = withTiming(colors.secondary, { duration: 500 })
     }
 
-    const typeIcon = () => {
+   const typeIcon = () => {
         switch (item.type) {
+            case "demande_ami": // <- AJOUT POUR L'US-13
             case "amis":
                 return <Icon name="person-outline" color={colors.muted} size={20} />
             case "sync":

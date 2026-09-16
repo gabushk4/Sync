@@ -1,15 +1,14 @@
-import React, {useState, useEffect, } from 'react';
-import { StyleSheet, Text, View, Button, ScrollView, Image, TouchableOpacity, useColorScheme} from 'react-native';
-import { usePalette } from '@/contextes/contextePalette';
 import { useAPI } from '@/contextes/contexteAPI';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import catcher from '@/functions/catcher';
-import { useMembre } from '@/contextes/contexteMembre';
 import { useInvites } from '@/contextes/contexteInvites';
+import { useMembre } from '@/contextes/contexteMembre';
+import { useMockMode } from '@/contextes/contexteMockMode';
+import { usePalette } from '@/contextes/contextePalette';
+import catcher from '@/functions/catcher';
 import log from '@/functions/log';
 import { Participant } from '@/types/invites';
+import { useEffect, useState } from 'react';
+import { Alert, Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import ProfilPic from './pfp';
-import { useMockMode } from '@/contextes/contexteMockMode';
 
 type Props = {
     participant: Participant;
@@ -17,28 +16,28 @@ type Props = {
     height: number;
 }
 
-export default function ParticipantLigne({participant, participantsUrl = undefined, height} : Props){
+export default function ParticipantLigne({ participant, participantsUrl = undefined, height }: Props) {
     const { colors } = usePalette()
     const colorScheme = useColorScheme()
-    const {api, APIBaseURL} = useAPI()
-    const {membre} = useMembre()
+    const { api, APIBaseURL } = useAPI()
+    const { membre } = useMembre()
     const { supprimerInvite } = useInvites()
-    const {isMockMode} = useMockMode()
+    const { isMockMode } = useMockMode()
 
     const icone = {
-        admin: colorScheme === "dark" ? require('@/assets/icones/admin-dark-icon.png'):require('@/assets/icones/admin-light-icon.png'),
-        fpDef: colorScheme === "dark" ? require('@/assets/icones/profil-dark-icon.png'):require('@/assets/icones/profil-light-icon.png'),
-        en_attente: colorScheme === "dark" ? require('@/assets/icones/horloge-dark-icon.png'):require('@/assets/icones/horloge-light-icon.png'),
-        accepte:require('@/assets/icones/icon-succes-checkmark.png'),
-        refuse:require('@/assets/icones/icon-erreur.png'),
-        croix:colorScheme === "dark" ? require('@/assets/icones/croix-dark-icon.png'):require('@/assets/icones/croix-light-icon.png')
+        admin: colorScheme === "dark" ? require('@/assets/icones/admin-dark-icon.png') : require('@/assets/icones/admin-light-icon.png'),
+        fpDef: colorScheme === "dark" ? require('@/assets/icones/profil-dark-icon.png') : require('@/assets/icones/profil-light-icon.png'),
+        en_attente: colorScheme === "dark" ? require('@/assets/icones/horloge-dark-icon.png') : require('@/assets/icones/horloge-light-icon.png'),
+        accepte: require('@/assets/icones/icon-succes-checkmark.png'),
+        refuse: require('@/assets/icones/icon-erreur.png'),
+        croix: colorScheme === "dark" ? require('@/assets/icones/croix-dark-icon.png') : require('@/assets/icones/croix-light-icon.png')
     }
 
     const [p, setParticipant] = useState<Participant>()
 
     const getParticipant = async () => {
-        const {fp_url, pseudo} = participant
-        if(!fp_url || !pseudo){
+        const { fp_url, pseudo } = participant
+        if (!fp_url || !pseudo) {
             try {
                 const response = await api.get(`membres/${participant.id}`)
                 const fetchedParticipant: Participant = {
@@ -50,40 +49,59 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
                 log("fetched participant:", fetchedParticipant)
                 setParticipant(fetchedParticipant)
             } catch (error) {
-                catcher(error, `impossible d'avoir le participant ${ participant.id}`)
+                catcher(error, `impossible d'avoir le participant ${participant.id}`)
                 setParticipant(undefined)
             }
-        }else
+        } else
             setParticipant(participant)
     }
 
-    const supprimerParticipant = async () => {
-        supprimerInvite(p as Participant, participantsUrl).then(()=>{
-            setParticipant(undefined)
-        })
+    // US-10 : Confirmation de suppression via un Modal (Alert native) avant l'action destructive
+    const confirmerSuppression = () => {
+        Alert.alert(
+            "Retirer le participant",
+            `Êtes-vous sûr de vouloir retirer ${p?.pseudo ?? 'ce participant'} de l'évènement ?`,
+            [
+                { text: "Annuler", style: "cancel" },
+                {
+                    text: "Retirer",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            // On présume que supprimerInvite fait l'appel API DELETE vers participantsUrl
+                            await supprimerInvite(p as Participant, participantsUrl);
+                            // Soft delete local : on cache immédiatement le composant en le passant à undefined
+                            setParticipant(undefined);
+                        } catch (error) {
+                            catcher(error, "Erreur lors du retrait du participant");
+                        }
+                    }
+                }
+            ]
+        );
     }
 
-    useEffect(()=>{
+    useEffect(() => {
         getParticipant()
     }, [])
 
     const peutSupprimer = p ? (p.id !== membre.idPublique && p.privilege !== 'editeur') : false
 
     const s = StyleSheet.create({
-        conteneur:{
-            marginTop:-1,
-            width:'90%',
-            paddingVertical:4,
-            borderTopWidth:1,
+        conteneur: {
+            marginTop: -1,
+            width: '90%',
+            paddingVertical: 4,
+            borderTopWidth: 1,
             alignSelf: 'center',
             borderColor: colors.border,
             height: height
         },
-        photo:{
+        photo: {
             borderRadius: 100,
             overflow: 'hidden',
         },
-        pseudo:{
+        pseudo: {
             fontSize: 20,
             flexShrink: 1,
         },
@@ -108,14 +126,14 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
         },
         leftIcon: {
             flex: 1,
-            width:'20%',
+            width: '20%',
             height: '100%',
             alignItems: 'center',
             justifyContent: 'center',
         },
         rightAction: {
             flex: 1,
-            width:'20%',
+            width: '20%',
             height: '100%',
             alignItems: 'flex-end',
             justifyContent: 'center',
@@ -132,15 +150,15 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
         }
     })
 
-    if(!p) return null
+    if (!p) return null
 
-    return(
+    return (
         <View style={s.conteneur}>
             <TouchableOpacity style={s.button}>
                 <View style={s.leftIcon}>
                     {participant.privilege === 'editeur' && (
                         <Image
-                            style={[s.photo, {height:'100%', width:'100%'}]}
+                            style={[s.photo, { height: '100%', width: '100%' }]}
                             source={icone.admin}
                             resizeMode='contain'
                         />
@@ -165,7 +183,7 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
                         {p.statut && (
                             <Image
                                 source={p.statut === 'refusee' ? icone.refuse : p.statut === 'acceptee' ? icone.accepte : icone.en_attente}
-                                style={{height:24, width:24}}
+                                style={{ height: 24, width: 24 }}
                                 resizeMode='contain'
                             />
                         )}
@@ -174,12 +192,10 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
 
                 <View style={s.rightAction}>
                     {peutSupprimer && (
-                        <TouchableOpacity onPress={() => {
-                            supprimerParticipant()
-                        }}>
+                        <TouchableOpacity onPress={confirmerSuppression}>
                             <Image
                                 source={icone.croix}
-                                style={{transform:[{rotate:'45deg'}], height:24, width:24}}
+                                style={{ transform: [{ rotate: '45deg' }], height: 24, width: 24, tintColor: colors.error }}
                                 resizeMode='contain'
                             />
                         </TouchableOpacity>
@@ -189,4 +205,3 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
         </View>
     )
 }
-

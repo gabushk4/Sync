@@ -1,10 +1,16 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useColorScheme } from 'react-native';
+import { generateTheme, ThemeColors } from '@/themes/generateTheme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DarkTheme, DefaultTheme } from '@react-navigation/native';
-import { generateTheme, ThemeColors } from '@/themes/generateTheme';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { ColorValue, useColorScheme } from 'react-native';
 
 type PaletteContextType = {
+  warning: ColorValue | undefined;
+  card: ColorValue | undefined;
+  secondary: ColorValue | undefined;
+  error: ColorValue | undefined;
+  text: ColorValue | undefined;
+  background: ColorValue | undefined;
   colors: ThemeColors;
   hue: number;
   setHue: (h: number) => void;
@@ -29,7 +35,7 @@ function buildNavTheme(hue: number, scheme: 'light' | 'dark') {
 
 // Provider
 export function PaletteProvider({ children }: { children: ReactNode }) {
-  const scheme = useColorScheme() ?? 'light';
+  const scheme: 'light' | 'dark' = useColorScheme() === 'dark' ? 'dark' : 'light';
   const [hue, setHueState] = useState(260);
 
   // gets saved hue
@@ -49,7 +55,20 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
   const navTheme = buildNavTheme(hue, scheme);
 
   return (
-    <PaletteContext.Provider value={{ colors, hue, setHue, navTheme }}>
+    <PaletteContext.Provider
+      value={{
+        colors,
+        hue,
+        setHue,
+        navTheme,
+        secondary: colors.secondary,
+        error: colors.error,
+        warning: colors.warning,
+        card: colors.card,
+        text: colors.text,
+        background: colors.background,
+      }}
+    >
       {children}
     </PaletteContext.Provider>
   );

@@ -9,6 +9,8 @@ type Fonts = {
 }
 
 type FontContextType = {
+  body: string | undefined;
+  title: string | undefined;
   fonts: Fonts;
   setFontFamily: (fonts: Fonts) => void;
   fontsLoaded: boolean;
@@ -53,7 +55,7 @@ export function FontProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <FontContext.Provider value={{ fonts, setFontFamily, fontsLoaded }}>
+    <FontContext.Provider value={{ body: fonts.body, title: fonts.title, fonts, setFontFamily, fontsLoaded }}>
       {children}
     </FontContext.Provider>
   );
