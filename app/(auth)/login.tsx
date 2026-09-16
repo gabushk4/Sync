@@ -1,29 +1,21 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as SecureStore from 'expo-secure-store';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Dimensions, Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 
 import Haptics from '@/abstractions/haptics.js';
+import { createLinkStyles, LinkAbs } from '@/abstractions/linkAbs';
 import TextInputAbs from '@/abstractions/textInputAbs';
-import ChargementEcran from '@/components/chargementEcran.js';
-import PingServeur from '@/components/pingServeur.js';
+import ServerStatus from '@/components/serverStatus';
 import { useAPI } from '@/contextes/contexteAPI';
-import { useHeaderHeight } from '@/contextes/contexteHeader.js';
-import { useMembre } from '@/contextes/contexteMembre';
-import { useModal } from '@/contextes/contexteModals';
+import { useAuth } from '@/contextes/contexteAuth';
+import { useFont } from '@/contextes/contexteFont';
+import { MOCK_MODE_AVAILABLE, useMockMode } from '@/contextes/contexteMockMode';
 import { usePalette } from '@/contextes/contextePalette';
 import { useRouteAbs } from '@/contextes/contexteRoute';
-import { useAccessToken } from '@/contextes/contexteToken';
 import catcher from '@/functions/catcher';
 import log from '@/functions/log.js';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { useFont } from '@/contextes/contexteFont';
-import {LinkAbs, createLinkStyles} from '@/abstractions/linkAbs';
-import { useAuth } from '@/contextes/contexteAuth';
-import ServerStatus from '@/components/serverStatus';
-import { MOCK_MODE_AVAILABLE, useMockMode } from '@/contextes/contexteMockMode';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function ConnexionEcran(){
     const largeur = Dimensions.get("window").width - 32

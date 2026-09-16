@@ -1,8 +1,8 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useColorScheme } from 'react-native';
+import { generateTheme, ThemeColors } from '@/themes/generateTheme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DarkTheme, DefaultTheme } from '@react-navigation/native';
-import { generateTheme, ThemeColors } from '@/themes/generateTheme';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { useColorScheme } from 'react-native';
 
 type PaletteContextType = {
   colors: ThemeColors;
@@ -30,7 +30,7 @@ function buildNavTheme(hue: number, scheme: 'light' | 'dark') {
 // Provider
 export function PaletteProvider({ children }: { children: ReactNode }) {
   const scheme = useColorScheme() ?? 'light';
-  const [hue, setHueState] = useState(260);
+  const [hue, setHueState] = useState(20);
 
   // gets saved hue
   useEffect(() => {
