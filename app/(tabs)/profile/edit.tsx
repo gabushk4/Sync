@@ -5,7 +5,7 @@ import { useFont } from "@/contextes/contexteFont";
 import { useMembre } from "@/contextes/contexteMembre";
 import { usePalette } from "@/contextes/contextePalette";
 import catcher from "@/functions/catcher";
-import ChoisirImage from '@/functions/choisirImage';
+import ChooseImage from '@/functions/choisirImage';
 import log from "@/functions/log";
 import { useActionFab } from "@/hooks/useActionFAB";
 import { FPType } from "@/types/pfp";
@@ -51,7 +51,7 @@ export default function EditProfil() {
     }
 
     const pickImage = async () => {
-        await ChoisirImage((img) => {
+        await ChooseImage((img) => {
             setFpSource({ uri: img.uri, mimeType: img.type, fileName: img.fileName })
         })
     }
