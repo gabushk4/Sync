@@ -1,15 +1,14 @@
-import { useFocusEffect, useIsFocused } from "expo-router/react-navigation";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useFocusEffect, useIsFocused } from "expo-router/react-navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Alert, StyleSheet, TouchableOpacity, useColorScheme, View } from 'react-native';
-import Toast from "react-native-toast-message";
 
 
 import { useAPI } from "@/contextes/contexteAPI";
 import { useFont } from "@/contextes/contexteFont";
 import { useInvites } from "@/contextes/contexteInvites";
 import { useMembre } from "@/contextes/contexteMembre";
-import { useModal } from "@/contextes/contexteModals";
 import { usePalette } from "@/contextes/contextePalette";
 import { useAccessToken } from "@/contextes/contexteToken";
 
@@ -18,17 +17,17 @@ import { convertirLocalVersUTC, convertirUTCversLocale } from "@/functions/conve
 import formaterDatePourServeur from "@/functions/formaterDatePourServeur";
 import log from "@/functions/log";
 
+import ToastAbs from "@/abstractions/toastAbs";
 import EventForm from "@/components/eventForm";
+import { toastTypes } from "@/constants/toastConfig";
 import { useNavFab } from "@/hooks/useNavFAB";
-import { seedData } from "@/seed";
 import { defaultEvent, Event } from "@/types/calendar";
 import { UrlDescriptor } from "@/types/url";
 import Icon from "@react-native-vector-icons/ionicons";
 import { DateTime } from "luxon";
-import { toastTypes } from "@/constants/toastConfig";
-import ToastAbs from "@/abstractions/toastAbs";
 
 export default function Details(){
+    const { t } = useTranslation('events')
     const { colors } = usePalette()
     const { fonts } = useFont()
     const colorScheme = useColorScheme()
@@ -54,9 +53,9 @@ export default function Details(){
 
     const verifAvantDelete = ()=>{        
         if (event.type === "recurrence") {
-            Alert.alert('édition d\'une récurrence', 'voulez-vous éditer la série d\'évènements ou seulement celui-ci?', 
+            Alert.alert(t('details.recurringEditTitle'), t('details.recurringEditMessage'),
                 [
-                    {text:'la série', onPress:()=>{
+                    {text:t('details.editSeries'), onPress:()=>{
                         const url = {
                             method: 'DELETE',
                             string: `/evenements/${event.id}`,
@@ -64,7 +63,7 @@ export default function Details(){
                         };
                         deleteEvenement(url)
                     }},
-                    {text:'celui-ci', onPress:()=>{
+                    {text:t('details.editOccurrence'), onPress:()=>{
                         const url = {
                             method: 'POST',
                             string: '/evenements/exceptions/',
@@ -110,25 +109,20 @@ export default function Details(){
 
             ToastAbs.show({
                 type:toastTypes.success,
-                text1:'effacé',
-                text2:'on l\'a bien rangé là où personne ne regarde; rangé quoi? aucune idée',
+                text1:t('details.deletedTitle'),
+                text2:t('details.deletedMessage'),
                 position:'top'
             })
             router.back()
         } catch (error) {
             log('erreur en supprimant l\'évènement', error)
-            catcher(error, 'erreur en supprimant l\'évènement')
+            catcher(error, t('errors.deleteFailed'))
         }
     }    
 
     const quitterEvenement = async ()=>{
         try {
-            const token = await getToken()
-            const reponse = await api.post(`/evenements/${event.id}/quitter`, {}, {
-                headers:{
-                    "Authorization":`Bearer ${token}`
-                }
-            })
+            const reponse = await api.post(`/evenements/${event.id}/quitter`, {})
             if(reponse.status === 201){
                 ToastAbs.show({
                     type:toastTypes.success,
@@ -137,18 +131,17 @@ export default function Details(){
                 router.back()
             }
         } catch (error) {
-            catcher(error, 'impossible de quitter')
+            catcher(error, t('errors.leaveFailed'))
         }
     }
 
     const getDetails = async (id: string) => {
-        const accessToken = await getToken()
         try {
             const timezone = membre.timezone
 
             const res = await api.request({
                 method: "GET",
-                url: `${APIBaseURL}/evenements/${id}`,
+                url: `/evenements/${id}`,
                 params: {
                     debut: formaterDatePourServeur(convertirLocalVersUTC(
                         typeof start === "string"
@@ -159,8 +152,7 @@ export default function Details(){
                             ? end 
                             : DateTime.now().plus({ hour: 1 })
                     )),
-                },
-                headers: { Authorization: `Bearer ${accessToken}` },
+                }
             })
 
             res.data.debut = convertirUTCversLocale(res.data.debut, timezone)
@@ -168,7 +160,7 @@ export default function Details(){
             setEvent(res.data)
         } catch (error) {
             router.back()
-            catcher(error, "erreur d'accès à l'évènement")            
+            catcher(error, t('errors.loadFailed'))
         }
     }
 

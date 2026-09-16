@@ -6,7 +6,8 @@ import { usePalette } from '@/contextes/contextePalette';
 import catcher from '@/functions/catcher';
 import log from '@/functions/log';
 import { Participant } from '@/types/invites';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import ProfilPic from './pfp';
 
@@ -17,6 +18,7 @@ type Props = {
 }
 
 export default function ParticipantLigne({ participant, participantsUrl = undefined, height }: Props) {
+    const { t } = useTranslation('events')
     const { colors } = usePalette()
     const colorScheme = useColorScheme()
     const { api, APIBaseURL } = useAPI()
@@ -49,7 +51,7 @@ export default function ParticipantLigne({ participant, participantsUrl = undefi
                 log("fetched participant:", fetchedParticipant)
                 setParticipant(fetchedParticipant)
             } catch (error) {
-                catcher(error, `impossible d'avoir le participant ${participant.id}`)
+                catcher(error, `impossible d'avoir le participant ${ participant.id}`)
                 setParticipant(undefined)
             }
         } else

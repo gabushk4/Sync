@@ -19,6 +19,11 @@ type AuthContextType = {
 
 const AuthContexte = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * Permet de donner le contexte pour l'authetification d'un membre
+ * @param param0 ReactNode
+ * @returns
+ */
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { setToken, resetTokens } = useAccessToken();
     const { getMembre, resetMembre, setMockMembre } = useMembre();
@@ -26,42 +31,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const [state, setState] = useState<AuthState>('loading');
 
+    // Vérifie si le membre est connecté ou non
     const checkAuth = async () => {
-        if (isMockMode) {
-            setMockMembre()
-            setState("authenticated")            
-        } else {
-            try {
-                const refreshToken = await SecureStore.getItemAsync('refresh_token');
+        try {
+            const refreshToken = await SecureStore.getItemAsync('refresh_token');
 
-                if (!refreshToken) {
-                    log('AuthContext: aucun refresh token, non authentifié');
-                    setState('unauthenticated');
-                    return;
-                }
-                
-                await getMembre();
-                setState('authenticated');
-            } catch (error: any) {
-                log('AuthContext: échec de la vérification, déconnexion', error?.message);
-                await resetTokens();
-                resetMembre();
+            if (!refreshToken) {
+                log('AuthContext: aucun refresh token, non authentifié');
                 setState('unauthenticated');
+                return;
             }
+            
+            await getMembre(); // fetch les infos du membre connecté
+            setState('authenticated');
+        } catch (error: any) {
+            log('AuthContext: échec de la vérification, déconnexion', error?.message);
+            await resetTokens(); // invalide tous les tokens
+            resetMembre(); // invalide les infos du membre
+            setState('unauthenticated');
         }
-    };
+    }
+    
 
-    useEffect(() => {        
+    useEffect(() => {  
+        // abonnement à l'évènement Unauthorized
         const unsubscribe = authEvents.onUnauthorized(() => {
-            signOut();
+            signOut(); 
         });
         return unsubscribe;        
     }, []);
 
+    // au lancement de l'app
     useEffect(() => {
         checkAuth();
-    }, [isMockMode])
+    }, [])
 
+    /**
+     * permet de lancer la requête pour connecter le membre
+     * @param accessToken du membre connecté
+     * @param refreshToken du membre connecté
+     */
     const signIn = async (accessToken: string, refreshToken: string) => {
         console.log("sign in")
         try {
@@ -75,6 +84,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    /**
+     * Permet de déconnecter le membre
+     */
     const signOut = async () => {
         await resetTokens();
         resetMembre();

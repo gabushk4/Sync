@@ -1,16 +1,17 @@
 import { useFont } from '@/contextes/contexteFont';
 import { usePalette } from "@/contextes/contextePalette";
 
+import ceilBy5 from '@/functions/ceilBy5';
 import { convertirTimestampDateLongue, convertirTimestampHeure } from "@/functions/convertirTimestamp";
 import log from "@/functions/log";
-import ceilBy5 from '@/functions/ceilBy5';
 
+import SwitchAbs from '@/abstractions/switchAbs';
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 import { DateTime } from "luxon";
 import { useEffect, useRef, useState } from "react";
-import { Platform, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
-import Animated, { Easing, useAnimatedStyle, withTiming } from "react-native-reanimated";
-import SwitchAbs from '@/abstractions/switchAbs';
+import { useTranslation } from 'react-i18next';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Animated from "react-native-reanimated";
 
 type Props = {
     timezone: string | 'local',
@@ -26,6 +27,7 @@ type Props = {
 const END_DELAY_FROM_START = 60 //minutes
 
 export default function DateTimeSelecteur({timezone, start, setStart, end, setEnd, disabled=false, minimumStart, maximum} : Props){
+    const { t } = useTranslation('calendar')
     const { colors } = usePalette();
     const { fonts } = useFont()
     
@@ -186,7 +188,7 @@ export default function DateTimeSelecteur({timezone, start, setStart, end, setEn
     return (
         <Animated.View style={s.container}>    
             <View style={[s.dateTimeContainer, { flex: 2, marginBottom:4 }]}>
-                <Text style={[s.label, {flex:1}]}>Jour entier</Text>
+                <Text style={[s.label, {flex:1}]}>{t('dateTime.allDay')}</Text>
                     <SwitchAbs
                         style={{width:'20%'}}
                         value={isAllDay}
@@ -195,7 +197,7 @@ export default function DateTimeSelecteur({timezone, start, setStart, end, setEn
             </View>    
             {/* --- Start --- */}
             <View style={s.dateTimeContainer}>
-                <Text style={[s.label, s.pickerContainer, Platform.OS === 'android' ? s.androidTimeLabel : {}]}>débute</Text>
+                <Text style={[s.label, s.pickerContainer, Platform.OS === 'android' ? s.androidTimeLabel : {}]}>{t('dateTime.starts')}</Text>
                 {/* Date */}
                 <View style={s.pickerContainer}>
                     {Platform.OS === 'android' && (
@@ -242,7 +244,7 @@ export default function DateTimeSelecteur({timezone, start, setStart, end, setEn
 
             {/* --- End --- */}
             <View style={s.dateTimeContainer}>            
-                <Text style={[s.label, s.pickerContainer, Platform.OS === 'android' ? s.androidTimeLabel : {}]}>finit</Text>
+                <Text style={[s.label, s.pickerContainer, Platform.OS === 'android' ? s.androidTimeLabel : {}]}>{t('dateTime.ends')}</Text>
                 {/* Date */}
                 <View style={s.pickerContainer}>                
                     {Platform.OS === 'android' && (

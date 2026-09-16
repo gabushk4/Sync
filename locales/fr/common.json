@@ -1,0 +1,37 @@
+{
+	"friendRequestSentTitle": "demande d'ami envoyée",
+	"friendRequestSentMessage": "je sens que c'est le début d'un lien unique, presque magique!",
+	"copiedToClipboard": "ajouté au presse-papier"
+	,"signOut": {
+		"title": "déconnexion",
+		"confirmation": "voulez-vous vraiment vous déconnecter?",
+		"confirm": "oui"
+	},
+	"loading": "chargement",
+	"serverWaking": "merci de patienter; le serveur prend du temps à se réveiller",
+	"returnToLogin": "Retour à la connexion",
+	"serverStatus": "Statut du serveur",
+	"toast": {
+		"success": "succès!",
+		"error": "erreur",
+		"errorWithoutMessage": "une erreur sans message est survenue",
+		"reportBug": "pour signaler un bug!",
+		"warning": "avertissement",
+		"warningWithoutMessage": "un avertissement sans message est survenu"
+	},
+	"tabs": {
+		"home": "sync",
+		"feed": "fil",
+		"feedTitle": "actualités",
+		"inbox": "messages",
+		"inboxTitle": "conversations",
+		"profile": "profil",
+		"profileTitle": "profile"
+	},
+	"demo": {
+		"modalTitle": "Modale",
+		"openCode": "Ouvre le code de cet écran :",
+		"changeText": "Modifie le texte, enregistre le fichier et l'application se mettra automatiquement à jour.",
+		"reloadHelp": "Appuie ici si l'application ne se met pas automatiquement à jour après une modification"
+	}
+}

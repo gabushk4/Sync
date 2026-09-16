@@ -1,0 +1,28 @@
+{
+	"navigation": {
+		"profile": "profil",
+		"edit": "éditer le profil",
+		"settings": "paramètres"
+	},
+	"edit": {
+		"usernameLabel": "pseudo",
+		"usernamePlaceholder": "pseudo",
+		"bioLabel": "bio",
+		"bioPlaceholder": "quelques mots sur toi"
+	},
+	"qrCode": {
+		"brightnessTitle": "Sync souhaite ajuster la luminosité de votre écran",
+		"brightnessMessage": "cela permet à un téléphone de scanner ton QR code plus facilement ;\nTu pourras modifier ce choix à tout moment dans tes réglages",
+		"deny": "refuser",
+		"allow": "autoriser"
+	},
+	"brightness": {
+		"warning": "attention les yeux !"
+	},
+	"memberSince": "membre depuis le {{date}}",
+	"memberIdLabel": "identifiant du membre",
+	"errors": {
+		"widgetsLoadFailed": "erreur lors du chargement des widgets",
+		"updateFailed": "impossible de modifier le profil"
+	}
+}

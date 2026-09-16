@@ -1,0 +1,20 @@
+{
+	"types": {
+		"amis": "amis",
+		"sync": "sync",
+		"evenements": "évènements"
+	},
+	"expiration": {
+		"label": "expiration",
+		"expired": "expirée"
+	},
+	"list": {
+		"emptyState": "Il n'y a rien pour toi...\nAlors profite de ce moment pour toi !",
+		"deselect": "désélectionner",
+		"unread": "non lues"
+	},
+	"errors": {
+		"actionFailed": "erreur à l'action",
+		"deleteFailed": "impossible de supprimer une notification"
+	}
+}

@@ -1,0 +1,23 @@
+{
+	"permission": {
+		"title": "Camera permission required",
+		"message": "Sync needs access to the camera to scan the QR code; do you agree?",
+		"allow": "Yes",
+		"settingsTitle": "Open settings",
+		"settingsMessage": "Manual intervention is required; do not worry, we will never use your camera without your knowledge",
+		"openSettings": "Go there",
+		"deny": "No",
+		"pending": "Camera permission not granted... If you accepted, it may take time to update; please wait: waiting ({{seconds}}s/20s)"
+	},
+	"scanHint": {
+		"title": "Having trouble scanning?",
+		"message": "You can also enter the friend code shown below the QR code",
+		"action": "Tap here to enter the friend code"
+	},
+	"scanResult": {
+		"notificationNotSent": "Notification not sent"
+	},
+	"errors": {
+		"requestFailed": "The request could not be sent"
+	}
+}

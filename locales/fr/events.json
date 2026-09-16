@@ -1,0 +1,62 @@
+{
+  "navigation": {
+    "create": "créer un évènement",
+    "details": "détails",
+    "edit": "éditer"
+  },
+  "details": {
+    "recurringEditTitle": "édition d'une récurrence",
+    "recurringEditMessage": "voulez-vous éditer la série d'évènements ou seulement celui-ci?",
+    "editSeries": "la série",
+    "editOccurrence": "celui-ci",
+    "deletedTitle": "effacé",
+    "deletedMessage": "on l'a bien rangé là où personne ne regarde; rangé quoi? aucune idée"
+  },
+  "edit": {
+    "defaultError": "impossible d'éditer l'évènement",
+    "titleTooShort": "le titre doit avoir au moins 4 caractères",
+    "validationErrorTitle": "erreur à l'édition",
+    "updatedTitle": "Évènement modifié",
+    "modifiedFields": "Champs modifiés : {{fields}}"
+  },
+  "create": {
+    "unknownError": "Erreur inconnue",
+    "titleTooShort": "Le titre doit avoir plus de 4 caractères ; titre : {{title}}",
+    "createdTitle": "Évènement ajouté",
+    "createdMessage": "Tu peux te détendre, c'est enregistré"
+  },
+  "form": {
+    "titlePlaceholder": "titre...",
+    "descriptionPlaceholder": "description...",
+    "showMore": "plus",
+    "dateFrom": "du",
+    "dateTo": "au",
+    "recurrenceLabel": "récurrence",
+    "repeatedUntil": "évènement répété chaque {{unit}} jusqu'au :",
+    "private": "privé",
+    "public": "public",
+    "participants": "participants"
+  },
+  "recurrence": {
+    "never": "jamais",
+    "daily": "quotidien",
+    "weekly": "hebdomadaire",
+    "monthly": "mensuel",
+    "yearly": "annuel",
+    "units": {
+      "daily": "jours",
+      "weekly": "semaines",
+      "monthly": "mois",
+      "yearly": "années"
+    }
+  },
+  "errors": {
+    "deleteFailed": "erreur en supprimant l'évènement",
+    "leaveFailed": "impossible de quitter",
+    "loadFailed": "erreur d'accès à l'évènement",
+    "updateFailed": "erreur en éditant l'évènement",
+    "createFailed": "erreur lors de la création de l'évènement",
+    "participantLoadFailed": "impossible de charger le participant {{id}}",
+    "participantsLoadFailed": "erreur au chargement des participants"
+  }
+}

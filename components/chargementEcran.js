@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { View, Image, Text, TouchableOpacity, useColorScheme} from "react-native";
-import Animated, {withSpring, withSequence, useAnimatedStyle, useSharedValue, withRepeat, withTiming, Easing} from "react-native-reanimated";
-import { usePalette } from "@/contextes/contextePalette";
-import { useFont } from "@/contextes/contexteFont";
-import { router } from "expo-router";
 import { useAuth } from "@/contextes/contexteAuth";
+import { useFont } from "@/contextes/contexteFont";
+import { usePalette } from "@/contextes/contextePalette";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
+import { Text, TouchableOpacity, useColorScheme, View } from "react-native";
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 
 export default function ChargementEcran({}){
+    const { t } = useTranslation()
     const { colors } = usePalette() 
     const { fonts } = useFont()
     const colorScheme = useColorScheme()
@@ -55,11 +57,11 @@ export default function ChargementEcran({}){
                 style={[imageAnime, {}]}
             />
             <Text style={{fontSize:16, fontFamily:fonts.body, color:colors.text}}>
-                chargement{points}
+                {t('common:loading')}{points}
             </Text>
             {afficherMessage &&
                 <Text style={{fontSize:14, fontFamily:fonts.body, color:colors.muted, maxWidth:'60%', textAlign:'center'}}>
-                    merci de patienter; le serveur prend du temps à se réveiller
+                    {t('common:serverWaking')}
                 </Text>
             }
             {afficherRetour && 
@@ -70,7 +72,7 @@ export default function ChargementEcran({}){
                             router.push('/(auth)/login')
                         }}
                     >
-                        <Text style={{color:colors.text, fontFamily:fonts.body, fontSize:16}}>Retour a la connexion</Text>
+                        <Text style={{color:colors.text, fontFamily:fonts.body, fontSize:16}}>{t('common:returnToLogin')}</Text>
                     </TouchableOpacity>
                 </View>
             }

@@ -66,8 +66,7 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
                 fp: data.fp_url ?? null,
                 admin: data.role === 'admin',
                 emailConfirme: data.email_confirme ?? false,
-                email: data.courriel
-                
+                email: data.courriel                
             }))
             /* widgetsMembresRef.current = data.widgets
             setWidgetsMembre(data.widgets) */

@@ -4,9 +4,14 @@ import { useFont } from '@/contextes/contexteFont';
 import { usePalette } from '@/contextes/contextePalette';
 import catcher from '@/functions/catcher';
 import { useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next'
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
+export default function MemberProfil() {
+    const { t } = useTranslation('profile')
+
+    const {membreId} = useLocalSearchParams()
 export default function FriendProfile() {
   const { membreId } = useLocalSearchParams();
   const { api } = useAPI();
@@ -61,4 +66,9 @@ export default function FriendProfile() {
       )}
     </View>
   );
+    return (
+        <Text >
+            {t('memberIdLabel')}: {membreId}
+        </Text>
+    )
 }

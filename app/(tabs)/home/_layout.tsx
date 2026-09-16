@@ -2,10 +2,12 @@ import RequestStatus from "@/components/requestStatus";
 import { useFont } from "@/contextes/contexteFont";
 
 import { Stack } from "expo-router";
+import { useTranslation } from 'react-i18next';
 import { View } from "react-native";
 
 export default function HomeLayout() {
     const {fonts} = useFont()
+    const { t } = useTranslation('events')
     return (
         <Stack
             screenOptions={{
@@ -19,13 +21,13 @@ export default function HomeLayout() {
                 name="index" options={{ headerTitle: 'sync'}}
             />
             <Stack.Screen
-                name="create" options={{headerBackVisible:true, headerBackButtonDisplayMode:'minimal', headerTitle:'créer un évènement'}}
+                name="create" options={{headerBackVisible:true, headerBackButtonDisplayMode:'minimal', headerTitle:t('navigation.create')}}
             />
             <Stack.Screen
-                name="details/[eventId]" options={{headerBackVisible:true, headerBackButtonDisplayMode:'minimal', headerTitle:'details'}}
+                name="details/[eventId]" options={{headerBackVisible:true, headerBackButtonDisplayMode:'minimal', headerTitle:t('navigation.details')}}
             />
             <Stack.Screen
-                name="edit/[event]" options={{headerBackVisible:true, headerBackButtonDisplayMode:'minimal', headerTitle:'editer'}}
+                name="edit/[event]" options={{headerBackVisible:true, headerBackButtonDisplayMode:'minimal', headerTitle:t('navigation.edit')}}
             />
         </Stack>
     )

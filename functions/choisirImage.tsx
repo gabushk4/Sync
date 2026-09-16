@@ -1,9 +1,12 @@
-import * as ImagePicker from 'expo-image-picker'
+import * as ImagePicker from 'expo-image-picker';
+
+type onChangeCallback = (asset: ImagePicker.ImagePickerAsset) => void
+
 /**
- * 
- * @param {function} onChange(image)
+ * Used to pick an image from system's library and import it to app
+ * @param onChange 
  */
-export default  async function ChoisirImage(onChange, ){
+export default  async function ChooseImage( onChange: onChangeCallback ){
     const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: 'images',
         allowsEditing: true,

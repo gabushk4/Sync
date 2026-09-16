@@ -1,11 +1,12 @@
-import React from "react";
-import {View, Text, StyleSheet, Animated, Image, Platform} from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { Image, Text, View } from 'react-native';
 import Haptics from "../abstractions/haptics";
 
-import { usePalette } from "@/contextes/contextePalette";
 import { useFont } from "@/contextes/contexteFont";
+import { usePalette } from "@/contextes/contextePalette";
 
 export default function ToastSucces({text1, text2, ...rest}){
+    const { t } = useTranslation()
     const { colors } = usePalette()
     const { fonts } = useFont()
     Haptics.succes()
@@ -20,7 +21,7 @@ export default function ToastSucces({text1, text2, ...rest}){
                 />
             </View>
             <View style={{alignItems:'flex-start', width:'80%', height:'100%', paddingVertical:8}}>
-                <Text style={{color:colors.success, fontFamily:fonts.title, fontSize:20,}}>{text1?text1:'succès!'}</Text>
+                <Text style={{color:colors.success, fontFamily:fonts.title, fontSize:20,}}>{text1?text1:t('common:toast.success')}</Text>
                 <Text style={{color:colors.text, fontFamily: fonts.body, fontSize:16,}}>{text2}</Text>
             </View>
         </View>
