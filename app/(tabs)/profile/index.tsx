@@ -27,6 +27,7 @@ import { FPType, isFpObject } from '@/types/pfp';
 import Haptics from '@/abstractions/haptics';
 import MemberCode from '@/components/memberCode';
 import { withSpringConfig, withTimingConfig } from '@/constants/ReanimatedConfs';
+import { convertirTimestampDateCourte, convertirTimestampDateLongue } from "@/functions/convertirTimestamp";
 
 const MENU_OPTIONS_GAP = 8
 const FLOATING_BTN_HEIGHT = 64
@@ -280,6 +281,7 @@ export default function ProfilEcran(){
     useFocusEffect(
         React.useCallback(() => {
             ajouterEcran('profil')
+            log("temps creation", membre.tempsCreation)
             
             if(!membre.fp || !membre.pseudo || !membre.bio || !membre.idPublique)
                 getMembre()
@@ -404,7 +406,7 @@ export default function ProfilEcran(){
                                 <Text style={[s.pseudo, { }]}>@{membre.pseudo}</Text>
                                 <MemberCode code={membre.idPublique??''}/>
                             </View>                            
-                            <Text style={[{color:colors.muted, fontSize:14, paddingLeft:4, fontFamily:fonts.body}]}>{t('memberSince', { date: membre.tempsCreation })}</Text>                
+                            <Text style={[{color:colors.muted, fontSize:14, paddingLeft:4, fontFamily:fonts.body}]}>{t('memberSince', { date: convertirTimestampDateCourte(membre.tempsCreation) })}</Text>                
                         </Animated.View>
                         <Animated.View>
 

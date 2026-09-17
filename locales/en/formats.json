@@ -2,6 +2,8 @@
   "dateShort": "LLL d",
   "dateLong": "ccc, LLL d, yyyy",
   "time": "HH:mm",
+  "monthsShort": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  "weekdaysShort": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
   "justNow": "just now",
   "minutes_one": "{{count}} minute ago",
   "minutes_other": "{{count}} minutes ago",

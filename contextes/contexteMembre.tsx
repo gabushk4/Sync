@@ -16,7 +16,7 @@ type Membre = {
     pseudo: string | undefined;
     bio: string | undefined;
     fp: FPType;
-    tempsCreation: string | undefined;
+    tempsCreation: DateTime | undefined;
     admin: boolean | false;
     emailConfirme: boolean | false;
     timezone: string;
@@ -64,15 +64,9 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
                 fp: data.fp_url ?? null,
                 admin: data.role === 'admin',
                 emailConfirme: data.email_confirme ?? false,
-                email: data.courriel                
-            }))
-            /* widgetsMembresRef.current = data.widgets
-            setWidgetsMembre(data.widgets) */
-            let t = convertirTimestampDateLongue(
-                convertUTCToLocal(data.temps_creation)
-            );
-            t = t.substring(t.indexOf('.') + 2);
-            setMembre((prev) => ({ ...prev, tempsCreation: t }));
+                email: data.courriel,
+                tempsCreation: convertUTCToLocal(data.temps_creation)
+            }))            
             
         } catch (error : any) {
             throw error
@@ -85,7 +79,7 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
             idPublique: "Mmoc1234",
             bio: "Je ne suis qu'un mock de donnée",
             fp: undefined,
-            tempsCreation: DateTime.now().toISO(),
+            tempsCreation: DateTime.now(),
             admin: true,
             emailConfirme: true,
             timezone: 'local',

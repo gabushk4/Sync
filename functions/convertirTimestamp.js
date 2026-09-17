@@ -1,7 +1,11 @@
 import { DateTime } from "luxon";
 import i18n from "../i18n";
 import { SUPPORTED_LANGUAGES } from "../locales/config";
+import enFormats from "../locales/en/formats.json";
+import frFormats from "../locales/fr/formats.json";
 import log from "./log";
+
+const formats = { fr: frFormats, en: enFormats };
 
 function getCurrentLocale() {
     const language = i18n.resolvedLanguage || i18n.language || "fr";
@@ -9,11 +13,49 @@ function getCurrentLocale() {
 }
 
 function getDateFormat(formatKey) {
-    return i18n.t(formatKey, { ns: "formats" });
+    const language = i18n.resolvedLanguage || i18n.language || "fr";
+    return formats[language]?.[formatKey] || formats.fr[formatKey];
+}
+
+function formatDate(dateTime, formatKey) {
+    const language = i18n.resolvedLanguage || i18n.language || "fr";
+    const languageFormats = formats[language] || formats.fr;
+    const month = languageFormats.monthsShort[dateTime.month - 1];
+
+    if (formatKey === "dateShort") {
+        return language === "en"
+            ? `${month} ${dateTime.day}`
+            : `${dateTime.day} ${month}`;
+    }
+
+    const weekday = languageFormats.weekdaysShort[dateTime.weekday - 1];
+    return language === "en"
+        ? `${weekday}, ${month} ${dateTime.day}, ${dateTime.year}`
+        : `${weekday} ${dateTime.day} ${month} ${dateTime.year}`;
 }
 
 function translateRelativeTime(key, options) {
-    return i18n.t(key, { ...options, ns: "formats" });
+    return i18n.t(`formats:${key}`, options);
+}
+
+function toDateTime(timestamp) {
+    if (DateTime.isDateTime(timestamp)) {
+        return timestamp;
+    }
+
+    if (timestamp instanceof Date) {
+        return DateTime.fromJSDate(timestamp);
+    }
+
+    if (typeof timestamp === "string") {
+        const fromISO = DateTime.fromISO(timestamp);
+        if (fromISO.isValid) return fromISO;
+
+        const fromSQL = DateTime.fromSQL(timestamp);
+        if (fromSQL.isValid) return fromSQL;
+    }
+
+    return null;
 }
 
 /**
@@ -22,39 +64,25 @@ function translateRelativeTime(key, options) {
  * @returns {string} month and day depending on locale
  */
 function convertirTimestampDateCourte(timestamp) {
-    let dateTime;
-    const locale = getCurrentLocale();
-    if(timestamp instanceof Date)
-        dateTime = DateTime.fromJSDate(timestamp).setLocale(locale)
-    else if(typeof timestamp === 'string')
-        dateTime = DateTime.fromISO(timestamp).setLocale(locale)
-    else if(timestamp instanceof DateTime){
-        dateTime = timestamp.setLocale(locale)
-    }
-    else{
+    const dateTime = toDateTime(timestamp)?.setLocale(getCurrentLocale());
+    if (!dateTime?.isValid) {
         log('erreur convertirTimestampDateCourte')
         return '???'
     }
 
-    return dateTime.toFormat(getDateFormat("dateShort"));
+    return formatDate(dateTime, "dateShort");
 }
 
 
 
 function convertirTimestampDateLongue(timestamp) {
-    let dateTime;
-    const locale = getCurrentLocale();
-
-    if (timestamp instanceof Date) {
-        dateTime = DateTime.fromJSDate(timestamp).setLocale(locale);
-    } else if (DateTime.isDateTime(timestamp)) {
-        dateTime = timestamp.setLocale(locale);
-    } else {
+    const dateTime = toDateTime(timestamp)?.setLocale(getCurrentLocale());
+    if (!dateTime?.isValid) {
         console.warn("Timestamp n'est pas une date ou un DateTime", typeof(timestamp));
         return '???';
     }
 
-    return dateTime.toFormat(getDateFormat("dateLong"));
+    return formatDate(dateTime, "dateLong");
 }
 
 /**
@@ -63,14 +91,8 @@ function convertirTimestampDateLongue(timestamp) {
  * @returns
  */
 function convertirTimestampHeure(timestamp) {
-    let dateTime;
-    const locale = getCurrentLocale();
-    if(timestamp instanceof Date)
-        dateTime = DateTime.fromJSDate(timestamp).setLocale(locale)
-    else if(DateTime.isDateTime(timestamp) && timestamp.isValid){
-        dateTime = timestamp.setLocale(locale)
-    }
-    else
+    const dateTime = toDateTime(timestamp)?.setLocale(getCurrentLocale());
+    if (!dateTime?.isValid)
         return '???'
 
     return dateTime.toFormat(getDateFormat("time"));
