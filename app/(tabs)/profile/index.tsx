@@ -457,19 +457,30 @@ export default function ProfilEcran(){
                             </Svg>
                         </AnimatedTouchableOpacity>
                         {/* Hamburger menu options */}
-                        <AnimatedTouchableOpacity style={[s.floatingButton, s.floatingOption, paramsOptionAnimated]}>
+                        <AnimatedTouchableOpacity style={[s.floatingButton, s.floatingOption, paramsOptionAnimated]}
+                        onPress={() => {
+                            toggleHamburgerMenu()
+                            router.push('/(tabs)/profile/settings')
+                        }}
+                        >
                             <Icon name='cog' color={colors.text} size={28} />
                         </AnimatedTouchableOpacity>
                         <AnimatedTouchableOpacity
                             style={[s.floatingButton, s.floatingOption, editOptionAnimated]}
-                            onPress={()=> router.push('/(tabs)/profile/edit')}
+                        onPress={() => {
+                            toggleHamburgerMenu()
+                            router.push('/(tabs)/profile/edit')
+                        }}
                         >
                             <Icon name='pencil' color={colors.text} size={28} />
                         </AnimatedTouchableOpacity>
                         <AnimatedTouchableOpacity
                             style={[s.floatingButton, s.floatingOption, { borderColor: colors.error }, logOutOptionAnimated]}
                             onPress={() => {
-                                router.push('/(modals)/confirmSignOut')    
+                                router.push({
+                                    pathname: '/(modals)/confirm',
+                                    params: { action: 'signOut' },
+                                })
                             }}
                         >
                             <Icon name='log-out' color={colors.error} size={28} />

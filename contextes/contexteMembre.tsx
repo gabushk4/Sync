@@ -1,15 +1,13 @@
-import catcher from '@/functions/catcher'
 import { convertirTimestampDateLongue } from '@/functions/convertirTimestamp'
-import { convertirUTCversLocale } from '@/functions/convertirUTCenLocal'
+import { convertUTCToLocal } from '@/functions/convertirUTCenLocal'
 import log from '@/functions/log'
 import { createContext, useContext, useState } from 'react'
-import Toast from 'react-native-toast-message'
 import { useAPI } from './contexteAPI'
 import { useAccessToken } from './contexteToken'
 
+import ToastAbs from '@/abstractions/toastAbs'
 import { FPType } from '@/types/pfp'
 import { DateTime } from 'luxon'
-import ToastAbs from '@/abstractions/toastAbs'
 
 //Types
 
@@ -71,7 +69,7 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
             /* widgetsMembresRef.current = data.widgets
             setWidgetsMembre(data.widgets) */
             let t = convertirTimestampDateLongue(
-                convertirUTCversLocale(data.temps_creation)
+                convertUTCToLocal(data.temps_creation)
             );
             t = t.substring(t.indexOf('.') + 2);
             setMembre((prev) => ({ ...prev, tempsCreation: t }));

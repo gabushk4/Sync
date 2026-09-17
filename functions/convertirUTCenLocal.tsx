@@ -21,7 +21,7 @@ function convertirLocalVersUTC(dateLocale,){
     return dateUTC //retourne un DateTime
 } */
 
-function convertirUTCversLocale(dateUTC: string | DateTime, timezone = 'local') : DateTime | undefined {
+function convertUTCToLocal(dateUTC: string | DateTime, timezone = 'local') : DateTime | undefined {
   if (!dateUTC) {
     log('DateUTC est undefined:', dateUTC)
     throw Error('convertirUTCversLocale: DateUTC est undefined')
@@ -48,7 +48,7 @@ function convertirUTCversLocale(dateUTC: string | DateTime, timezone = 'local') 
   return dtLocale
 }
 
-function convertirLocalVersUTC(dateLocale: string | DateTime | undefined) {
+function convertLocalToUTC(dateLocale: string | DateTime | undefined) {
   let dt: DateTime | string | undefined = dateLocale;
   if (!dateLocale) throw "convertirLocalVersUTC date locale est undefined";
 
@@ -63,4 +63,5 @@ function convertirLocalVersUTC(dateLocale: string | DateTime | undefined) {
   return null
 }
 
-export {convertirUTCversLocale, convertirLocalVersUTC}
+export { convertLocalToUTC, convertUTCToLocal };
+

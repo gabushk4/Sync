@@ -1,0 +1,12 @@
+{
+  "dateShort": "LLL d",
+  "dateLong": "ccc, LLL d, yyyy",
+  "time": "HH:mm",
+  "justNow": "just now",
+  "minutes_one": "{{count}} minute ago",
+  "minutes_other": "{{count}} minutes ago",
+  "hours_one": "{{count}} hour ago",
+  "hours_other": "{{count}} hours ago",
+  "yesterday": "yesterday",
+  "atTime": "at {{time}}"
+}

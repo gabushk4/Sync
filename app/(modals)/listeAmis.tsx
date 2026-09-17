@@ -7,7 +7,7 @@ import { FlatList, Image, Text, TouchableOpacity, useColorScheme, View, } from '
 
 import catcher from "@/functions/catcher";
 import { convertirTimestampDateLongue } from "@/functions/convertirTimestamp";
-import { convertirUTCversLocale } from "@/functions/convertirUTCenLocal";
+import { convertUTCToLocal } from "@/functions/convertirUTCenLocal";
 import log from "@/functions/log";
 
 import { useAPI } from "@/contextes/contexteAPI";
@@ -57,7 +57,7 @@ export default function ListeAmis(){
             const response = await api.get('/amis')
             
             const data = response.data.map((ami: Friend)=>{
-                const amitie = convertirUTCversLocale(ami.temps_amitie )
+                const amitie = convertUTCToLocal(ami.temps_amitie )
                 return{
                     id:ami.id_publique,
                     ...ami,

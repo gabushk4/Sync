@@ -4,5 +4,16 @@
     "english":"english",
     "french":"french",
     "timezone":"timezone",
-    "local":"local timezone"
+    "local":"local timezone",
+    "permissions":"OS permissions",
+    "camera":"camera",
+    "location":"location",
+    "notifications":"notifications",
+    "granted":"allowed",
+    "notGranted":"not allowed",
+    "dangerZone":"danger zone",
+    "signOut":"sign out",
+    "open":"open",
+    "deleteAccount":"delete my account",
+    "exportData":"export my data"
 }

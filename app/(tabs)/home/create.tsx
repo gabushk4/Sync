@@ -21,7 +21,7 @@ import Icon from "@react-native-vector-icons/ionicons";
 import ToastAbs from "@/abstractions/toastAbs";
 import { EventFormHandle } from "@/components/eventForm";
 import { toastTypes } from "@/constants/toastConfig";
-import { convertirLocalVersUTC } from "@/functions/convertirUTCenLocal";
+import { convertLocalToUTC } from "@/functions/convertirUTCenLocal";
 import formaterDatePourServeur from "@/functions/formaterDatePourServeur";
 import { Participant } from "@/types/invites";
 import { DateTime } from "luxon";
@@ -79,8 +79,8 @@ export default function CreateEvent({ }) {
                         titre: values.titre,
                         description: values.description,
                         prive: values.prive,
-                        debut: formaterDatePourServeur(convertirLocalVersUTC(values.start)), 
-                        fin: formaterDatePourServeur(convertirLocalVersUTC(values.end)),
+                        debut: formaterDatePourServeur(convertLocalToUTC(values.start)), 
+                        fin: formaterDatePourServeur(convertLocalToUTC(values.end)),
                         regle_recurrence: values.regleRecurrence,
                         participants: invites.map((i) => ({ id: i.id, privilege: i.privilege }))
                     }

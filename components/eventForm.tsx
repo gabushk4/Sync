@@ -8,7 +8,7 @@ import { Event, Recurrence } from '@/types/calendar'
 
 import ceilBy5 from '@/functions/ceilBy5'
 import { convertirTimestampDateCourte, convertirTimestampDateLongue, convertirTimestampHeure } from '@/functions/convertirTimestamp'
-import { convertirUTCversLocale } from '@/functions/convertirUTCenLocal'
+import { convertUTCToLocal } from '@/functions/convertirUTCenLocal'
 import log from '@/functions/log'
 
 import RNDateTimePicker from '@react-native-community/datetimepicker'
@@ -143,8 +143,8 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
             return {start, end}
         }
 
-        let start = convertirUTCversLocale(event.debut ?? dtNow) ?? dtNow
-        let end = convertirUTCversLocale(event.fin ?? dtNow) ?? dtNow        
+        let start = convertUTCToLocal(event.debut ?? dtNow) ?? dtNow
+        let end = convertUTCToLocal(event.fin ?? dtNow) ?? dtNow        
 
         return {start, end}
     }

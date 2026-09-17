@@ -16,7 +16,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { getCommonFreeSlots } from '@/functions/availability';
 import catcher from '@/functions/catcher';
-import { convertirLocalVersUTC, convertirUTCversLocale } from '@/functions/convertirUTCenLocal';
+import { convertLocalToUTC, convertUTCToLocal } from '@/functions/convertirUTCenLocal';
 import formaterDatePourServeur from '@/functions/formaterDatePourServeur';
 import log from '@/functions/log';
 
@@ -133,8 +133,8 @@ export default function Home() {
       if (events) { 
         const dataLocale = events.map((evenement: any) => {
           if (!evenement.id_publique.includes('factice')) {
-            const startLocalMs = convertirUTCversLocale(evenement.debut, membre.timezone)?.toMillis()
-            const endLocalMs = convertirUTCversLocale(evenement.fin, membre.timezone)?.toMillis()
+            const startLocalMs = convertUTCToLocal(evenement.debut, membre.timezone)?.toMillis()
+            const endLocalMs = convertUTCToLocal(evenement.fin, membre.timezone)?.toMillis()
 
             return {
               ...evenement,
@@ -176,8 +176,8 @@ export default function Home() {
           //log('ami evenements', ami.evenements)
           const evenements = (ami.evenements || [])
                 .map((ev: any) => {
-                  const start = convertirUTCversLocale(ev.debut, membre.timezone) 
-                  const end = convertirUTCversLocale(ev.fin, membre.timezone)
+                  const start = convertUTCToLocal(ev.debut, membre.timezone) 
+                  const end = convertUTCToLocal(ev.fin, membre.timezone)
                   return {
                     id: ev.id,
                     url: ev.url,
@@ -348,8 +348,8 @@ export default function Home() {
 
       userEventsRefresh.current = new AutoRefresh(api, '/evenements/', {        
         extraParams: {
-          start: formaterDatePourServeur(convertirLocalVersUTC(now.startOf('day'))),
-          end: formaterDatePourServeur(convertirLocalVersUTC(now.endOf('day')))
+          start: formaterDatePourServeur(convertLocalToUTC(now.startOf('day'))),
+          end: formaterDatePourServeur(convertLocalToUTC(now.endOf('day')))
         },
         onData: modifierEvenementsMembreFetched,
         onError: (error) => {
@@ -360,8 +360,8 @@ export default function Home() {
 
       friendsEventsRefresh.current = new AutoRefresh(api, '/evenements/amis', {
         extraParams: {
-          start: formaterDatePourServeur(convertirLocalVersUTC(now.startOf('day'))),
-          end: formaterDatePourServeur(convertirLocalVersUTC(now.endOf('day')))
+          start: formaterDatePourServeur(convertLocalToUTC(now.startOf('day'))),
+          end: formaterDatePourServeur(convertLocalToUTC(now.endOf('day')))
         },
         onData: modifierEvenementsAmisFetched,
         onError: (error) => {

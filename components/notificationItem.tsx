@@ -12,8 +12,8 @@ import { usePalette } from "@/contextes/contextePalette";
 import { useAccessToken } from "@/contextes/contexteToken";
 
 import catcher from "@/functions/catcher";
-import { convertirTimestampDateCourte, convertirTimestampHeure, convertirTimestampQuand } from "@/functions/convertirTimestamp";
-import { convertirUTCversLocale } from "@/functions/convertirUTCenLocal";
+import { convertirTimestampDateCourte, convertirTimestampHeure, convertToWhen } from "@/functions/convertirTimestamp";
+import { convertUTCToLocal } from "@/functions/convertirUTCenLocal";
 import log from "@/functions/log";
 
 import Haptics from "@/abstractions/haptics";
@@ -265,7 +265,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
 
     let expired = false
     if (item.expiration === "expired") expired = true
-    const expiration = item.expiration ? convertirUTCversLocale(item.expiration) : undefined
+    const expiration = item.expiration ? convertUTCToLocal(item.expiration) : undefined
     let expirationLabel
 
     if (expired)
@@ -364,7 +364,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                         </Text>
                     </View>
                     <Text style={s.timestamp}>
-                        {convertirTimestampQuand(convertirUTCversLocale(item.date_envoie) ?? DateTime.now().toLocal())}
+                        {convertToWhen(convertUTCToLocal(item.date_envoie) ?? DateTime.now().toLocal()) as string}
                     </Text>
                 </View>
                 <TouchableOpacity

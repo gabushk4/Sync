@@ -4,5 +4,16 @@
     "english":"anglais",
     "french":"français",
     "timezone":"fuseau horaire",
-    "local":"fuseau horaire local"
+    "local":"fuseau horaire local",
+    "permissions":"permissions système",
+    "camera":"caméra",
+    "location":"localisation",
+    "notifications":"notifications",
+    "granted":"autorisée",
+    "notGranted":"non autorisée",
+    "dangerZone":"zone dangereuse",
+    "signOut":"se déconnecter",
+    "open":"ouvrir",
+    "deleteAccount":"supprimer mon compte",
+    "exportData":"exporter mes données"
 }

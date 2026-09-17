@@ -6,7 +6,12 @@ import { StyleSheet, Text } from 'react-native';
 import Haptics from './haptics';
 
 
-export function LinkAbs({ href, children, ...props }: { href: string; children: React.ReactNode } & React.ComponentProps<typeof Link>) {
+type LinkAbsProps = Omit<React.ComponentProps<typeof Link>, 'href'> & {
+    href: React.ComponentProps<typeof Link>['href']
+    children: React.ReactNode
+}
+
+export function LinkAbs({ href, children, ...props }: LinkAbsProps) {
     const { colors } = usePalette()
     const { fonts } = useFont()
     const s = createLinkStyles(colors, fonts)

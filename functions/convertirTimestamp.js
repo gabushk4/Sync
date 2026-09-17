@@ -1,120 +1,102 @@
 import { DateTime } from "luxon";
-import { Platform } from "react-native";
+import i18n from "../i18n";
+import { SUPPORTED_LANGUAGES } from "../locales/config";
 import log from "./log";
 
-function customToFormat(dt, format){
+function getCurrentLocale() {
+    const language = i18n.resolvedLanguage || i18n.language || "fr";
+    return SUPPORTED_LANGUAGES[language]?.locale || "fr-CA";
+}
 
-    if(Platform.OS !== 'ios'){
-        return dt.toFormat(format)
-    }
+function getDateFormat(formatKey) {
+    return i18n.t(formatKey, { ns: "formats" });
+}
 
-    const moisAbr = [
-        'janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin',
-        'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'
-    ]
-
-    switch(format){
-        case 'ccc d LLL yyyy':
-            return `${dt.weekdayShort}. ${dt.day} ${moisAbr[dt.month-1]} ${dt.year}`
-        case 'd LLL':
-            return `${dt.day} ${moisAbr[dt.month-1]}`
-        default:
-            log('erreur customToFormat')
-            return `1er janv. 1970`
-    }
+function translateRelativeTime(key, options) {
+    return i18n.t(key, { ...options, ns: "formats" });
 }
 
 /**
- * 
- * @param {string || DateTime || JSDate} timestamp 
- * @returns {string} jour mois (19 fev.)
+ *
+ * @param {string || DateTime || JSDate} timestamp
+ * @returns {string} month and day depending on locale
  */
 function convertirTimestampDateCourte(timestamp) {
-    //log('timestamp', timestamp)
     let dateTime;
+    const locale = getCurrentLocale();
     if(timestamp instanceof Date)
-        dateTime = DateTime.fromJSDate(timestamp).setLocale('fr')
+        dateTime = DateTime.fromJSDate(timestamp).setLocale(locale)
     else if(typeof timestamp === 'string')
-        dateTime = DateTime.fromISO(timestamp).setLocale('fr')
+        dateTime = DateTime.fromISO(timestamp).setLocale(locale)
     else if(timestamp instanceof DateTime){
-        dateTime = timestamp.setLocale('fr')
-    }    
-    else{ 
+        dateTime = timestamp.setLocale(locale)
+    }
+    else{
         log('erreur convertirTimestampDateCourte')
         return '???'
     }
-    
-    return customToFormat(dateTime, 'd LLL');
+
+    return dateTime.toFormat(getDateFormat("dateShort"));
 }
 
 
 
 function convertirTimestampDateLongue(timestamp) {
     let dateTime;
+    const locale = getCurrentLocale();
 
     if (timestamp instanceof Date) {
-        dateTime = DateTime.fromJSDate(timestamp).setLocale('fr');
+        dateTime = DateTime.fromJSDate(timestamp).setLocale(locale);
     } else if (DateTime.isDateTime(timestamp)) {
-        dateTime = timestamp.setLocale('fr-CA');
+        dateTime = timestamp.setLocale(locale);
     } else {
         console.warn("Timestamp n'est pas une date ou un DateTime", typeof(timestamp));
         return '???';
     }
 
-    //log("Formatage :", dateTime.toFormat("ccc d LLL yyyy"), "| isValid:", dateTime.isValid, "| locale:", dateTime.locale);
-
-    //log("monthLong:", dateTime.monthShort, "| monthShort:", dateTime.toFormat("LLL"));
-
-    const format = Platform.OS === 'android' ? 'ccc d LLL yyyy' : 'ccc. d LLL yyyy'
-
-    return customToFormat(dateTime, 'ccc d LLL yyyy'); 
-    // Exemple : "lun. 3 juin 2024"
+    return dateTime.toFormat(getDateFormat("dateLong"));
 }
 
 /**
- * 
- * @param {JSDate || DateTime} timestamp 
- * @returns 
+ *
+ * @param {JSDate || DateTime} timestamp
+ * @returns
  */
 function convertirTimestampHeure(timestamp) {
     let dateTime;
+    const locale = getCurrentLocale();
     if(timestamp instanceof Date)
-        dateTime = DateTime.fromJSDate(timestamp).setLocale('fr')
+        dateTime = DateTime.fromJSDate(timestamp).setLocale(locale)
     else if(DateTime.isDateTime(timestamp) && timestamp.isValid){
-        dateTime = timestamp.setLocale('fr')     
+        dateTime = timestamp.setLocale(locale)
     }
     else
         return '???'
 
-    const heures = dateTime.toFormat('HH');
-    const minutes = dateTime.toFormat('mm');
-    //log('DateTime', dateTime.toISO(), '→ heure', heures, ':', minutes);
-
-    return `${heures}:${minutes}`;
+    return dateTime.toFormat(getDateFormat("time"));
 }
 /**
- * 
- * @param {DateTime} timestamp 
+ *
+ * @param {DateTime} timestamp
  */
-function convertirTimestampQuand(timestamp) {
+function convertToWhen(timestamp) {
     const diff = DateTime.now().diff(timestamp, 'minutes').minutes
-    
+
     switch (true) {
         case diff < 5:
-            return "à l'instant"
-        case diff < 60:            
-            return `il y a ${Math.floor(diff)} minutes`
+            return translateRelativeTime("justNow")
+        case diff < 60:
+            return translateRelativeTime("minutes", { count: Math.floor(diff) })
         case diff < 60 * 3:
-            return `il y a ${Math.floor(diff/60)} heures`
+            return translateRelativeTime("hours", { count: Math.floor(diff / 60) })
         case diff < 60 * 24:
-            return `à ${convertirTimestampHeure(timestamp)}`
+            return translateRelativeTime("atTime", { time: convertirTimestampHeure(timestamp) })
         case diff < 60 * 48:
-            return `hier`
+            return translateRelativeTime("yesterday")
         default:
             return convertirTimestampDateCourte(timestamp)
     }
 }
 
 
-export {convertirTimestampDateCourte, convertirTimestampDateLongue, convertirTimestampHeure, convertirTimestampQuand}
-    
+export { convertirTimestampDateCourte, convertirTimestampDateLongue, convertirTimestampHeure, convertToWhen };
