@@ -1,28 +1,56 @@
-import { asyncStorageSettingsRepository } from '@/functions/settingsStorage'
-import { getDeviceTimezone } from '@/functions/timezones'
-import { changeAppLocale } from '@/locales/initLocale'
-import {
-    AppSettings,
-    DEFAULT_SETTINGS,
-    SettingKey,
-    SettingsRepository,
-} from '@/types/settings'
-import { ReactNode, createContext, useContext, useEffect, useState } from 'react'
+// TODO: functions/settingsStorage, functions/timezones et types/settings n'existent pas encore.
+// Implémentation réelle commentée en attendant ces fichiers.
+// import { asyncStorageSettingsRepository } from '@/functions/settingsStorage'
+// import { getDeviceTimezone } from '@/functions/timezones'
+// import { changeAppLocale } from '@/locales/initLocale'
+// import {
+//     AppSettings,
+//     DEFAULT_SETTINGS,
+//     SettingKey,
+//     SettingsRepository,
+// } from '@/types/settings'
+import { DEFAULT_LANGUAGE } from '@/locales/config'
+import { ReactNode, createContext, useContext } from 'react'
+
+type AppSettings = {
+  language: string
+  timezone: string
+}
 
 type SettingsContextValue = {
   settings: AppSettings
   hydrated: boolean
-  setSetting: <K extends SettingKey>(key: K, value: AppSettings[K]) => Promise<void>
+  setSetting: (key: keyof AppSettings, value: string) => Promise<void>
+}
+
+const DEFAULT_SETTINGS: AppSettings = {
+  language: DEFAULT_LANGUAGE,
+  timezone: 'local',
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null)
 
 type SettingsProviderProps = {
   children: ReactNode
-  repository?: SettingsRepository
 }
 
-export function SettingsProvider({
+export function SettingsProvider({ children }: SettingsProviderProps) {
+  // TODO: remplacer par la vraie implémentation (persistance + fuseau horaire) une fois
+  // functions/settingsStorage, functions/timezones et types/settings créés.
+  const value: SettingsContextValue = {
+    settings: DEFAULT_SETTINGS,
+    hydrated: true,
+    setSetting: async () => {},
+  }
+
+  return (
+    <SettingsContext.Provider value={value}>
+      {children}
+    </SettingsContext.Provider>
+  )
+}
+
+/* export function SettingsProvider({
   children,
   repository = asyncStorageSettingsRepository,
 }: SettingsProviderProps) {
@@ -66,7 +94,7 @@ export function SettingsProvider({
       {children}
     </SettingsContext.Provider>
   )
-}
+} */
 
 export function useSettings() {
   const context = useContext(SettingsContext)
