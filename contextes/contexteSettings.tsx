@@ -1,5 +1,5 @@
-// TODO: functions/settingsStorage, functions/timezones et types/settings n'existent pas encore.
-// Implémentation réelle commentée en attendant ces fichiers.
+// TODO: functions/settingsStorage, functions/timezones and types/settings don't exist yet.
+// Real implementation commented out until those files are created.
 // import { asyncStorageSettingsRepository } from '@/functions/settingsStorage'
 // import { getDeviceTimezone } from '@/functions/timezones'
 // import { changeAppLocale } from '@/locales/initLocale'
@@ -35,8 +35,8 @@ type SettingsProviderProps = {
 }
 
 export function SettingsProvider({ children }: SettingsProviderProps) {
-  // TODO: remplacer par la vraie implémentation (persistance + fuseau horaire) une fois
-  // functions/settingsStorage, functions/timezones et types/settings créés.
+  // TODO: replace with the real implementation (persistence + timezone) once
+  // functions/settingsStorage, functions/timezones and types/settings are created.
   const value: SettingsContextValue = {
     settings: DEFAULT_SETTINGS,
     hydrated: true,

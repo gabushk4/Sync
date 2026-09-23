@@ -21,6 +21,7 @@ import formaterDatePourServeur from '@/functions/formaterDatePourServeur';
 import log from '@/functions/log';
 
 
+import CalendarMonthView from '@/components/calendarMonthView';
 import EventsList from '@/components/eventsList';
 import ProfilPic from '@/components/pfp';
 import Timeline from '@/components/timeline';
@@ -76,6 +77,7 @@ export default function Home() {
     deconnecte:colorScheme === 'dark'?require('@/assets/icones/dark-deconnecte-icon.png'):require('@/assets/icones/light-deconnecte-icon.png'),
     rafraichir: colorScheme === 'dark' ? require('@/assets/icones/rafraichir-dark-icon.png') : require('@/assets/icones/rafraichir-light-icon.png'),
     ajouterAmi:colorScheme === 'dark'?require('@/assets/icones/ajouter-ami-dark-icon.png'):require('@/assets/icones/ajouter-ami-dark-icon.png'),
+    calendrier: colorScheme === 'dark' ? require('@/assets/icones/calendrier-dark-icon.png') : require('@/assets/icones/calendrier-light-icon.png'),
   }
   
   //Refs
@@ -93,6 +95,8 @@ export default function Home() {
   const [chargementEchec, setChargementEchec] = useState(false)
   const [chargementEvenements, setChargementEvenements] = useState(false)
   const [afficherRetour, setAfficherRetour] = useState({afficher:afficherRetourMaintenant.value.afficher, left:afficherRetourMaintenant.value.left})
+  const [vueCalendrier, setVueCalendrier] = useState(false)
+  const [moisCalendrier, setMoisCalendrier] = useState<DateTime>()
 
   //SharedValues
   const evAmisOffset = useSharedValue(0)
@@ -258,6 +262,57 @@ export default function Home() {
       friendsEventsRefresh.current?.forceRefresh({extraParams:{start:newDt.startOf('day'), end:newDt.endOf('day')}})
     }
   };
+
+  /**
+   * Toggles between the timeline view (day) and the calendar view (month).
+   * Switching in refetches the member's events for the whole month (to populate the
+   * day dots); switching out refetches just the currently displayed day.
+   *
+   * @returns {void}
+   */
+  const toggleVueCalendrier = () => {
+    const activation = !vueCalendrier
+    setVueCalendrier(activation)
+
+    if (activation && todayDateTime) {
+      const mois = todayDateTime.startOf('month')
+      setMoisCalendrier(mois)
+      userEventsRefresh.current?.forceRefresh({ extraParams: { start: mois.startOf('month'), end: mois.endOf('month') } })
+    } else if (todayDateTime) {
+      userEventsRefresh.current?.forceRefresh({ extraParams: { start: todayDateTime.startOf('day'), end: todayDateTime.endOf('day') } })
+      friendsEventsRefresh.current?.forceRefresh({ extraParams: { start: todayDateTime.startOf('day'), end: todayDateTime.endOf('day') } })
+    }
+  }
+
+  /**
+   * Changes the displayed month in the calendar view and refetches the member's
+   * events for that new month.
+   *
+   * @param {1 | -1} direction - 1 to go to the next month, -1 for the previous month.
+   * @returns {void}
+   */
+  const changerMoisCalendrier = (direction: 1 | -1) => {
+    if (!moisCalendrier) return
+    const nouveauMois = moisCalendrier.plus({ month: direction })
+    setMoisCalendrier(nouveauMois)
+    userEventsRefresh.current?.forceRefresh({ extraParams: { start: nouveauMois.startOf('month'), end: nouveauMois.endOf('month') } })
+  }
+
+  /**
+   * Selects a day in the calendar view and switches back to the timeline view on that day,
+   * refetching both the member's and friends' events for that day.
+   *
+   * @param {DateTime} jour - The day that was tapped in the calendar grid.
+   * @returns {void}
+   */
+  const selectionnerJourCalendrier = (jour: DateTime) => {
+    toggleBackToNow(jour)
+    setTodayDateTime(jour)
+    dateAujShared.value = jour.toMillis()
+    setVueCalendrier(false)
+    userEventsRefresh.current?.forceRefresh({ extraParams: { start: jour.startOf('day'), end: jour.endOf('day') } })
+    friendsEventsRefresh.current?.forceRefresh({ extraParams: { start: jour.startOf('day'), end: jour.endOf('day') } })
+  }
 
   const retourMaintenant = () => {
     const now = DateTime.now();
@@ -501,12 +556,24 @@ export default function Home() {
       <View style={s.container}>
 
         {/* ── Timeline (heures) ── */}
-        <View style={s.timeline}>
-          <View style={ s.column} />
-          <Timeline horizontal={true}/>
-        </View>
+        {!vueCalendrier && (
+          <View style={s.timeline}>
+            <View style={ s.column} />
+            <Timeline horizontal={true}/>
+          </View>
+        )}
 
-        {/* ── Zone principale (3/4) — horaire amis ── */}
+        {/* ── Calendar view (month grid) ── */}
+        {vueCalendrier ? (
+          <CalendarMonthView
+            monthDate={moisCalendrier ?? todayDateTime ?? DateTime.now()}
+            selectedDate={todayDateTime}
+            events={userEvents}
+            onSelectDay={selectionnerJourCalendrier}
+            onChangeMonth={changerMoisCalendrier}
+          />
+        ) : (
+        /* ── Zone principale (3/4) — horaire amis ── */
         <GestureDetector gesture={panGesture}>
           <View style={s.calendarContainer}>
           <Animated.View style={[loadingAnimated, s.friendsZone]}>
@@ -587,24 +654,36 @@ export default function Home() {
             </Animated.View>
         </View>
         </GestureDetector>
+        )}
 
-        {/* ── Barre du bas (flèches + date) ── */}
+        {/* ── Bottom bar (arrows + date + calendar toggle) ── */}
         <View style={[s.botBar]}>
-           <TouchableOpacity style={s.arrow} onPress={reculerDate}>
+          {!vueCalendrier && (
+            <>
+              <TouchableOpacity style={s.arrow} onPress={reculerDate}>
+                <Image
+                  source={icones.arrowL}
+                  style={{height:'100%'}}
+                  resizeMode='contain'
+                />
+              </TouchableOpacity>
+              <View style={{padding:8, backgroundColor:colors.primary, borderWidth:1, borderColor:colors.border, borderRadius:8}}>
+                <Text style={{ color: colors.text, fontFamily:fonts.title }}>
+                  {todayDateTime?.toFormat('d MMM')}
+                </Text>
+              </View>
+              <TouchableOpacity style={s.arrow} onPress={avancerDate}>
+                <Image
+                  source={icones.arrowR}
+                  style={{height:'100%'}}
+                  resizeMode='contain'
+                />
+              </TouchableOpacity>
+            </>
+          )}
+          <TouchableOpacity style={s.arrow} onPress={toggleVueCalendrier}>
             <Image
-              source={icones.arrowL}
-              style={{height:'100%'}}
-              resizeMode='contain'
-            />
-          </TouchableOpacity>
-          <View style={{padding:8, backgroundColor:colors.primary, borderWidth:1, borderColor:colors.border, borderRadius:8}}>
-            <Text style={{ color: colors.text, fontFamily:fonts.title }}>
-              {todayDateTime?.toFormat('d MMM')}
-            </Text>
-          </View>
-          <TouchableOpacity style={s.arrow} onPress={avancerDate}>
-            <Image
-              source={icones.arrowR}
+              source={icones.calendrier}
               style={{height:'100%'}}
               resizeMode='contain'
             />

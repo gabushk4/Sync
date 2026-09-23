@@ -1,5 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, SetStateAction, Dispatch } from 'react';
-import { useAuth } from './contexteAuth';
+import { createContext, ReactNode, useContext, useState } from 'react';
 
 type MockModeContextType = {
     isMockMode: boolean;
