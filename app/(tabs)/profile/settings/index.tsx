@@ -12,9 +12,12 @@ import Setting from "@/types/settings";
 
 import Radius from "@/constants/Radius";
 
+import ServerStatus from "@/components/serverStatus";
 import SettingRow from "@/components/settingsRow";
+import { DEFAULT_HUE } from "@/constants/Colors";
 import log from "@/functions/log";
 import * as Camera from 'expo-camera';
+import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
@@ -22,7 +25,10 @@ import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
-import { DEFAULT_HUE } from "@/constants/Colors";
+
+const ABOUT_URL = 'https://sync.app/about';
+const PRIVACY_URL = 'https://app.notion.com/p/syncapp/Politique-de-confidentialit-sync-28b05fccf55c80638d84ce250bccadd1';
+const MINOR_SEC_URL = 'https://app.notion.com/p/syncapp/Normes-li-s-a-la-s-curit-des-mineurs-2ae05fccf55c80909cc7f3783d0d3953' 
 
 
 type Permissions = {
@@ -125,7 +131,10 @@ export default function Settings(){
             type: 'input',
             keyboardType: 'numeric',
             value: localHue.toString(),
-            setDefault: () => setHue(DEFAULT_HUE),
+            setDefault: () => {
+                setHue(DEFAULT_HUE)
+                setLocalHue(DEFAULT_HUE)
+            },
             onBlur(e) {
                 const newHue = Number(localHue) % 360
                 setHue(newHue)
@@ -247,7 +256,7 @@ export default function Settings(){
             marginBottom: 4,
         },
         sectionContainer: {
-            padding: 8,
+            paddingHorizontal: 8,
             borderRadius: Radius.md,
             backgroundColor: c.card,
         },
@@ -255,13 +264,22 @@ export default function Settings(){
         dangerLabel: {
             color: c.error,
         },
-        
-        
+        footer: {
+            alignItems: 'center',
+            gap: 8,
+            paddingVertical: 32,
+        },
+        version: {
+            color: c.muted,
+            fontFamily: f.body,
+            fontSize: 14,
+        },
     })    
 
     return (
         <Container style={{ backgroundColor: c.background }}>
             <ScrollView contentContainerStyle={s.screen}>
+                <ServerStatus/>
                 {!hydrated ? (
                     <ActivityIndicator color={c.secondary} />
                 ) : settings.map((setting, i) => {
@@ -303,7 +321,26 @@ export default function Settings(){
                         </View>
                     )
                 })}
+                <View style={s.footer}>
+                    {[
+                        { id: 'about', titleKey: 'about', href: ABOUT_URL },
+                        { id: 'privacyPolicy', titleKey: 'privacyPolicy', href: PRIVACY_URL },
+                        { id: 'minorSecurity', titleKey: 'minorSecurity', href: MINOR_SEC_URL },
+                    ].map((setting, index, links) => (
+                        <React.Fragment key={setting.id}>
+                            <View style={s.row}>
+                                <Text style={s.label}>{t(setting.titleKey)}</Text>
+                                <SettingRow setting={{ ...setting, type: 'link', externalLink: true }} />
+                            </View>
+                            <Separator show={index < links.length - 1} />
+                        </React.Fragment>
+                    ))}
+                    <Text style={s.version}>
+                        {t('appVersion', { version: Constants.expoConfig?.version ?? '1.0.0' })}
+                    </Text>
+                </View>
             </ScrollView>
+            
         </Container>
     )
 }

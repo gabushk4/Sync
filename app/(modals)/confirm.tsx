@@ -1,25 +1,35 @@
-import { useLocalSearchParams } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
+import ToastAbs from '@/abstractions/toastAbs'
 import ModalBase from '@/components/modalBase'
+import { toastTypes } from '@/constants/toastConfig'
+import { useAPI } from '@/contextes/contexteAPI'
 import { useAuth } from '@/contextes/contexteAuth'
 import { useFont } from '@/contextes/contexteFont'
 import { useMembre } from '@/contextes/contexteMembre'
 import { usePalette } from '@/contextes/contextePalette'
-import Ionicons from "@react-native-vector-icons/ionicons"
-import { useAPI } from '@/contextes/contexteAPI'
-import ToastAbs from '@/abstractions/toastAbs'
-import { toastTypes } from '@/constants/toastConfig'
+import { modalEvents } from '@/events/modalEvents'
 import catcher from '@/functions/catcher'
+import Ionicons, { IoniconsIconName } from "@react-native-vector-icons/ionicons"
 
 
+type ConfirmActionConfig = {
+    title: string,
+    confirmation: string,
+    confirm: string,
+    icon: IoniconsIconName,
+    callback?: () => void | Promise<void>
+}
 
-type ConfirmAction = 'signOut' | 'deleteAccount' | 'exportData'
-
+/**
+ * Renders a dynamic confirm modal. Uses action passed from LocalSearchParams to display the right content. 
+ * Action has to be of type ConfirmAction
+ * @returns {JSX.Element}
+ */
 export default function Confirm() {
     const { action: rawAction } = useLocalSearchParams<{ action?: string }>()
-    const action = (Array.isArray(rawAction) ? rawAction[0] : rawAction) as ConfirmAction | undefined
     const { t } = useTranslation()
     const { t: tSettings } = useTranslation('settings')
     const { colors } = usePalette()
@@ -46,14 +56,17 @@ export default function Confirm() {
                 try {
                     const res = await api.post("/membres/anonymise")
 
+                    console.log(res.data)
+
                     if (res.status < 300) {
+                        
                         ToastAbs.show({
                             type: toastTypes.success,
                             text1:'demande envoyée avec succès'
                         })
                     }    
                 } catch (err) {
-                    catcher(err, "demande d'anonymisation")
+                    catcher(err, tSettings('deleteAccount'))
                 }
             },
         },
@@ -62,17 +75,40 @@ export default function Confirm() {
             confirmation: t('common:exportData.explanation', {email: membre.email}),
             confirm: t('common:exportData.confirm'),
             icon: 'download' as const,
-            callback: undefined,
+            callback: async () => {
+                try {
+                    const res = await api.post("/membres/export")
+
+                    if (res.status < 300) {
+                        ToastAbs.show({
+                            type: toastTypes.success,
+                            text2: t('common:exportData.done')
+                        })
+                    }
+                } catch (err) {
+                    catcher(err, tSettings('exportData'))
+                }
+            },
         },
-    } satisfies Record<ConfirmAction, {
-        title: string
-        confirmation: string
-        confirm: string
-        icon: 'log-out' | 'trash' | 'download'
-        callback?: () => void | Promise<void>
-    }>
+    } satisfies Record<string, ConfirmActionConfig>
+
+    type ConfirmAction = keyof typeof actionConfig
+    const action = (Array.isArray(rawAction) ? rawAction[0] : rawAction) as ConfirmAction | undefined
 
     const selectedAction = action ? actionConfig[action] : undefined
+
+    const confirmerAction = async () => {
+        if (action === 'signOut') {
+            if (router.canDismiss()) {
+                router.dismiss()
+            }
+            await selectedAction?.callback?.()
+            return
+        }
+
+        await selectedAction?.callback?.()
+        modalEvents.emitClosing()
+    }
 
     const s = StyleSheet.create({
         container: {
@@ -115,6 +151,7 @@ export default function Confirm() {
             gap:8
         }
     })
+
     return (
         <ModalBase>
             <View style={s.container}>
@@ -123,7 +160,7 @@ export default function Confirm() {
                 <View style={s.btnContainer}>
                     <TouchableOpacity style={[s.btn, {}]}
                         disabled={!selectedAction?.callback}
-                        onPress={selectedAction?.callback}
+                        onPress={confirmerAction}
                     >
                         <Text style={s.text}>{selectedAction?.confirm}</Text>
                         <Ionicons name={selectedAction?.icon ?? 'help-circle'} color={colors.error} size={20}/>

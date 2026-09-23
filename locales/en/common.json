@@ -15,7 +15,8 @@
 		"explanation":"A verification email will be sent to {{email}}. It will contain the next steps.",
 		"confirm":"export my data",
 		"errorTitle":"exporting data",
-		"errorOccured": "impossible to register for the exportation of your data"
+		"errorOccured": "impossible to register for the exportation of your data",
+		"done":"a download link will be sent to you when your file is ready"
 	},
 	"deleteAccount": {
 		"explanation": "Your personal information will be irreversibly anonymized in accordance with Quebec’s Law 25. Your account will no longer be associated with this information. A confirmation email will be sent to {{email}} and will contain the next steps.",

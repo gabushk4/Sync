@@ -46,7 +46,8 @@ type DropdownSetting<T extends string = string> = SettingBase & {
 
 type LinkSetting = SettingBase & {
 	type: 'link'
-	href: LinkProps['href'] 
+	href: LinkProps['href'] | string
+	externalLink?: boolean
 }
 
 type InputSettings = SettingBase & {
@@ -55,10 +56,7 @@ type InputSettings = SettingBase & {
 	keyboardType: TextInputProps['keyboardType']
 	onChangeText: TextInputProps['onChangeText']
 	onBlur: TextInputProps['onBlur']
-	setDefault?: {
-		labelKey: string,
-		onPress: () => void
-	}
+	setDefault?: () => void
 }
 
 type Section = {

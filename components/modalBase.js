@@ -1,20 +1,19 @@
-import { useFocusEffect, useIsFocused } from "expo-router/react-navigation"
 import { BlurView } from "expo-blur"
+import { LinearGradient } from "expo-linear-gradient"
+import { router } from "expo-router"
+import { useFocusEffect, useIsFocused } from "expo-router/react-navigation"
 import React, { useEffect, useState } from "react"
-import { Image, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, useColorScheme, View } from "react-native"
+import { Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TouchableOpacity, useColorScheme, View } from "react-native"
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler"
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming, } from "react-native-reanimated"
-import { router } from "expo-router"
-import { LinearGradient } from "expo-linear-gradient"
 
 import Haptics from "@/abstractions/haptics"
 
 import log from "@/functions/log"
 
-import { useModal } from "@/contextes/contexteModals"
+import { useFont } from "@/contextes/contexteFont"
 import { usePalette } from "@/contextes/contextePalette"
 import { useRouteAbs } from "@/contextes/contexteRoute"
-import { useFont } from "@/contextes/contexteFont"
 
 import { withSpringConfig, withTimingConfig } from "@/constants/ReanimatedConfs"
 
@@ -25,7 +24,6 @@ export default function ModalBase({children}){
     const colorScheme = useColorScheme()
 
     const { fonts } = useFont()
-    const {fermerModal, modal} = useModal()
     const { ajouterEcran, getRoute } = useRouteAbs()
     const isFocused = useIsFocused()
     
@@ -176,6 +174,12 @@ export default function ModalBase({children}){
     const optionBottom = useSharedValue(-s.closeButton.height)
     const optionsOpacity = useSharedValue(1)
 
+    const dismissModalRoute = () => {
+        if (router.canDismiss()) {
+            router.dismiss()
+        }
+    }
+
     const LEVELS = [0, 45, 94]; // 0 = closed, 1 = 45, 2 = fullscreen
     const actualLevel = useSharedValue(1); // starts at 45%   
 
@@ -201,17 +205,16 @@ export default function ModalBase({children}){
     })
 
     const fermerModalBase = () => {
+        if (closing) return
         setClosing(true)
 
         opacityFlou.value = withTiming(0, withTimingConfig);
-        modalOpacity.value = withTiming(0, withTimingConfig);
+        modalOpacity.value = withTiming(0, withTimingConfig, (finished) => {
+            if (finished) runOnJS(dismissModalRoute)()
+        });
         modalHeight.value = withSpring('0%', withSpringConfig);
         optionBottom.value = withSpring(-s.closeButton.height, withSpringConfig);
         optionsOpacity.value = withTiming(0, withTimingConfig);
-
-        setTimeout(() => {
-            router.back()    
-        }, 300)
     }
 
     const panGesture = Gesture.Pan()

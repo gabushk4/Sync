@@ -16,5 +16,10 @@
     "open":"ouvrir",
     "deleteAccount":"supprimer mon compte",
     "exportData":"exporter mes données",
-    "theme":"palette"
+    "theme":"palette",
+    "setDefault":"rétablir la valeur par défaut",
+    "appVersion":"version {{version}}",
+    "about":"à propos de sync",
+    "privacyPolicy":"politique de confidentialité",
+    "minorSecurity":"sécurité des mineurs"
 }

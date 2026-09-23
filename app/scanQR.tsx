@@ -5,7 +5,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Image, Linking, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
-import Toast from 'react-native-toast-message';
 
 import Haptics from '@/abstractions/haptics';
 import ToastAbs from '@/abstractions/toastAbs';
@@ -15,7 +14,7 @@ import { usePalette } from '@/contextes/contextePalette';
 import { useRouteAbs } from '@/contextes/contexteRoute';
 import { useAccessToken } from '@/contextes/contexteToken';
 
-import { toastConfig, toastTypes } from '@/constants/toastConfig';
+import { toastTypes } from '@/constants/toastConfig';
 import catcher from '@/functions/catcher';
 import log from '@/functions/log';
 import { router } from 'expo-router';
@@ -328,7 +327,6 @@ export default function ScannerQRCode(): React.ReactElement {
         </TouchableOpacity>
       </View>
       </View>
-      <Toast config={toastConfig}/>
     </>
   );
 }

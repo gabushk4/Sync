@@ -15,7 +15,8 @@
 		"explanation":"un courriel de confirmation sera envoyé à l'adresse {{email}}. Il contiendra les prochaines étapes.",
 		"confirm":"exporter mes données",
 		"errorTitle":"exportant vos données",
-		"errorOccured": "impossible de vous enregistrer pour l'exportation de vos données"
+		"errorOccured": "impossible de vous enregistrer pour l'exportation de vos données",
+		"done":"un lien de téléchargement vous sera envoyé lorsque votre fichier sera prêt"
 	},
 	"deleteAccount": {
 		"explanation": "Vos renseignements personnels seront anonymisés de façon irréversible conformément à la Loi 25 du Québec. Votre compte ne pourra plus être associé à ces renseignements. Un courriel de confirmation sera envoyé à l’adresse {{email}} et contiendra les prochaines étapes.",

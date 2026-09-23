@@ -1,11 +1,11 @@
-import { LinkAbs } from "@/abstractions/linkAbs"
+import { LinkAbs, linkStyle } from "@/abstractions/linkAbs"
 import SwitchAbs from "@/abstractions/switchAbs"
 import TextInputAbs from "@/abstractions/textInputAbs"
 import { useFont } from "@/contextes/contexteFont"
 import { usePalette } from "@/contextes/contextePalette"
 import Setting from "@/types/settings"
 import { useTranslation } from "react-i18next"
-import { StyleSheet, TouchableOpacity, View } from "react-native"
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native"
 import MenuDeroulant from "./menuDeroulant"
 
 type SettingRowProps = {
@@ -28,6 +28,9 @@ export default function SettingRow({ setting }: SettingRowProps) {
         container: {
             width:'50%',
         },
+        linkContainer: {
+            width:'30%'
+        },
         action: {
             minWidth: 88,
             alignItems: 'flex-end',
@@ -37,9 +40,14 @@ export default function SettingRow({ setting }: SettingRowProps) {
             fontFamily: f.body,
             fontSize: 16,
         },
+        input: {
+            gap: 4, 
+            flexDirection: 'column',
+            alignItems:'center'
+        }
     })
     return (
-        <View style={s.container}>
+        <View style={setting.type == 'link' ? s.linkContainer : s.container}>
             {setting.type === 'toggle' && (
                 <SwitchAbs
                     style={{alignSelf:'flex-end'}}
@@ -63,24 +71,29 @@ export default function SettingRow({ setting }: SettingRowProps) {
                 />
             )}
             {setting.type === 'link' && (
-                <TouchableOpacity
-                    style={s.action}
-                    disabled={setting.disabled ?? false}
-                >
-                    <LinkAbs href={setting.href} style={s.status}>{t('open')}</LinkAbs>
-                </TouchableOpacity>
+                <View style={s.action}>
+                    <LinkAbs
+                        href={setting.href}
+                        externalLink={setting.externalLink}
+                        disabled={setting.disabled ?? false}
+                        style={s.status}
+                    >
+                        {t('open')}
+                    </LinkAbs>
+                </View>
             )}
             {setting.type === 'input' && (
-                <View>
-                    <LinkAbs                        
-                    >t()</LinkAbs>
+                <View style={s.input}>                    
                     <TextInputAbs
                         keyboardType={setting.keyboardType}
                         onBlur={setting.onBlur}
                         onChangeText={setting.onChangeText}
                         value={setting.value}
                         style={{width:'100%'}}
-                        />
+                    />
+                    <TouchableOpacity
+                        onPress={setting.setDefault}
+                    ><Text style={linkStyle(c, f)}>{t('setDefault') }</Text></TouchableOpacity>
                 </View>
             )}
         </View>

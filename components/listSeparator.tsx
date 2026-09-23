@@ -35,6 +35,6 @@ export default function Separator({ show, style }: Props) {
         }
     }
     return (
-        <View style={[s.separator, style]}/>
+        <View style={[s.separator, style ?? {}]}/>
     )
 }
