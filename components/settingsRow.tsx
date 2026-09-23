@@ -1,11 +1,12 @@
+import { LinkAbs } from "@/abstractions/linkAbs"
 import SwitchAbs from "@/abstractions/switchAbs"
+import TextInputAbs from "@/abstractions/textInputAbs"
 import { useFont } from "@/contextes/contexteFont"
 import { usePalette } from "@/contextes/contextePalette"
 import Setting from "@/types/settings"
 import { useTranslation } from "react-i18next"
-import { StyleSheet, Text, TouchableOpacity } from "react-native"
+import { StyleSheet, TouchableOpacity, View } from "react-native"
 import MenuDeroulant from "./menuDeroulant"
-import { LinkAbs } from "@/abstractions/linkAbs"
 
 type SettingRowProps = {
     setting: Setting
@@ -24,6 +25,9 @@ export default function SettingRow({ setting }: SettingRowProps) {
     const { t } = useTranslation('settings');
 
     const s = StyleSheet.create({
+        container: {
+            width:'50%',
+        },
         action: {
             minWidth: 88,
             alignItems: 'flex-end',
@@ -35,9 +39,10 @@ export default function SettingRow({ setting }: SettingRowProps) {
         },
     })
     return (
-        <>
+        <View style={s.container}>
             {setting.type === 'toggle' && (
                 <SwitchAbs
+                    style={{alignSelf:'flex-end'}}
                     value={setting.value}
                     disabled={setting.disabled ?? false}
                     onValueChange={(value) => setting.onValueChange(value)}
@@ -65,6 +70,19 @@ export default function SettingRow({ setting }: SettingRowProps) {
                     <LinkAbs href={setting.href} style={s.status}>{t('open')}</LinkAbs>
                 </TouchableOpacity>
             )}
-        </>
+            {setting.type === 'input' && (
+                <View>
+                    <LinkAbs                        
+                    >t()</LinkAbs>
+                    <TextInputAbs
+                        keyboardType={setting.keyboardType}
+                        onBlur={setting.onBlur}
+                        onChangeText={setting.onChangeText}
+                        value={setting.value}
+                        style={{width:'100%'}}
+                        />
+                </View>
+            )}
+        </View>
     )
 }

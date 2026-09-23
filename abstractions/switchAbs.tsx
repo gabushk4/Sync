@@ -12,7 +12,7 @@ export default function SwitchAbs({ value, style, onValueChange, ...props }: Rea
 
     return (
         <Switch
-            style={[style, {alignSelf:'center'}]}
+            style={[{alignSelf:'center'}, style]}
             value={value}
             onValueChange={onValueChange}
             thumbColor={Platform.OS === 'android' ? colors.secondary : colors.card}

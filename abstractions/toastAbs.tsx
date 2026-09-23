@@ -26,7 +26,7 @@ function processQueue() {
 }
 
 const ToastAbs = {
-    show(config = {}) {
+    show(config: ToastShowParams) {
         queue.push(config);
         if (!isShowing) {
             processQueue();

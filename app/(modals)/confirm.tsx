@@ -8,6 +8,10 @@ import { useFont } from '@/contextes/contexteFont'
 import { useMembre } from '@/contextes/contexteMembre'
 import { usePalette } from '@/contextes/contextePalette'
 import Ionicons from "@react-native-vector-icons/ionicons"
+import { useAPI } from '@/contextes/contexteAPI'
+import ToastAbs from '@/abstractions/toastAbs'
+import { toastTypes } from '@/constants/toastConfig'
+import catcher from '@/functions/catcher'
 
 
 
@@ -21,6 +25,7 @@ export default function Confirm() {
     const { colors } = usePalette()
     const { fonts } = useFont()
     const { signOut } = useAuth()
+    const {api} = useAPI()
 
     const {membre} = useMembre()
 
@@ -34,11 +39,22 @@ export default function Confirm() {
         },
         deleteAccount: {
             title: tSettings('deleteAccount'),
-            confirmation: t('common:deleteAccount.explanation'),
+            confirmation: t('common:deleteAccount.explanation', {email:membre.email}),
             confirm: t('common:deleteAccount.confirm'),
             icon: 'trash' as const,
             callback: async () => {
-                
+                try {
+                    const res = await api.post("/membres/anonymise")
+
+                    if (res.status < 300) {
+                        ToastAbs.show({
+                            type: toastTypes.success,
+                            text1:'demande envoyée avec succès'
+                        })
+                    }    
+                } catch (err) {
+                    catcher(err, "demande d'anonymisation")
+                }
             },
         },
         exportData: {

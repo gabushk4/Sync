@@ -1,4 +1,5 @@
 import { LinkProps } from "expo-router"
+import { TextInputProps } from "react-native"
 
 export type AppSettings = {
 	language: 'en' | 'fr'
@@ -48,6 +49,18 @@ type LinkSetting = SettingBase & {
 	href: LinkProps['href'] 
 }
 
+type InputSettings = SettingBase & {
+	type: 'input'
+	value: TextInputProps['value']
+	keyboardType: TextInputProps['keyboardType']
+	onChangeText: TextInputProps['onChangeText']
+	onBlur: TextInputProps['onBlur']
+	setDefault?: {
+		labelKey: string,
+		onPress: () => void
+	}
+}
+
 type Section = {
 	id: string
 	titleKey: string
@@ -59,6 +72,7 @@ type Setting =
 	| ToggleSetting
 	| DropdownSetting
 	| LinkSetting
-    | Section
+	| Section
+	| InputSettings
 
 export default Setting

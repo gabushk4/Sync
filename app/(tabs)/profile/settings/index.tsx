@@ -22,6 +22,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { DEFAULT_HUE } from "@/constants/Colors";
 
 
 type Permissions = {
@@ -47,9 +48,11 @@ export default function Settings(){
     const {t} = useTranslation('settings')
     const { settings: values, hydrated, setSetting } = useSettings()
     const router = useRouter()
+    const {hue, setHue} = usePalette()
 
     const [permissions, setPermissions] = useState<Permissions>()
     const [, requestCameraPermission, getCameraPermission] = Camera.useCameraPermissions()
+    const [localHue, setLocalHue] = useState<number>(hue)
 
     const timezones = getAvailableTimezones()
 
@@ -114,6 +117,24 @@ export default function Settings(){
                 { value: 'en', titleKey: 'english' },
             ],
             onValueChange: value => setSetting('language', value as 'en' | 'fr'),
+        },
+        //TODO: color picker instead on HSL color base
+        {
+            id: 'theme',
+            titleKey: 'theme',
+            type: 'input',
+            keyboardType: 'numeric',
+            value: localHue.toString(),
+            setDefault: () => setHue(DEFAULT_HUE),
+            onBlur(e) {
+                const newHue = Number(localHue) % 360
+                setHue(newHue)
+                setLocalHue(newHue)
+                setSetting('theme', newHue)
+            },
+            onChangeText(text) {
+                setLocalHue(Number(text))                
+            }
         },
         {
             id: 'permissions',
@@ -244,6 +265,7 @@ export default function Settings(){
                 {!hydrated ? (
                     <ActivityIndicator color={c.secondary} />
                 ) : settings.map((setting, i) => {
+                    console.log("title key", setting.titleKey)
                     return (
                         <View key={setting.id}>
                             {setting.type === 'section' && (
@@ -253,7 +275,7 @@ export default function Settings(){
                                         {setting.settings.map((childSetting, i) => (
                                             <React.Fragment key={childSetting.id}>
                                                 <View style={s.row}>
-                                                    <Text style={[s.label, childSetting.id === 'signOut' && s.dangerLabel]}>
+                                                    <Text style={[s.label, setting.id === 'dangerZone' && s.dangerLabel]}>
                                                         {t(childSetting.titleKey)}
                                                     </Text>
                                                     <SettingRow setting={childSetting}/>

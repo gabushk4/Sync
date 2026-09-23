@@ -13,11 +13,15 @@
 	},
 	"exportData":{
 		"explanation":"A verification email will be sent to {{email}}. It will contain the next steps.",
-		"confirm":"export my data"
+		"confirm":"export my data",
+		"errorTitle":"exporting data",
+		"errorOccured": "impossible to register for the exportation of your data"
 	},
 	"deleteAccount": {
 		"explanation": "Your personal information will be irreversibly anonymized in accordance with Quebec’s Law 25. Your account will no longer be associated with this information. A confirmation email will be sent to {{email}} and will contain the next steps.",
-		"confirm": "anonymize my data"
+		"confirm": "anonymize my data",
+		"errorTitle":"anonymising data",
+		"errorOccured": "impossible to register for the anonymisation of your data"
 	},
 	"loading": "Loading",
 	"serverWaking": "Please wait; the server is taking a while to wake up",

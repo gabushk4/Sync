@@ -15,5 +15,6 @@
     "signOut":"sign out",
     "open":"open",
     "deleteAccount":"delete my account",
-    "exportData":"export my data"
+    "exportData":"export my data",
+    "theme":"palette"
 }
