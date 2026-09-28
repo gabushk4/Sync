@@ -68,7 +68,7 @@ const mockRegistry = {
             {
                 id: 'conv-2',
                 ami: { id: 'ami-2', pseudo: 'ali', fp_url: undefined },
-                dernierMessage: { type: 'vocal', envoyeLe: now.minus({ hours: 3 }).toISO(), auteurId: 'mock-user-1' },
+                dernierMessage: { type: 'vocal', envoyeLe: now.minus({ hours: 3 }).toISO(), auteurId: 'Mmoc1234' },
                 nonLus: 0,
             },
         ],
@@ -76,6 +76,7 @@ const mockRegistry = {
 
     'POST /conversations': (body) => ({
         id: `conv-${body?.ami_id ?? 'nouv'}`,
+        existante: false,
     }),
 
     // --- Story #16 (Isma): messages vocaux (type 'vocal' géré ci-dessous) ---
@@ -83,15 +84,21 @@ const mockRegistry = {
         has_changed: true,
         messages: [
             { id: 'msg-1', conversationId: params.id, auteurId: 'ami-1', type: 'texte', contenu: 'allo!', envoyeLe: now.minus({ hours: 1 }).toISO(), lu: true },
-            { id: 'msg-2', conversationId: params.id, auteurId: 'mock-user-1', type: 'texte', contenu: 'salut ça va?', envoyeLe: now.minus({ minutes: 40 }).toISO(), lu: true },
+            { id: 'msg-2', conversationId: params.id, auteurId: 'Mmoc1234', type: 'texte', contenu: 'salut ça va?', envoyeLe: now.minus({ minutes: 40 }).toISO(), lu: true },
             { id: 'msg-3', conversationId: params.id, auteurId: 'ami-1', type: 'vocal', audioUrl: undefined, dureeSecondes: 7, envoyeLe: now.minus({ minutes: 12 }).toISO(), lu: false },
         ],
     }),
 
     'POST /conversations/:id/messages': (params, body) => ({
-        id: `msg-${Date.now()}`,
-        conversationId: params.id,
-        ...body,
+        message: {
+            id: `msg-${Date.now()}`,
+            conversationId: params.id,
+            auteurId: 'Mmoc1234',
+            type: body?.type ?? 'texte',
+            contenu: body?.contenu,
+            envoyeLe: DateTime.now().toUTC().toISO({ includeOffset: false }),
+            lu: false,
+        },
     }),
 
     // --- Story #7 (Isma): import .ics ---

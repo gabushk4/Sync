@@ -28,6 +28,7 @@ import ChargementEcran from '@/components/chargementEcran';
 import { AuthProvider, useAuth } from '@/contextes/contexteAuth';
 import { GestionScrollProvider } from '@/contextes/contexteGestionListes';
 import { InvitesProvider } from '@/contextes/contexteInvites';
+import { ConversationsProvider } from '@/contextes/contexteConversations';
 import { MockModeProvider } from '@/contextes/contexteMockMode';
 import { NotificationProvider } from '@/contextes/contexteNotifications';
 import { SettingsProvider, useSettings } from '@/contextes/contexteSettings';

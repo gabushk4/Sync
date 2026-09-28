@@ -33,16 +33,14 @@ export default function MessageBubble({message,estDeMoi}: Props){
                         </Text>
                     )
                 }
-                <Text 
-                style={[
-                    styles.heure,
-                    { color: estDeMoi ? 'rgba(255,255,255,0.7' : colors/muted,fontFamily: fonts.body},
-
-                ]}
+                <Text
+                    style={[
+                        styles.heure,
+                        { color: estDeMoi ? 'rgba(255,255,255,0.7)' : colors.muted, fontFamily: fonts.body },
+                    ]}
                 >
-                    {convertirTimeStanpHeure{message.envoyeLe}}
-                </View>
-
+                    {convertirTimestampHeure(message.envoyeLe)}
+                </Text>
             </View>
         </View>
     )

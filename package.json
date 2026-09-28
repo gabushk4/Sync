@@ -21,6 +21,7 @@
     "@vvo/tzdb": "^6.198.0",
     "axios": "^1.9.0",
     "expo": "^57.0.20",
+    "expo-audio": "~57.0.5",
     "expo-blur": "~57.0.2",
     "expo-brightness": "~57.0.1",
     "expo-calendar": "~57.0.2",

@@ -32,3 +32,9 @@ export type MessageBrut = Omit<Message,'envoyeLe'> & {envoyeLe: string}
 export type ConversationBrute = Omit<Conversation,'dernierMessage'> & {
     dernierMessage?: Omit<NonNullable<Conversation['dernierMessage']>,'envoyeLe'> & { envoyeLe: string}
 }
+
+
+/** Ce que l'écran de conversation envoie au contexte */
+export type EnvoiMessage =
+    | { type: 'texte', contenu: string }
+    | { type: 'vocal', uri: string, dureeSecondes: number }

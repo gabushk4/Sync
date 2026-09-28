@@ -8,21 +8,29 @@ import { usePalette } from '@/contextes/contextePalette'
 import VoiceRecorderButton from './voiceRecorderButton'
 
 type Props = {
-    onEnvoyerTexte: (texte: string) => void
-    onEnvoyerVocal: (uri: string, dureeSecondes: number) => void
+    onEnvoyerTexte: (texte: string) => Promise<void> | void
+    onEnvoyerVocal: (uri: string, dureeSecondes: number) => Promise<void> | void
 }
 
-export default function MessageInput({onEnvoyeTexte,onEnvoyerVocal,onEnvoi = false} : Props){
+export default function MessageInput({ onEnvoyerTexte, onEnvoyerVocal }: Props){
     const {colors} = usePalette()
     const [texte,setTexte] = useState('')
+    const [enEnvoi, setEnEnvoi] = useState(false)
 
-    const envoyer = () => {
+    const envoyer = async () => {
         const t = texte.trim()
-        if(t.lenght === 0) return
-        onEnvoyerTexte(t)
+        if(t.length === 0 || enEnvoi) return
+        setEnEnvoi(true)
         setTexte('')
+        try {
+            await onEnvoyerTexte(t)
+        } catch {
+            setTexte(t) // remettre le texte si l'envoi a échoué
+        } finally {
+            setEnEnvoi(false)
+        }
     }
-    const aDuTexte = texte.trim().lenght > 0
+    const aDuTexte = texte.trim().length > 0
 
     return (
         <View style= {[styles.conteneur, {backgroundColor: colors.card, borderTopColor: colors.border}]}>
@@ -31,6 +39,7 @@ export default function MessageInput({onEnvoyeTexte,onEnvoyerVocal,onEnvoi = fal
                 onChangeText={setTexte}
                 placeholder="écris un message…"
                 multiline
+                maxLength={2000}
                 style={styles.input}
             />
             {aDuTexte
@@ -41,11 +50,8 @@ export default function MessageInput({onEnvoyeTexte,onEnvoyerVocal,onEnvoi = fal
                         style={[styles.boutonEnvoyer,{backgroundColor: colors.secondary,opacity:enEnvoi ? 0.5 : 1}]}>
                             <Icon name="send" size={16} color="white"/>
                     </TouchableOpacity>
-                    
                 )
                 : <VoiceRecorderButton onEnregistrementTermine={onEnvoyerVocal} />
-
-
             }
         </View>
     )

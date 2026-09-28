@@ -24,7 +24,7 @@ export default function ConversationItem({ conversation, onPress }: Props) {
         ? dernierMessage.type === 'vocal'
             ? 'message vocal'
             : dernierMessage.contenu
-        : ' aucun message pour le moment'
+        : 'aucun message pour le moment'
     return (
        <TouchableOpacity
             onPress={() => onPress(conversation)}
@@ -43,7 +43,7 @@ export default function ConversationItem({ conversation, onPress }: Props) {
                 <Text style={[styles.pseudo, { color: colors.text, fontFamily: fonts.body }]}>{ami.pseudo}</Text>
                 <Text 
                     numberOfLines={1}
-                    styles={[styles.apercu,
+                    style={[styles.apercu,
                         {color:nonLus > 0 ? colors.text : colors.muted, fontFamily: fonts.body},
                         nonLus > 0 && {fontWeight: '600'},
 
@@ -55,7 +55,7 @@ export default function ConversationItem({ conversation, onPress }: Props) {
             </View> 
 
             <View style={styles.droite}>
-                {dernierMessage && (<Text style={[styles.heure,{color:colors.mutes,fontFamily:fonts.body}]}>
+                {dernierMessage && (<Text style={[styles.heure,{color:colors.muted,fontFamily:fonts.body}]}>
                     {convertirTimestampQuand(dernierMessage.envoyeLe)}
                     </Text>
                 )}

@@ -135,6 +135,10 @@ export default function ListeAmis(){
                                     }
                                     else if(type === 'consult')
                                         onPress?.(item)
+                                    else if(type === 'message'){
+                                        modalEvents.emitClosing()
+                                        onPress?.(item)
+                                    }
                                 }}>
                                     <View style={{ width:'20%', height:64, alignItems:'center', justifyContent:'center', alignSelf:'center'}}>
                                         <Image
@@ -148,7 +152,7 @@ export default function ListeAmis(){
                                         <Text style={{fontFamily:fonts.body, color:colors.muted, fontSize:14}}>{t('list.friendSince', { date: dateAmitie.substring(dateAmitie.indexOf('.')+2) })}</Text>
                                     </View>
                                     <View style={{width:'15%', height:'100%', justifyContent:'center', alignItems:'center'}}>
-                                    {!select && <TouchableOpacity style={{width:'88%', height:'72%', justifyContent:'center', alignItems:'center'}}
+                                    {type === 'consult' && <TouchableOpacity style={{width:'88%', height:'72%', justifyContent:'center', alignItems:'center'}}
                                             onPress={()=>{
                                                 log("supprimer ami:", item.pseudo, item.id)
                                             }}

@@ -31,7 +31,13 @@
       "expo-secure-store",
       "expo-splash-screen",
       "expo-status-bar",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Sync utilise le micro pour enregistrer tes messages vocaux."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

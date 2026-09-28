@@ -22,23 +22,23 @@ type Props = {
 
 export default function VoiceMessageBubble({message,estDeMoi}: Props){
     const {colors} = usePalette()
-    const player = useAudioPlayer()
+    const player = useAudioPlayer(message.audioUrl ? { uri: message.audioUrl } : null)
     const status = useAudioPlayerStatus(player)
 
     useEffect(()=>{
      // Revenir au début une fois la lecture terminée, pour permettre de rejouer
      if(status.didJustFinish){
-        player.seek(0)
+        player.seekTo(0)
      }
     },[status.didJustFinish])
 
-    const dureeAffichee = Math.max(0,Math.round(message.dureeSecondes ?? status.duration ?? 0))
-    const coulerIcone = estDeMoi ? 'white' : colors.text
-    
+    const dureeAffichee = Math.max(0,Math.round(message.dureeSecondes || status.duration || 0))
+    const couleurIcone = estDeMoi ? 'white' : colors.text
+
     const basculerLecture = () => {
         if(!message.audioUrl) return
         if(status.playing) player.pause()
-        else player.play(message.audioUrl)
+        else player.play()
     }
     return (
         <View style={styles.conteneur}>
@@ -63,11 +63,12 @@ export default function VoiceMessageBubble({message,estDeMoi}: Props){
                 />
             </View>
 
-            <Text style={{ color: couleurIcone, fontSize: 12 }}>{`0:${dureeAffichee.toString().padStart(2, '0')}`}</Text>
+            <Text style={{ color: couleurIcone, fontSize: 12 }}>
+                {`${Math.floor(dureeAffichee / 60)}:${(dureeAffichee % 60).toString().padStart(2, '0')}`}
+            </Text>
         </View>
     )
 }
-
 
 
 const styles = StyleSheet.create({
