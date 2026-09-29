@@ -2,7 +2,12 @@ import { useFont } from '@/contextes/contexteFont'
 import { usePalette } from '@/contextes/contextePalette'
 import { Event } from '@/types/calendar'
 import { DateTime } from 'luxon'
-import { Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native'
+import { ComponentType, Ref, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Animated, FlatList, FlatListProps, Image, NativeScrollEvent, NativeSyntheticEvent, PanResponder, Pressable, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native'
+
+// Animated.FlatList loses the generic type param, so it's reconstructed here
+// to keep `data`/`renderItem` typed as number[] instead of any[].
+const FlatListAnime = Animated.FlatList as unknown as ComponentType<FlatListProps<number> & { ref?: Ref<FlatList<number>> }>
 
 export type CalendarMonthViewProps = {
     monthDate: DateTime;
@@ -10,38 +15,33 @@ export type CalendarMonthViewProps = {
     events?: Event[];
     onSelectDay: (date: DateTime) => void;
     onChangeMonth: (direction: 1 | -1) => void;
+    /** Called when the user taps anywhere in the calendar that isn't a day, the header, or a swipe. */
+    onDismiss: () => void;
+    /** Called once a long-press-and-drag range selection ends, with the days sorted earliest-first. */
+    onSelectRange?: (debut: DateTime, fin: DateTime) => void;
 }
 
-// Shows a full month as a grid of days (like a regular calendar).
-export default function CalendarMonthView({
-    monthDate,
-    selectedDate,
-    events = [],
-    onSelectDay,
-    onChangeMonth,
-}: CalendarMonthViewProps) {
-    const { colors } = usePalette()
-    const { fonts } = useFont()
-    const colorScheme = useColorScheme()
+/** How far (in months) the calendar can be browsed in each direction. */
+const MOIS_PAR_DIRECTION = 24
+const NOMBRE_MOIS = MOIS_PAR_DIRECTION * 2 + 1
+const INDEX_INITIAL = MOIS_PAR_DIRECTION
 
-    // Picks the right icons for the light/dark theme
-    let iconeGauche = require('@/assets/icones/fleche-g-light-icon.png')
-    let iconeDroite = require('@/assets/icones/fleche-d-light-icon.png')
-    if (colorScheme === 'dark') {
-        iconeGauche = require('@/assets/icones/fleche-g-dark-icon.png')
-        iconeDroite = require('@/assets/icones/fleche-d-dark-icon.png')
-    }
+/** The fixed list of month indices the FlatList renders (0..NOMBRE_MOIS-1). */
+const INDICES_MOIS = Array.from({ length: NOMBRE_MOIS }, (_, i) => i)
 
-    // First and last day of the displayed month
-    const debutMois = monthDate.startOf('month')
-    const finMois = monthDate.endOf('month')
+/**
+ * Builds the weeks (each an array of 7 days) needed to display a full month
+ * grid, including the leading/trailing days from the previous/next month
+ * that complete the first/last week. The week's start day follows Luxon's
+ * global locale (`Settings.defaultLocale`).
+ *
+ * @param {DateTime} mois - Any date within the month to build weeks for.
+ * @returns {DateTime[][]} A list of weeks, each an array of exactly 7 days.
+ */
+function construireSemaines(mois: DateTime): DateTime[][] {
+    const debutGrille = mois.startOf('month').startOf('week')
+    const finGrille = mois.endOf('month').endOf('week')
 
-    // We want full weeks, so we add the days from the previous/next
-    // month that complete the first and last week.
-    const debutGrille = debutMois.startOf('week')
-    const finGrille = finMois.endOf('week')
-
-    // Build the list of every day to show, one by one
     const jours: DateTime[] = []
     let jourCourant = debutGrille
     while (jourCourant <= finGrille) {
@@ -49,25 +49,275 @@ export default function CalendarMonthView({
         jourCourant = jourCourant.plus({ day: 1 })
     }
 
-    // Split the list of days into weeks of 7 days
     const semaines: DateTime[][] = []
     for (let i = 0; i < jours.length; i += 7) {
-        const semaine = jours.slice(i, i + 7)
-        semaines.push(semaine)
+        semaines.push(jours.slice(i, i + 7))
+    }
+    return semaines
+}
+
+/**
+ * Full-month calendar grid, with:
+ * - A dot under any day that has at least one event (`events`).
+ * - The `selectedDate` day highlighted with a filled circle.
+ * - Swipeable month navigation, bounded to ±2 years from wherever the
+ *   calendar was first opened (header title and grid slide together).
+ * - Tap outside the grid/header to dismiss (`onDismiss`).
+ * - Long-press-and-drag on a day to select a range (`onSelectRange`).
+ *
+ * Internationalization: month/weekday names and the week's start day come
+ * from Luxon's global locale, set once at app startup from the user's
+ * language (see `locales/initLocale.js`). This component only uses
+ * locale-agnostic format tokens ('MMMM', 'EEE').
+ *
+ * Implementation: months are addressed by a fixed index (0..NOMBRE_MOIS-1)
+ * into a bounded `FlatList`, rather than a small window of months that gets
+ * shifted and re-centred on every swipe. This avoids needing to reset the
+ * scroll position after each swipe at all — the FlatList simply stays
+ * wherever it naturally scrolled to — which removes the frame-timing race
+ * that a shift-and-recentre approach is prone to.
+ *
+ * @param {CalendarMonthViewProps} props
+ * @param {DateTime} props.monthDate - Any date within the month to display.
+ * @param {DateTime} [props.selectedDate] - Currently selected day, highlighted in the grid.
+ * @param {Event[]} [props.events] - Events for the currently displayed month, used for the day dots.
+ * @param {(date: DateTime) => void} props.onSelectDay - Called with the tapped day when a cell is pressed.
+ * @param {(direction: 1 | -1) => void} props.onChangeMonth - Called with -1/1 once a swipe or arrow tap has switched month.
+ * @param {() => void} props.onDismiss - Called when the user taps outside the interactive parts of the calendar.
+ * @param {(debut: DateTime, fin: DateTime) => void} [props.onSelectRange] - Called with the sorted range once a long-press-drag selection ends.
+ * @returns {JSX.Element}
+ */
+export default function CalendarMonthView({
+    monthDate,
+    selectedDate,
+    events = [],
+    onSelectDay,
+    onChangeMonth,
+    onDismiss,
+    onSelectRange,
+}: CalendarMonthViewProps) {
+    const { colors } = usePalette()
+    const { fonts } = useFont()
+    const colorScheme = useColorScheme()
+
+    let iconeGauche = require('@/assets/icones/fleche-g-light-icon.png')
+    let iconeDroite = require('@/assets/icones/fleche-d-light-icon.png')
+    if (colorScheme === 'dark') {
+        iconeGauche = require('@/assets/icones/fleche-g-dark-icon.png')
+        iconeDroite = require('@/assets/icones/fleche-d-dark-icon.png')
     }
 
-    // List of dates (as text) that have at least one event, to show a dot
-    const datesAvecEvenements: string[] = []
-    for (const evenement of events) {
-        if (evenement.debut) {
-            const dateTexte = evenement.debut.toISODate()
-            if (dateTexte && !datesAvecEvenements.includes(dateTexte)) {
-                datesAvecEvenements.push(dateTexte)
+    // ISO date strings with at least one event, for the day dots.
+    const datesAvecEvenements = useMemo(() => {
+        const dates: string[] = []
+        for (const evenement of events) {
+            if (evenement.debut) {
+                const dateTexte = evenement.debut.toISODate()
+                if (dateTexte && !dates.includes(dateTexte)) dates.push(dateTexte)
             }
         }
+        return dates
+    }, [events])
+
+    // Fixed reference point: index INDEX_INITIAL always maps to whichever
+    // month the calendar was first opened on, so every other index's month
+    // never needs remapping.
+    const ancreRef = useRef(monthDate.startOf('month'))
+
+    /**
+     * Converts a month index to the month it represents.
+     *
+     * @param {number} index - A value in [0, NOMBRE_MOIS - 1].
+     * @returns {DateTime}
+     */
+    function moisPourIndex(index: number): DateTime {
+        return ancreRef.current.plus({ month: index - INDEX_INITIAL })
     }
 
-    const s = StyleSheet.create({
+    /**
+     * Converts a month to its index, clamped to the browsable range.
+     *
+     * @param {DateTime} mois
+     * @returns {number}
+     */
+    function indexPourMois(mois: DateTime): number {
+        const diff = Math.round(mois.startOf('month').diff(ancreRef.current, 'months').months)
+        return Math.min(NOMBRE_MOIS - 1, Math.max(0, INDEX_INITIAL + diff))
+    }
+
+    // The month currently centred/active. Mirrored into a ref for the same
+    // reason as plageDebut/plageFin below: values read from inside the
+    // PanResponder's handlers (created once) must come from a ref, not
+    // straight from render-time state.
+    const [indexActuel, setIndexActuel] = useState(() => indexPourMois(monthDate))
+    const indexActuelRef = useRef(indexActuel)
+    indexActuelRef.current = indexActuel
+
+    const moisActuel = moisPourIndex(indexActuel)
+    const semainesActuel = useMemo(() => construireSemaines(moisActuel), [moisActuel])
+    const semainesActuelRef = useRef(semainesActuel)
+    semainesActuelRef.current = semainesActuel
+
+    // Measured grid width; also the width of one FlatList page.
+    const [largeur, setLargeur] = useState(0)
+    const largeurRef = useRef(largeur)
+    largeurRef.current = largeur
+
+    const flatListRef = useRef<FlatList<number>>(null)
+
+    // Live horizontal scroll position, native-driven for smooth dragging.
+    const scrollX = useRef(new Animated.Value(0)).current
+
+    // Seeds scrollX to match the FlatList's initial position once the width
+    // is known (`initialScrollIndex` moves the FlatList itself, but doesn't
+    // fire an onScroll event, so scrollX wouldn't otherwise reflect it).
+    useLayoutEffect(() => {
+        if (largeur === 0) return
+        scrollX.setValue(indexActuelRef.current * largeur)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [largeur])
+
+    // Jumps to match `monthDate` when it changes for a reason other than our
+    // own swipe (e.g. opening the calendar on a new date). A no-op for our
+    // own swipes: indexActuelRef is already updated by then (see
+    // surSwipeTermine), so it already matches.
+    useLayoutEffect(() => {
+        if (largeur === 0) return
+        const indexVoulu = indexPourMois(monthDate)
+        if (indexVoulu === indexActuelRef.current) return
+
+        indexActuelRef.current = indexVoulu
+        setIndexActuel(indexVoulu)
+        flatListRef.current?.scrollToOffset({ offset: indexVoulu * largeur, animated: false })
+        scrollX.setValue(indexVoulu * largeur)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [monthDate, largeur])
+
+    // onMomentumScrollEnd can occasionally fire twice for a single swipe
+    // (e.g. a small settle correction right after the first "end" event).
+    // Ignoring a second call that lands right after the first one avoids
+    // advancing the month twice for what was really one gesture.
+    const dernierTraitementRef = useRef(0)
+
+    /**
+     * Called once the FlatList settles on a page after a swipe: updates the
+     * active index and tells the parent which month is now shown.
+     *
+     * @param {NativeSyntheticEvent<NativeScrollEvent>} e - The scroll event, used for its final `contentOffset.x`.
+     * @returns {void}
+     */
+    function surSwipeTermine(e: NativeSyntheticEvent<NativeScrollEvent>) {
+        if (largeur === 0) return
+
+        const maintenant = Date.now()
+        if (maintenant - dernierTraitementRef.current < 300) return
+
+        const nouvelIndex = Math.round(e.nativeEvent.contentOffset.x / largeur)
+        if (nouvelIndex === indexActuelRef.current) return
+
+        dernierTraitementRef.current = maintenant
+        const direction = nouvelIndex > indexActuelRef.current ? 1 : -1
+        indexActuelRef.current = nouvelIndex
+        setIndexActuel(nouvelIndex)
+        onChangeMonth(direction)
+    }
+
+    // --- Long-press-and-drag range selection (active month only) ---
+    const [plageDebut, setPlageDebut] = useState<DateTime | null>(null)
+    const [plageFin, setPlageFinState] = useState<DateTime | null>(null)
+    const plageDebutRef = useRef<DateTime | null>(null)
+    const plageFinRef = useRef<DateTime | null>(null)
+    const onSelectRangeRef = useRef(onSelectRange)
+    onSelectRangeRef.current = onSelectRange
+
+    // Absolute on-screen position of the active grid, for converting a
+    // PanResponder touch position into a row/column.
+    const grilleActiveRef = useRef<View>(null)
+    const positionGrilleActive = useRef({ x: 0, y: 0 })
+
+    /**
+     * Finds which day of the active month's grid an absolute screen position
+     * falls over (every cell is a `largeur / 7` square).
+     *
+     * @param {number} pageX - Absolute X position on screen.
+     * @param {number} pageY - Absolute Y position on screen.
+     * @returns {DateTime | null} The day under that position, or null if outside the grid.
+     */
+    function jourSousLeDoigt(pageX: number, pageY: number): DateTime | null {
+        const largeurActuelle = largeurRef.current
+        if (largeurActuelle === 0) return null
+
+        const tailleCase = largeurActuelle / 7
+        const xRelatif = pageX - positionGrilleActive.current.x
+        const yRelatif = pageY - positionGrilleActive.current.y
+        if (xRelatif < 0 || yRelatif < 0) return null
+
+        const semaines = semainesActuelRef.current
+        const colonne = Math.min(6, Math.floor(xRelatif / tailleCase))
+        const rangee = Math.min(semaines.length - 1, Math.floor(yRelatif / tailleCase))
+
+        return semaines[rangee]?.[colonne] ?? null
+    }
+
+    /**
+     * Starts a range selection on `jour` (from a day cell's `onLongPress`).
+     *
+     * @param {DateTime} jour - The day that was long-pressed.
+     * @returns {void}
+     */
+    function demarrerSelection(jour: DateTime) {
+        plageDebutRef.current = jour
+        plageFinRef.current = jour
+        setPlageDebut(jour)
+        setPlageFinState(jour)
+    }
+
+    /**
+     * Updates the in-progress range's end day as the finger drags.
+     *
+     * @param {DateTime} jour - The day currently under the finger.
+     * @returns {void}
+     */
+    function etendreSelection(jour: DateTime) {
+        plageFinRef.current = jour
+        setPlageFinState(jour)
+    }
+
+    /**
+     * Ends the range selection: reports the sorted range via
+     * `onSelectRange`, then clears the selection state.
+     *
+     * @returns {void}
+     */
+    function terminerSelection() {
+        const debut = plageDebutRef.current
+        const fin = plageFinRef.current
+        if (debut && fin) {
+            const [du, au] = debut <= fin ? [debut, fin] : [fin, debut]
+            onSelectRangeRef.current?.(du, au)
+        }
+        plageDebutRef.current = null
+        plageFinRef.current = null
+        setPlageDebut(null)
+        setPlageFinState(null)
+    }
+
+    // Capture-phase handler takes over the touch from a day cell's
+    // TouchableOpacity as soon as a long-press has started a selection,
+    // letting the drag continue across the whole grid.
+    const panResponderSelection = useRef(
+        PanResponder.create({
+            onMoveShouldSetPanResponderCapture: () => plageDebutRef.current !== null,
+            onPanResponderMove: (_, gestureState) => {
+                const jour = jourSousLeDoigt(gestureState.moveX, gestureState.moveY)
+                if (jour) etendreSelection(jour)
+            },
+            onPanResponderRelease: () => terminerSelection(),
+            onPanResponderTerminate: () => terminerSelection(),
+        })
+    ).current
+
+    const s = useMemo(() => StyleSheet.create({
         container: {
             flex: 1,
             backgroundColor: colors.background,
@@ -79,14 +329,19 @@ export default function CalendarMonthView({
             justifyContent: 'space-between',
             paddingVertical: 12,
         },
+        entete: {
+            flex: 1,
+            overflow: 'hidden',
+        },
         monthLabel: {
             color: colors.text,
             fontFamily: fonts.title,
             fontSize: 20,
+            textAlign: 'center',
         },
         arrow: {
-            height: 24,
-            width: 24,
+            height: 36,
+            width: 36,
         },
         weekdaysRow: {
             flexDirection: 'row',
@@ -130,64 +385,158 @@ export default function CalendarMonthView({
             alignItems: 'center',
             justifyContent: 'center',
         },
+        dayCircleEnSelection: {
+            backgroundColor: colors.border,
+            borderRadius: 100,
+            width: 32,
+            height: 32,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
         dot: {
             width: 4,
             height: 4,
             borderRadius: 2,
             backgroundColor: colors.secondary,
         },
-    })
+    }), [colors, fonts])
+
+    /**
+     * Renders one page of the FlatList: a full month's grid of weeks. Only
+     * the active (currently centred) month gets the range-selection pan
+     * handlers and position measurement attached.
+     *
+     * @param {{ item: number }} info - `item` is the month index to render.
+     * @returns {JSX.Element}
+     */
+    function renderMois({ item: index }: { item: number }) {
+        const mois = moisPourIndex(index)
+        const semaines = index === indexActuel ? semainesActuel : construireSemaines(mois)
+        const estActif = index === indexActuel
+
+        const plageMin = plageDebut && plageFin ? (plageDebut <= plageFin ? plageDebut : plageFin) : null
+        const plageMax = plageDebut && plageFin ? (plageDebut <= plageFin ? plageFin : plageDebut) : null
+        // Hidden everywhere while a range is being dragged, so the old
+        // confirmed selection doesn't compete visually with the new one.
+        const enTrainDeSelectionner = plageDebut !== null
+
+        return (
+            <View
+                style={{ width: largeur }}
+                ref={estActif ? grilleActiveRef : undefined}
+                onLayout={estActif ? () => {
+                    grilleActiveRef.current?.measureInWindow((x, y) => {
+                        positionGrilleActive.current = { x, y }
+                    })
+                } : undefined}
+                {...(estActif ? panResponderSelection.panHandlers : {})}
+            >
+                {semaines.map((semaine, i) => (
+                    <View key={i} style={s.week}>
+                        {semaine.map(jour => {
+                            const horsMois = jour.month !== mois.month
+                            const estSelectionne = !enTrainDeSelectionner && !!selectedDate && jour.hasSame(selectedDate, 'day')
+                            const aUnEvenement = datesAvecEvenements.includes(jour.toISODate() ?? '')
+                            const enSelection = estActif && !!plageMin && !!plageMax
+                                && jour >= plageMin && jour <= plageMax
+
+                            // Confirmed selection takes priority over the lighter, in-progress range highlight.
+                            let styleCercle
+                            if (estSelectionne) styleCercle = s.dayCircleSelectionne
+                            else if (enSelection) styleCercle = s.dayCircleEnSelection
+
+                            return (
+                                <TouchableOpacity
+                                    key={jour.toISODate()}
+                                    style={s.dayCell}
+                                    onPress={() => {
+                                        // A tap right after a long-press (no drag) still
+                                        // finalizes the 1-day selection, instead of navigating.
+                                        if (plageDebutRef.current) terminerSelection()
+                                        else onSelectDay(jour)
+                                    }}
+                                    onLongPress={estActif ? () => demarrerSelection(jour) : undefined}
+                                >
+                                    <View style={styleCercle}>
+                                        <Text style={[
+                                            s.dayLabel,
+                                            estSelectionne && s.dayLabelSelectionne,
+                                            !estSelectionne && horsMois && s.dayLabelHorsMois,
+                                        ]}>
+                                            {jour.day}
+                                        </Text>
+                                    </View>
+                                    {aUnEvenement && <View style={s.dot} />}
+                                </TouchableOpacity>
+                            )
+                        })}
+                    </View>
+                ))}
+            </View>
+        )
+    }
 
     return (
-        <View style={s.container}>
-            <View style={s.header}>
-                <TouchableOpacity onPress={() => onChangeMonth(-1)}>
+        // Pressable, not a plain View: an empty-space tap bubbles up to
+        // onDismiss, while child touchables (days, arrows, the FlatList)
+        // claim their own touches first.
+        <Pressable style={s.container} onPress={onDismiss}>
+            {/* No-op onPress: claims taps in the header's empty space so they
+                don't fall through to the container's onDismiss above. */}
+            <Pressable style={s.header} onPress={() => {}}>
+                <TouchableOpacity
+                    onPress={() => indexActuel > 0 && onChangeMonth(-1)}
+                    disabled={indexActuel <= 0}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                >
                     <Image source={iconeGauche} style={s.arrow} resizeMode="contain" />
                 </TouchableOpacity>
-                <Text style={s.monthLabel}>{monthDate.toFormat('LLLL yyyy')}</Text>
-                <TouchableOpacity onPress={() => onChangeMonth(1)}>
+
+                <View style={s.entete}>
+                    <Text style={s.monthLabel}>{moisActuel.toFormat('MMMM yyyy')}</Text>
+                </View>
+
+                <TouchableOpacity
+                    onPress={() => indexActuel < NOMBRE_MOIS - 1 && onChangeMonth(1)}
+                    disabled={indexActuel >= NOMBRE_MOIS - 1}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                >
                     <Image source={iconeDroite} style={s.arrow} resizeMode="contain" />
                 </TouchableOpacity>
-            </View>
+            </Pressable>
 
             <View style={s.weekdaysRow}>
-                {semaines[0].map(jour => (
+                {semainesActuel[0].map(jour => (
                     <View key={jour.weekday} style={s.weekdayCell}>
-                        <Text style={s.weekdayLabel}>{jour.toFormat('ccc')}</Text>
+                        <Text style={s.weekdayLabel}>{jour.toFormat('EEE')}</Text>
                     </View>
                 ))}
             </View>
 
-            {semaines.map((semaine, i) => (
-                <View key={i} style={s.week}>
-                    {semaine.map(jour => {
-                        const horsMois = jour.month !== monthDate.month
-                        const estSelectionne = selectedDate ? jour.hasSame(selectedDate, 'day') : false
-                        const aUnEvenement = datesAvecEvenements.includes(jour.toISODate() ?? '')
-
-                        // Pick the day number's text style based on its state
-                        let styleTexte = s.dayLabel
-                        if (estSelectionne) {
-                            styleTexte = { ...s.dayLabel, ...s.dayLabelSelectionne }
-                        } else if (horsMois) {
-                            styleTexte = { ...s.dayLabel, ...s.dayLabelHorsMois }
-                        }
-
-                        return (
-                            <TouchableOpacity
-                                key={jour.toISODate()}
-                                style={s.dayCell}
-                                onPress={() => onSelectDay(jour)}
-                            >
-                                <View style={estSelectionne ? s.dayCircleSelectionne : undefined}>
-                                    <Text style={styleTexte}>{jour.day}</Text>
-                                </View>
-                                {aUnEvenement && <View style={s.dot} />}
-                            </TouchableOpacity>
-                        )
-                    })}
-                </View>
-            ))}
-        </View>
+            <View onLayout={(e) => setLargeur(e.nativeEvent.layout.width)}>
+                {largeur > 0 && (
+                    <FlatListAnime
+                        ref={flatListRef}
+                        data={INDICES_MOIS}
+                        keyExtractor={(index) => String(index)}
+                        renderItem={renderMois}
+                        extraData={[indexActuel, plageDebut, plageFin, selectedDate, datesAvecEvenements]}
+                        horizontal
+                        pagingEnabled
+                        // Disabled during a range drag so it doesn't compete with the month swipe.
+                        scrollEnabled={plageDebut === null}
+                        showsHorizontalScrollIndicator={false}
+                        initialScrollIndex={indexActuel}
+                        getItemLayout={(_, index) => ({ length: largeur, offset: largeur * index, index })}
+                        onScroll={Animated.event(
+                            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+                            { useNativeDriver: true }
+                        )}
+                        scrollEventThrottle={16}
+                        onMomentumScrollEnd={surSwipeTermine}
+                    />
+                )}
+            </View>
+        </Pressable>
     )
 }

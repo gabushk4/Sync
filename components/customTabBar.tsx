@@ -41,7 +41,7 @@ export function CustomTabBar(props: BottomTabBarProps) {
 
     return (
         <View style={s.container}>
-            {NavConfig && (
+            {NavConfig && NavConfig.visible !== false && (
                 <TouchableOpacity
                     onPress={() => router.push(
                         NavConfig.params

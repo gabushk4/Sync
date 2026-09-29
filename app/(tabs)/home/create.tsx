@@ -26,6 +26,14 @@ import formaterDatePourServeur from "@/functions/formaterDatePourServeur";
 import { Participant } from "@/types/invites";
 import { DateTime } from "luxon";
 
+/**
+ * Event creation screen. Reads `start`/`end` route params (an ISO date each)
+ * to pre-fill and constrain the event's date range — used both when tapping
+ * a time slot in the day timeline (`start` only) and when dragging a range
+ * in the month calendar (`start` and `end` both set).
+ *
+ * @returns {JSX.Element}
+ */
 export default function CreateEvent({ }) {
     const { t } = useTranslation('events')
     const { colors } = usePalette()
@@ -41,9 +49,26 @@ export default function CreateEvent({ }) {
     const formRef = useRef<EventFormHandle>(null)
 
     const { start, end, friend } = useLocalSearchParams()
-    
-    const diffNowStart = DateTime.fromISO(start as string).diff(DateTime.now(), 'hours').hours
-    const minimumStart = diffNowStart > 1 ? DateTime.fromISO(start as string) : DateTime.now().plus({hours:1})
+
+    // Sorted defensively regardless of the order `start`/`end` arrive in —
+    // constraints.maximumStart ending up before minimumStart crashes the
+    // native date picker deep inside DateTimeSelecteur.
+    let debutDemande = DateTime.fromISO(start as string)
+    let finDemandee = end ? DateTime.fromISO(end as string) : undefined
+    if (finDemandee && debutDemande > finDemandee) {
+        [debutDemande, finDemandee] = [finDemandee, debutDemande]
+    }
+
+    // The "at least 1h from now" floor exists for the single-slot flow (e.g.
+    // tapping a near-term time in the timeline), where there's no explicit
+    // end to anchor against. When an explicit range is provided (e.g. from
+    // the calendar's drag-select), it's an intentional, possibly-past choice
+    // — trust it directly instead of nudging it toward "now" and risking it
+    // landing after finDemandee.
+    const diffNowStart = debutDemande.diff(DateTime.now(), 'hours').hours
+    const minimumStart = finDemandee || diffNowStart > 1
+        ? debutDemande
+        : DateTime.now().plus({ hours: 1 })
 
     const [enChargement, setEnChargement] = useState(false)
     
@@ -51,6 +76,12 @@ export default function CreateEvent({ }) {
 
     const [event, setEvent] = useState<Event>(defaultEvent)
 
+    /**
+     * Validates the form and submits the new event to the API, then
+     * navigates back to the home screen on success.
+     *
+     * @returns {Promise<void>}
+     */
     const postEvenement = async () => {
         try {
             const values = formRef.current?.getValues()
@@ -143,11 +174,11 @@ export default function CreateEvent({ }) {
                 mode={'create'}
                 prefills={{
                     start: minimumStart ?? undefined,
-                    end: end ? DateTime.fromISO(end as string) : undefined,
+                    end: finDemandee,
                     participants: friend ? [JSON.parse(friend as string)] as Array<Participant> : undefined
                 }}
                 constraints={{
-                    maximumStart: end ? DateTime.fromISO(end as string) : undefined,
+                    maximumStart: finDemandee,
                     minimumStart: minimumStart ?? undefined
                 }}
             />

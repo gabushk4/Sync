@@ -62,11 +62,6 @@ export default function Home() {
   const { membre } = useMembre()
 
   const MAX_OFFSET_X = (24.78 * (pxHeures + L_HEURES)) - WIN_W
-  
-  useNavFab({
-    href: '/home/create',
-    icon: null,
-  })
 
   const icones = {
     arrowR:colorScheme === 'dark'?require('@/assets/icones/fleche-d-dark-icon.png'):require('@/assets/icones/fleche-d-light-icon.png'),
@@ -97,6 +92,12 @@ export default function Home() {
   const [afficherRetour, setAfficherRetour] = useState({afficher:afficherRetourMaintenant.value.afficher, left:afficherRetourMaintenant.value.left})
   const [vueCalendrier, setVueCalendrier] = useState(false)
   const [moisCalendrier, setMoisCalendrier] = useState<DateTime>()
+
+  useNavFab({
+    href: '/home/create',
+    icon: null,
+    visible: !vueCalendrier, // would otherwise catch taps meant for the calendar
+  })
 
   //SharedValues
   const evAmisOffset = useSharedValue(0)
@@ -312,6 +313,27 @@ export default function Home() {
     setVueCalendrier(false)
     userEventsRefresh.current?.forceRefresh({ extraParams: { start: jour.startOf('day'), end: jour.endOf('day') } })
     friendsEventsRefresh.current?.forceRefresh({ extraParams: { start: jour.startOf('day'), end: jour.endOf('day') } })
+  }
+
+  /**
+   * Called once the user finishes a long-press-and-drag range selection in
+   * the calendar view. Closes the calendar and opens the create-event screen,
+   * pre-filled to span the whole selected range (start of the first day to
+   * the end of the last day).
+   *
+   * @param {DateTime} debut - First selected day.
+   * @param {DateTime} fin - Last selected day.
+   * @returns {void}
+   */
+  const selectionnerPlageCalendrier = (debut: DateTime, fin: DateTime) => {
+    setVueCalendrier(false)
+    router.push({
+      pathname: '/home/create',
+      params: {
+        start: debut.startOf('day').toISO(),
+        end: fin.endOf('day').toISO(),
+      },
+    })
   }
 
   const retourMaintenant = () => {
@@ -571,6 +593,8 @@ export default function Home() {
             events={userEvents}
             onSelectDay={selectionnerJourCalendrier}
             onChangeMonth={changerMoisCalendrier}
+            onDismiss={toggleVueCalendrier}
+            onSelectRange={selectionnerPlageCalendrier}
           />
         ) : (
         /* ── Zone principale (3/4) — horaire amis ── */
@@ -656,10 +680,9 @@ export default function Home() {
         </GestureDetector>
         )}
 
-        {/* ── Bottom bar (arrows + date + calendar toggle) ── */}
+        {/* ── Bottom bar (arrows + date + calendar toggle) — hidden in calendar view, closed via onDismiss instead ── */}
+        {!vueCalendrier && (
         <View style={[s.botBar]}>
-          {!vueCalendrier && (
-            <>
               <TouchableOpacity style={s.arrow} onPress={reculerDate}>
                 <Image
                   source={icones.arrowL}
@@ -679,8 +702,6 @@ export default function Home() {
                   resizeMode='contain'
                 />
               </TouchableOpacity>
-            </>
-          )}
           <TouchableOpacity style={s.arrow} onPress={toggleVueCalendrier}>
             <Image
               source={icones.calendrier}
@@ -689,8 +710,10 @@ export default function Home() {
             />
           </TouchableOpacity>
         </View>
+        )}
 
         {/* ── Bouton retour maintenant (flottant) ── */}
+        {!vueCalendrier && (
         <Animated.View
           style={[
             retourMaintenantAnime,
@@ -706,6 +729,7 @@ export default function Home() {
             </Text>
           </TouchableOpacity>
         </Animated.View>
+        )}
 
       </View>
     </GestureHandlerRootView>

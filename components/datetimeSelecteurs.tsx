@@ -26,8 +26,36 @@ type Props = {
 
 const END_DELAY_FROM_START = 60 //minutes
 
+/**
+ * Start/end date and time pickers for an event, with an "all day" toggle.
+ * Keeps the event's duration constant when the start date/time moves, and
+ * keeps end >= start when either bound is edited directly.
+ *
+ * @param {Props} props
+ * @param {string} props.timezone - IANA timezone name (or 'local') used for the iOS pickers' display.
+ * @param {DateTime} props.start - Current event start.
+ * @param {Function} props.setStart - Setter for the event start.
+ * @param {DateTime} props.end - Current event end.
+ * @param {Function} props.setEnd - Setter for the event end.
+ * @param {boolean} [props.disabled] - Disables the Android picker trigger buttons.
+ * @param {DateTime} [props.minimumStart] - Earliest selectable start.
+ * @param {DateTime} [props.maximum] - Latest selectable date/time, for both start and end pickers.
+ * @returns {JSX.Element}
+ */
 export default function DateTimeSelecteur({timezone, start, setStart, end, setEnd, disabled=false, minimumStart, maximum} : Props){
     const { t } = useTranslation('calendar')
+
+    // Defensive floor: whatever `maximum` arrives as, it must never end up
+    // before this form's own minimum references (minimumStart, or a few
+    // minutes after `start` for the end-time picker below) — otherwise the
+    // native picker's "minimumDate < maximumDate" invariant crashes,
+    // regardless of what upstream miscalculated.
+    let maximumSur = maximum
+    if (maximumSur) {
+        if (minimumStart && maximumSur < minimumStart) maximumSur = minimumStart
+        const plancherFin = start.plus({ minutes: 5 })
+        if (maximumSur < plancherFin) maximumSur = plancherFin
+    }
     const { colors } = usePalette();
     const { fonts } = useFont()
     
@@ -46,7 +74,13 @@ export default function DateTimeSelecteur({timezone, start, setStart, end, setEn
     const [isAllDay, setIsAllDay] = useState(false)
     
 
-    // When changing the event date
+    /**
+     * Applies a new start date (keeping the existing start time), shifting
+     * the end so the event's duration stays the same.
+     *
+     * @param {Date} jsDate - The date picked in the native picker.
+     * @returns {void}
+     */
     const handleStartDateChange = (jsDate : Date) => {
         const newDate = DateTime.fromJSDate(jsDate).startOf('day');
 
@@ -64,6 +98,12 @@ export default function DateTimeSelecteur({timezone, start, setStart, end, setEn
         if (Platform.OS === 'android') setShowDatePicker(false);
     };
 
+    /**
+     * Applies a new end date, keeping the existing end time.
+     *
+     * @param {Date} jsDate - The date picked in the native picker.
+     * @returns {void}
+     */
     const handleEndDateChange = (jsDate: Date) => {
         let newDate: DateTime | null = DateTime.fromJSDate(jsDate).set({second:0});
 
@@ -77,7 +117,14 @@ export default function DateTimeSelecteur({timezone, start, setStart, end, setEn
         setEnd(newEnd);        
     };
 
-    // When changing start time
+    /**
+     * Applies a new start time, keeping the event's duration the same,
+     * and pushes the end forward if it would otherwise land before the
+     * new start.
+     *
+     * @param {Date} jsDate - The time picked in the native picker.
+     * @returns {void}
+     */
     const handleStartTimeChange = (jsDate: Date) => {
         const newDebut = DateTime.fromJSDate(jsDate).set({ second: 0 });        
         let newFin = end;
@@ -102,7 +149,12 @@ export default function DateTimeSelecteur({timezone, start, setStart, end, setEn
         if (Platform.OS === 'android') setShowStartPicker(false);
     };
 
-    // When changing end time
+    /**
+     * Applies a new end time directly.
+     *
+     * @param {Date} jsDate - The time picked in the native picker.
+     * @returns {void}
+     */
     const handleEndTimeChange = (jsDate: Date) => {
         log('handleEndChange', jsDate)
         let newFin = DateTime.fromJSDate(jsDate).set({ second: 0 });
@@ -210,7 +262,7 @@ export default function DateTimeSelecteur({timezone, start, setStart, end, setEn
                             value={start?.startOf('day').toJSDate() || dtNow.toJSDate()}
                             mode="date"
                             minimumDate={minimumStart?.startOf('day').toJSDate() ?? undefined}
-                            maximumDate={maximum?.toJSDate()}
+                            maximumDate={maximumSur?.toJSDate()}
                             display={Platform.OS === 'android' ? 'calendar' : 'default'}
                             onChange={(e, date) => date && handleStartDateChange(date)}
                             {...(Platform.OS === 'ios' ? { timeZoneName: timezone, accentColor: colors.text } : {})}
@@ -229,7 +281,7 @@ export default function DateTimeSelecteur({timezone, start, setStart, end, setEn
                             <RNDateTimePicker                        
                                 value={start.toJSDate()}
                                 minimumDate={minimumStart?.toJSDate() ?? undefined}
-                                maximumDate={maximum?.toJSDate()}
+                                maximumDate={maximumSur?.toJSDate()}
                                 mode="time"
                                 is24Hour={true}
                                 minuteInterval={5}
@@ -257,7 +309,7 @@ export default function DateTimeSelecteur({timezone, start, setStart, end, setEn
                             value={end.startOf('day').toJSDate()}
                             mode="date"
                             minimumDate={start.startOf('day').toJSDate()}
-                            maximumDate={maximum?.toJSDate()}
+                            maximumDate={maximumSur?.toJSDate()}
                             display={Platform.OS === 'android' ? 'calendar' : 'default'}
                             onChange={(e, date) => date && handleEndDateChange(date)}
                             {...(Platform.OS === 'ios' ? { timeZoneName: timezone, accentColor: colors.text } : {})}
@@ -276,7 +328,7 @@ export default function DateTimeSelecteur({timezone, start, setStart, end, setEn
                             <RNDateTimePicker
                                 value={end.toJSDate()}
                                 minimumDate={start.plus({ minutes: 5 }).toJSDate()}
-                                maximumDate={maximum?.toJSDate()}
+                                maximumDate={maximumSur?.toJSDate()}
                                 mode="time"
                                 is24Hour={true}
                                 minuteInterval={5}
