@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
+    "prestart": "node scripts/update-api-base-url.js",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios"

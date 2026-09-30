@@ -4,9 +4,9 @@ import { usePalette } from '@/contextes/contextePalette';
 
 import { useNavFab } from '@/hooks/useNavFAB';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Animated, { ReduceMotion, scrollTo, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue, withDecay, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { cancelAnimation, ReduceMotion, scrollTo, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue, withDecay, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
 
 import { DateTime } from 'luxon';
 
@@ -41,7 +41,6 @@ const WIDTH_COL = 80;
 const HEIGHT_BOT_BAR = 80;
 const HEIGHT_DATE = 56;
 const HEIGHT_TIMELINE = 32;
-const backToNowWidth = 56
 const AnimatedStyleMinVal = 0.1
 const LIST_HEIGHT = 104
 const { width: WIN_W, height: WIN_H } = Dimensions.get('window') 
@@ -56,11 +55,9 @@ export default function Home() {
   const { fonts } = useFont()
   const { api } = useAPI()
   const colorScheme = useColorScheme()
-  const { initialiserOffset, afficherRetourMaintenant, onPan, offset: offsetX, LEFT_GO_TO_BEFORE, LEFT_GO_TO_AFTER } = useGestionScroll()
+  const { initialiserOffset, afficherRetourMaintenant, onPan, offset: offsetX, LEFT_GO_TO_BEFORE, LEFT_GO_TO_AFTER, clampOffset, maxOffset } = useGestionScroll()
   const { pxHeures, pxHeuresShared, L_HEURES } = useTimeline();
   const { membre } = useMembre()
-
-  const MAX_OFFSET_X = (24.78 * (pxHeures + L_HEURES)) - WIN_W
   
   useNavFab({
     href: '/home/create',
@@ -80,7 +77,6 @@ export default function Home() {
   
   //Refs
   const chargerEvenementsEvent = useRef(false)
-  const offsetMaintenant = useRef(0)
   const friendsList = useAnimatedRef<Animated.ScrollView>()
   const friendsEventsRefresh = useRef<AutoRefresh>(null)
   const userEventsRefresh = useRef<AutoRefresh>(null)
@@ -146,7 +142,7 @@ export default function Home() {
           }
         })
 
-        const evenementsTries = dataLocale.sort((a: any, b: any) => a.debut - b.fin)
+        const evenementsTries = dataLocale.sort((a: any, b: any) => a.debut - b.debut)
 
         const evenementsFinal = evenementsTries.map((ev: any) => {
           if (ev) {
@@ -272,49 +268,45 @@ export default function Home() {
   };
   const lockedAxis = useSharedValue<string | null>(null)
 
+  const maxY = useSharedValue(0)
+  const zoneH = useRef(0)
+  const majMaxY = () => {
+    maxY.value = Math.max(0, friends.length * (LIST_HEIGHT + 4) - zoneH.current)
+  }
+  useEffect(majMaxY, [friends.length])
+
   const panGesture = Gesture.Pan()
     .onBegin(() => {
+      cancelAnimation(offsetX)            // stoppe l'inertie en cours
       lockedAxis.value = null
       offsetXBase.value = offsetX.value
       offsetYBase.value = offsetY.value
     })
     .onChange((e) => {
       // Lock la direction au premier mouvement significatif
-      if (!lockedAxis.value) {
-        if (Math.abs(e.translationX) > Math.abs(e.translationY)) {
-          lockedAxis.value = 'x'
-        } else {
-          lockedAxis.value = 'y'
-        }
+      if (!lockedAxis.value && (Math.abs(e.translationX) > 8 || Math.abs(e.translationY) > 8)) {
+        lockedAxis.value = Math.abs(e.translationX) > Math.abs(e.translationY) ? 'x' : 'y'
       }
-
       if (lockedAxis.value === 'x') {
-        offsetX.value = Math.min(Math.max(offsetXBase.value - e.translationX, 0), MAX_OFFSET_X)
-        scheduleOnRN(onPan, offsetX.value)
-      } else {
-        offsetY.value = Math.max(offsetYBase.value + e.translationY, 0)
+        offsetX.value = clampOffset(offsetXBase.value - e.translationX)
+      }else if(lockedAxis.value === 'y') {
+        offsetY.value = clampOffset(offsetYBase.value - e.translationY)
       }
     })
     .onEnd((e) => {
       //scheduleOnRN(log, "offsetX", offsetX.value, "base", offsetXBase.value)
       //scheduleOnRN(log, "offsetY", offsetY.value, "base", offsetYBase.value)
-      if (lockedAxis.value = 'x') {
-        offsetXBase.value = offsetX.value
+      if (lockedAxis.value === 'x') {
         offsetX.value = withDecay(
-          {
-            reduceMotion:ReduceMotion.Never,
-            velocity: -e.velocityX,
-            },
-            (endished) => {
-              if (endished) {
-                //Snap to nearest hour
-                const cellWidth = pxHeures + L_HEURES
-                const nearest = Math.round(offsetX.value / cellWidth) * cellWidth
-                offsetX.value = withSpring(nearest, withSpringConfig)            
-                offsetXBase.value = nearest
-              }
-            }
-        )
+        { velocity: -e.velocityX, clamp: [0, maxOffset] },   // la ligne clé
+        (finished) => {
+          'worklet'
+          if (!finished) return
+          const cell = pxHeures + L_HEURES
+          const snapped = clampOffset(Math.round(offsetX.value / cell) * cell)
+          offsetX.value = withSpring(snapped, withSpringConfig)
+        }
+      )
       }
       else {
         offsetYBase.value = offsetY.value      
@@ -325,7 +317,7 @@ export default function Home() {
           (endished) => {
             if (endished) {
               //Snap to nearest friend
-              offsetYBase.value = offsetY.value
+              offsetY.value = withDecay({ velocity: -e.velocityY, clamp: [0, maxY.value] })
             }
           }
         )
@@ -336,6 +328,13 @@ export default function Home() {
       () => offsetY.value,
       (offset) => 
           scrollTo(friendsList, 0, offset, false)
+  )
+
+  useAnimatedReaction(
+    () => offsetX.value,
+    (current, previous) => {
+      onPan(current)
+    }
   )
 
   useFocusEffect(
@@ -419,6 +418,7 @@ export default function Home() {
     friendList: {
       flexDirection: 'row',
       height: 104,
+      marginBottom: 4
     },
     column: {
       width: WIDTH_COL,
@@ -530,6 +530,10 @@ export default function Home() {
                   <Animated.ScrollView
                     ref={friendsList}
                     showsVerticalScrollIndicator={false}
+                    onLayout={(e) => {
+                      zoneH.current = e.nativeEvent.layout.height;
+                      majMaxY();
+                    }}
                   >
                     {friends.map((friend) => {
                       const commonFreeSlots = getCommonFreeSlots(
@@ -540,7 +544,7 @@ export default function Home() {
                       return(
                         <View key={friend.id} style={[s.friendList]}>
                           {/* Photo de profil */}
-                          <BlurView style={[s.column,{ backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' }]}>
+                          <BlurView tint='dark' style={[s.column,{ backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' }]}>
                             <ProfilPic
                               pfp={friend.fp_url}
                               size={64}

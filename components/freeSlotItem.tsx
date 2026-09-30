@@ -7,9 +7,10 @@ import { useFont } from "@/contextes/contexteFont";
 import log from "@/functions/log";
 import { router } from "expo-router";
 import { DateTime } from "luxon";
-import React, { useState } from "react";
-import { StyleSheet, TouchableOpacity } from "react-native";
-import Animated, { SharedValue, useAnimatedStyle } from "react-native-reanimated";
+import { useState } from "react";
+import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import Animated, { SharedValue } from "react-native-reanimated";
+import useTimelineLabelOffset from "@/hooks/useTimelineLabelOffset";
 
 type Props = {
     freeSlot: any;
@@ -36,22 +37,39 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
     const width = horizontal 
                     ? findWidth(freeSlot.start, freeSlot.end, displayedDate, pxHeures + L_HEURES)
         : '100%'
-    
-    const [freeSlotTextWidth, setFreeSlotTextWidth] = useState<number>(0)
-    const [freeSlotTextHeight, setFreeSlotTextHeight] = useState<number>(0)
 
-    const textAnimated = useAnimatedStyle(() => ({
-            ...(horizontal
-                ? { left: Math.min(Math.max((listOffset.value - left) + pxHeures, pxHeures), width as number - (freeSlotTextWidth + pxHeures)) }
-                : { top: Math.min(Math.max((listOffset.value - top) + pxHeures, pxHeures), height as number - (freeSlotTextHeight + pxHeures)) })
-        }))
+    const LABEL_W = 96
+    const itemSize = (horizontal ? width : height) as number
+    const labelSize = Math.min(LABEL_W, itemSize)   
+    
+    const textAnimated = useTimelineLabelOffset({
+        axis: horizontal ? 'x' : 'y',
+        itemOffset: horizontal ? left : top,
+        itemSize,
+        labelSize,
+        listOffset,
+        inset: pxHeures,
+        centerThreshold: 2 * (pxHeures + (horizontal ? L_HEURES : H_HEURES)),
+        timelineLength: 24 * (pxHeures + (horizontal ? L_HEURES : H_HEURES)),
+    })
+    
     const s = StyleSheet.create({
         freeSlot:{
             borderWidth: 1, 
             borderRadius:8,
             borderColor: colors.success,
             alignItems: 'center',
-            justifyContent: 'center',            
+            justifyContent: 'center',    
+            overflow:'hidden'
+        },
+        label: {
+            position: 'absolute',
+            left: 0, top: 0,                       // ancré, c'est transform qui déplace
+            alignItems: 'center',
+            justifyContent: 'center',
+            ...(horizontal
+                ? { width: labelSize, height: '100%' }
+                : { height: labelSize, width: '100%' }),
         },
         title: {
             fontFamily: fonts.title,
@@ -59,7 +77,10 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
             color: colors.text,
             flexWrap: 'wrap',
             textAlign: 'center',
-            position:'absolute'
+            maxWidth: horizontal ? width as number : '100%',
+            ...(horizontal
+                ? {}
+                : { maxHeight: height as number }),
         },
     })
     //log('free slot', freeSlot)
@@ -88,14 +109,18 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
                 })
             }}
         >
-            <Animated.Text style={[textAnimated, s.title, { color: colors.muted }]}
-                onLayout={(e) => {
-                    setFreeSlotTextWidth(e.nativeEvent.layout.width)
-                    setFreeSlotTextHeight(e.nativeEvent.layout.height)
-                }}
+            <Animated.View
+                style={[textAnimated, s.label]}                
             >
-                Dispo commune {'\n'} +
-            </Animated.Text>
+                <Text
+                    numberOfLines={2}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.5}
+                    style={[s.title, { color: colors.muted }]}
+                >
+                    Dispo commune {'\n'} +
+                </Text>
+            </Animated.View>
         </TouchableOpacity>
     )
 }
