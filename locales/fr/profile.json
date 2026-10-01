@@ -2,7 +2,8 @@
 	"navigation": {
 		"profile": "profil",
 		"edit": "éditer le profil",
-		"settings": "paramètres"
+		"settings": "paramètres",
+		"importCalendar": "importer le calendrier"
 	},
 	"edit": {
 		"usernameLabel": "pseudo",

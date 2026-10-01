@@ -45,6 +45,14 @@ const AnimatedStyleMinVal = 0.1
 const LIST_HEIGHT = 104
 const { width: WIN_W, height: WIN_H } = Dimensions.get('window') 
 
+/** Formats the displayed local day as the UTC date range expected by the events API. */
+function getEventDateRangeParams(date: DateTime) {
+  return {
+    debut: formaterDatePourServeur(convertLocalToUTC(date.startOf('day'))),
+    fin: formaterDatePourServeur(convertLocalToUTC(date.endOf('day'))),
+  }
+}
+
 /**
  * 
  * @returns 
@@ -236,8 +244,8 @@ export default function Home() {
       toggleBackToNow(newDt)
       setTodayDateTime(newDt);
       dateAujShared.value = newDt.toMillis();
-      userEventsRefresh.current?.forceRefresh({ extraParams: { start: newDt.startOf('day'), end: newDt.endOf('day') } })
-      friendsEventsRefresh.current?.forceRefresh({extraParams:{start:newDt.startOf('day'), end:newDt.endOf('day')}})
+      userEventsRefresh.current?.forceRefresh({ extraParams: getEventDateRangeParams(newDt) })
+      friendsEventsRefresh.current?.forceRefresh({ extraParams: getEventDateRangeParams(newDt) })
     }
   };
 
@@ -250,8 +258,8 @@ export default function Home() {
       setTodayDateTime(newDt);
       dateAujShared.value = newDt.toMillis();
       toggleBackToNow(newDt)
-      userEventsRefresh.current?.forceRefresh({ extraParams: { start: newDt.startOf('day'), end: newDt.endOf('day') } })
-      friendsEventsRefresh.current?.forceRefresh({extraParams:{start:newDt.startOf('day'), end:newDt.endOf('day')}})
+      userEventsRefresh.current?.forceRefresh({ extraParams: getEventDateRangeParams(newDt) })
+      friendsEventsRefresh.current?.forceRefresh({ extraParams: getEventDateRangeParams(newDt) })
     }
   };
 
@@ -260,8 +268,8 @@ export default function Home() {
     initialiserOffset(now.hour * (pxHeures + L_HEURES));
     if (todayDateTime?.day !== now.day) {
       setTodayDateTime(now.startOf('day'));
-      userEventsRefresh.current?.forceRefresh({ extraParams: { start: now.startOf('day'), end: now.endOf('day') } })
-      friendsEventsRefresh.current?.forceRefresh({extraParams:{start:now.startOf('day'), end:now.endOf('day')}})
+      userEventsRefresh.current?.forceRefresh({ extraParams: getEventDateRangeParams(now) })
+      friendsEventsRefresh.current?.forceRefresh({ extraParams: getEventDateRangeParams(now) })
     }
     setAfficherRetour(prev => ({ ...prev, afficher: false }))
     afficherRetourMaintenant.value = {...afficherRetourMaintenant.value, afficher:false}
@@ -346,10 +354,7 @@ export default function Home() {
       //chargerEvenements(now, now)
 
       userEventsRefresh.current = new AutoRefresh(api, '/evenements/', {        
-        extraParams: {
-          start: formaterDatePourServeur(convertLocalToUTC(now.startOf('day'))),
-          end: formaterDatePourServeur(convertLocalToUTC(now.endOf('day')))
-        },
+        extraParams: getEventDateRangeParams(now),
         onData: modifierEvenementsMembreFetched,
         onError: (error) => {
           log("impossible de charger les évènements du membre", error)
@@ -358,10 +363,7 @@ export default function Home() {
       })
 
       friendsEventsRefresh.current = new AutoRefresh(api, '/evenements/amis', {
-        extraParams: {
-          start: formaterDatePourServeur(convertLocalToUTC(now.startOf('day'))),
-          end: formaterDatePourServeur(convertLocalToUTC(now.endOf('day')))
-        },
+        extraParams: getEventDateRangeParams(now),
         onData: modifierEvenementsAmisFetched,
         onError: (error) => {
           log("impossible de charger les évènements d'amis", error)
@@ -585,7 +587,7 @@ export default function Home() {
                 textColor={colors.text}
                 listSize={LIST_HEIGHT}
                 displayedDate={todayDateTime}
-                getEvenements={() => userEventsRefresh.current?.forceRefresh({extraParams:{start: todayDateTime?.startOf('day'), end:todayDateTime?.endOf('day')}})}
+                getEvenements={() => userEventsRefresh.current?.forceRefresh({ extraParams: getEventDateRangeParams(todayDateTime ?? DateTime.now()) })}
                 horizontal={true}
               />
             </Animated.View>

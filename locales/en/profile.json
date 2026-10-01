@@ -2,7 +2,8 @@
 	"navigation": {
 		"profile": "profile",
 		"edit": "edit profile",
-		"settings": "settings"
+		"settings": "settings",
+		"importCalendar": "import calendar"
 	},
 	"edit": {
 		"usernameLabel": "username",
