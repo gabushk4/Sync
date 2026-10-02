@@ -1,7 +1,7 @@
 {
   "dateShort": "d LLL",
   "dateLong": "ccc d LLL yyyy",
-  "time": "HH:mm",
+  "time": "H:mm",
   "monthsShort": ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."],
   "weekdaysShort": ["lun.", "mar.", "mer.", "jeu.", "ven.", "sam.", "dim."],
   "justNow": "à l'instant",

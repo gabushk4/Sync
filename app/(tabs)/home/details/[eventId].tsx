@@ -25,6 +25,7 @@ import { defaultEvent, Event } from "@/types/calendar";
 import { UrlDescriptor } from "@/types/url";
 import Icon from "@react-native-vector-icons/ionicons";
 import { DateTime } from "luxon";
+import { EventDraftProvider } from "@/contextes/contexteEventDraft";
 
 export default function Details(){
     const { t } = useTranslation('events')
@@ -203,10 +204,11 @@ export default function Details(){
     })
 
     return (
+        <EventDraftProvider makeReq={false}>
         <View style={{flex:1}}>
             <EventForm
                 event={event}
-                mode={'details'}
+                mode={'details'}                
             />
             {/* quit (non-creators) / delete (creator) button */}
             <TouchableOpacity style={s.floatingBtn} onPress={() => {
@@ -217,6 +219,7 @@ export default function Details(){
             }}>
                 <Icon name='trash-sharp' color={colors.error} size={28}/>
             </TouchableOpacity>
-        </View>
+            </View>
+        </EventDraftProvider>
     )
 }

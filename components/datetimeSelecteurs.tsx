@@ -2,16 +2,24 @@ import { useFont } from '@/contextes/contexteFont';
 import { usePalette } from "@/contextes/contextePalette";
 
 import ceilBy5 from '@/functions/ceilBy5';
-import { convertirTimestampDateLongue, convertirTimestampHeure } from "@/functions/convertirTimestamp";
+import { convertirTimestampDateCourte, convertirTimestampDateLongue, convertirTimestampHeure } from "@/functions/convertirTimestamp";
 import log from "@/functions/log";
 
 import SwitchAbs from '@/abstractions/switchAbs';
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 import { DateTime } from "luxon";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from 'react-i18next';
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Animated from "react-native-reanimated";
+import { Platform, StyleSheet, Text, TouchableOpacity, View, ScrollView } from "react-native";
+import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
+
+import { useEventDraft } from '@/contextes/contexteEventDraft';
+import { withTimingConfig } from '@/constants/ReanimatedConfs';
+import { useFocusEffect } from 'expo-router';
+import { DateTimeSuggestions } from '@/types/availabilities';
+import Separator, { isLast } from './listSeparator';
+import Radius from '@/constants/Radius';
+import CommonSlotsSuggestions from './commonSlotsSuggestions';
 
 type Props = {
     timezone: string | 'local',
@@ -26,10 +34,26 @@ type Props = {
 
 const END_DELAY_FROM_START = 60 //minutes
 
-export default function DateTimeSelecteur({timezone, start, setStart, end, setEnd, disabled=false, minimumStart, maximum} : Props){
+const SLOT_SUGGESTIONS = [
+    {
+        debut: DateTime.now().plus({ hour: 4 }),
+        fin: DateTime.now().plus({hour: 5}).set({minute:0})
+    },
+    {
+        debut: DateTime.now().plus({ day: 7, hour: 4 }),
+        fin: DateTime.now().plus({ day: 7, hour: 5})
+    },
+    {
+        debut: DateTime.now().plus({ day: 2, hour: 4 }).set({minute:0}),
+        fin: DateTime.now().plus({day: 3, hour: 5})
+    }
+]
+
+export default function DateTimeSelecteur({timezone, disabled=false, minimumStart, maximum} : Props){
     const { t } = useTranslation('calendar')
     const { colors } = usePalette();
     const { fonts } = useFont()
+    const { setStart, setEnd, start, end } = useEventDraft();
     
     //log('datetimeSelecteurs: date', dateEvenement, 'debut', debutEvenement, 'fin', finEvenement)
 
@@ -49,6 +73,7 @@ export default function DateTimeSelecteur({timezone, start, setStart, end, setEn
     // When changing the event date
     const handleStartDateChange = (jsDate : Date) => {
         const newDate = DateTime.fromJSDate(jsDate).startOf('day');
+        let newFin = end.startOf('day')
 
         let diffTime = end.diff(start, 'minutes').minutes //for keeping same event length
         
@@ -58,8 +83,14 @@ export default function DateTimeSelecteur({timezone, start, setStart, end, setEn
             second: 0 
         });
 
+        if (newFin <= newStart) {
+            newFin = newStart.plus({ minutes: END_DELAY_FROM_START }); // default event length
+        }  
+
         setStart(newStart);
-        setEnd(newStart.plus({minutes:diffTime})); //Applies event length
+        //TODO: keep same length as a setting
+        //setEnd(newStart.plus({minutes:diffTime})); //Applies event length
+        setEnd(newFin)
 
         if (Platform.OS === 'android') setShowDatePicker(false);
     };
@@ -87,15 +118,12 @@ export default function DateTimeSelecteur({timezone, start, setStart, end, setEn
         // If end is before the start, end delayed from start
         if (newFin <= newDebut) {
             newFin = newDebut.plus({ minutes: END_DELAY_FROM_START }); // default event length
-        }
-
-        //If start is after end, end is delayed from start
-        if(newDebut > newFin){
-            newFin = newDebut.set({ hour: newDebut.hour }).plus({minutes: END_DELAY_FROM_START})
-        }       
+        }   
 
         setStart(newDebut);
-        setEnd(newDebut.plus({minutes:diffTime})); //Applies event length
+        //TODO: keep same length as a setting
+        //setEnd(newDebut.plus({minutes:diffTime})); //Applies event length
+        setEnd(newFin)
 
         log("newDebut", newDebut)
 
@@ -112,6 +140,8 @@ export default function DateTimeSelecteur({timezone, start, setStart, end, setEn
 
         if (Platform.OS === 'android') setShowEndPicker(false);
     };
+
+    
 
     useEffect(() => {
         if (isAllDay) {
@@ -182,7 +212,8 @@ export default function DateTimeSelecteur({timezone, start, setStart, end, setEn
             flex: 0,
             width: '20%',
             marginRight: 18
-        }
+        },
+        
     });
 
     return (
@@ -288,6 +319,9 @@ export default function DateTimeSelecteur({timezone, start, setStart, end, setEn
                     </View>
                 }
             </View> 
+
+            {/* --- Suggestions --- */}
+            <CommonSlotsSuggestions/>
         </Animated.View>
     );
 }

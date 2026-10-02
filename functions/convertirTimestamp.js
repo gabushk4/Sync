@@ -27,6 +27,7 @@ function formatDate(dateTime, formatKey) {
             ? `${month} ${dateTime.day}`
             : `${dateTime.day} ${month}`;
     }
+    
 
     const weekday = languageFormats.weekdaysShort[dateTime.weekday - 1];
     return language === "en"

@@ -1,7 +1,8 @@
 {
 	"friendRequestSentTitle": "demande d'ami envoyée",
 	"friendRequestSentMessage": "je sens que c'est le début d'un lien unique, presque magique!",
-	"copiedToClipboard": "ajouté au presse-papier"
+	"copiedToClipboard": "ajouté au presse-papier",
+	"showMore": "voir plus"
 	,"signOut": {
 		"title": "déconnexion",
 		"confirmation": "voulez-vous vraiment vous déconnecter?",

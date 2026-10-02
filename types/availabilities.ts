@@ -1,11 +1,17 @@
-import { DateTime } from "luxon"
+import { DateTime } from "luxon";
 
 export type Interval = {
-    start: DateTime, 
-    end: DateTime
+    id: string;
+    debut: DateTime; 
+    fin: DateTime;
 }
 
 export type FriendIntervals = {
-    friendId: string,    
+    id: string,    
     intervales: Interval[]
+}
+
+export type DateTimeSuggestions = {
+    debut: DateTime;
+    fin: DateTime;
 }

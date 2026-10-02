@@ -39,6 +39,7 @@ import {
 
 import { toastConfig } from '@/constants/toastConfig';
 import { initLocalization } from '@/locales/initLocale';
+import { EventDraftProvider } from '@/contextes/contexteEventDraft';
 
 // This is the default configuration
 configureReanimatedLogger({
@@ -56,32 +57,36 @@ export default function RootLayout() {
       <FontProvider>
         <AccessTokenProvider>
           <MockModeProvider>
-          <APIProvider>              
-            <SettingsProvider>
-              <PaletteProvider>
-                <MembreProvider>
-                <AuthProvider> 
-                  <NotificationProvider>
-                    <RouteAbsProvider>
-                      <ModalProvider>                  
-                        <NavFABProvider>
-                          <ActionFABProvider>
-                            <TimelineProvider>
-                              <GestionScrollProvider> 
-                                <InvitesProvider>
-                                  <AppLoader />    
-                                </InvitesProvider>  
-                              </GestionScrollProvider>
-                            </TimelineProvider>
-                          </ActionFABProvider>
-                        </NavFABProvider>                  
-                      </ModalProvider>
-                    </RouteAbsProvider>   
-                  </NotificationProvider>  
-                </AuthProvider>
-                </MembreProvider>
-              </PaletteProvider>
-            </SettingsProvider>          
+            <APIProvider>   
+              
+                <SettingsProvider>
+                  <PaletteProvider>
+                    <MembreProvider>
+                      <AuthProvider> 
+                        <NotificationProvider>
+                          <RouteAbsProvider>
+                            <ModalProvider>                  
+                              <NavFABProvider>
+                                <ActionFABProvider>
+                                  <TimelineProvider>
+                                    <GestionScrollProvider> 
+                                      <InvitesProvider>
+                                        
+                                          <AppLoader />  
+                                    
+                                      </InvitesProvider>  
+                                    </GestionScrollProvider>
+                                  </TimelineProvider>
+                                </ActionFABProvider>
+                              </NavFABProvider>                  
+                            </ModalProvider>
+                          </RouteAbsProvider>   
+                        </NotificationProvider>  
+                      </AuthProvider>
+                    </MembreProvider>
+                  </PaletteProvider>
+                </SettingsProvider>        
+              
             </APIProvider>
           </MockModeProvider>
         </AccessTokenProvider>            

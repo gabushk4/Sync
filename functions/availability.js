@@ -1,41 +1,33 @@
 import { DateTime } from 'luxon'
-import log from '@/functions/log'
 
-const dateToMinutes = (datetime) => {
-
-    let minutes = datetime?.hour * 60 + datetime?.minute
-    //log("date (dt)", datetime, 'minutes', minutes)
-    return minutes
-}
-
-const MINUTES = 24 * 60
+const minutesSinceStartOfDay = (dt, dayStart) =>
+  Math.round(dt.diff(dayStart, 'minutes').minutes)
 
 /**
  * Fills with 0 at busy minutes; betwwen star and end of an event
  * @param {Array} bitmap filled with 1s
  * @param {Array} events [{Event}]
  */
-const MINUTES_PER_DAY = 24*60
-
 const applyBusyTimes = (bitmap, events, date) => {
+  if (!date) return
   const dayStart = date?.startOf('day')
   const dayEnd = date?.endOf('day')
 
-  events.forEach(ev => {
-    const debut = ev.debut
-    const fin = ev.fin
-    if (!debut || !fin) return
+  for (const ev of events ?? []) {
+    const debut = ev?.debut
+    const fin = ev?.fin
+    if (!debut || !fin) continue
 
-    // L'événement ne touche pas cette journée du tout → on l'ignore
-    if (fin < dayStart || debut > dayEnd) return
+    // L'événement ne touche pas cette journée
+    if (fin.toMillis() < dayStart.toMillis() || debut.toMillis() > dayEnd.toMillis()) continue
 
-    // Si l'événement a commencé avant minuit → occupé depuis 00:00
-    const start = debut < dayStart ? 0 : dateToMinutes(debut)
-    // Si l'événement se termine après cette journée → occupé jusqu'à minuit (1440)
-    const end = fin > dayEnd ? MINUTES_PER_DAY : dateToMinutes(fin)
+    // Commencé avant minuit → occupé depuis 0
+    const start = debut < dayStart ? 0 : minutesSinceStartOfDay(debut, dayStart)
+    // Fini après cette journée → occupé jusqu'à la fin du bitmap
+    const end = fin > dayEnd ? bitmap.length : minutesSinceStartOfDay(fin, dayStart)
 
     bitmap.fill(0, start, Math.min(end, bitmap.length))
-  })
+  }
 }
 
 /**
@@ -45,23 +37,22 @@ const applyBusyTimes = (bitmap, events, date) => {
  * @param {DateTime} date 
  */
 const applyDndRules = (bitmap, dndRules, date) => {
-  const dayBit = 1 << date.weekday % 7 // 0=Dim, 1=Lun...
+  const dayBit = 1 << (date.weekday % 7)          // 0 = dimanche
+  const prevBit = 1 << ((date.weekday + 6) % 7)   // jour précédent
 
-  dndRules.forEach(rule => {
-    if ((rule.days_of_week & dayBit) === 0) return // pas actif ce jour
+  for (const rule of dndRules) {
+    const { start_time: start, end_time: end } = rule
+    const overnight = end <= start
 
-    const start = rule.start_time // in minutes
-    const end   = rule.end_time // in minutes
-
-    if (end > start) {
-      // Règle normale ex: 9h → 17h
-      bitmap.fill(0, start, end)
-    } else {
-      // Règle overnight ex: 23h → 7h
-      bitmap.fill(0, start, 1440)
+    if (rule.days_of_week & dayBit) {
+      if (!overnight) bitmap.fill(0, start, end)
+      else bitmap.fill(0, start, bitmap.length)   // soirée d'aujourd'hui
+    }
+    // Fin d'une règle overnight commencée hier soir
+    if (overnight && (rule.days_of_week & prevBit)) {
       bitmap.fill(0, 0, end)
     }
-  })
+  }
 }
 
 /**
@@ -70,56 +61,53 @@ const applyDndRules = (bitmap, dndRules, date) => {
  * @param {number} minutes 
  * @returns 
  */
-const minutesToTime = (date, minutes) => {
-    const hour = Math.floor(minutes / 60)
-    const minute = minutes % 60
+const minutesToTime = (date, minutes) => {    
 
-    const dt = DateTime.now().set({ day: date.day, hour: hour, minute: minute })
-    
-    return dt
+  const dt = date.startOf('day').plus({minutes: minutes})
+  
+  return dt
 }
 
 export const getCommonFreeSlots = (
-    userEvents,
-    friendEvents,
-    date,
-    userDndRules  = null, // Soon to be 
-    friendDndRules = null, // Soon to be
-    minDuration = 60,  
+  userEvents,
+  friendEvents,
+  date,
+  userDndRules = null,
+  friendDndRules = null,
+  minDuration = 60,
 ) => {
-  const bitmap = new Uint8Array(MINUTES).fill(1) // Filled with free times (1)
+  if (!date) return []
 
-  // Events busy times
-  applyBusyTimes(bitmap, userEvents, date) 
+  const dayStart = date.startOf('day')
+  const total = Math.round(dayStart.plus({ days: 1 }).diff(dayStart, 'minutes').minutes)
+  const bitmap = new Uint8Array(total).fill(1)
+
+  applyBusyTimes(bitmap, userEvents, date)
   applyBusyTimes(bitmap, friendEvents, date)
 
-  // Do Not Disturb rules 
-  if (userDndRules)   applyDndRules(bitmap, userDndRules, date)
+  if (userDndRules) applyDndRules(bitmap, userDndRules, date)
   if (friendDndRules) applyDndRules(bitmap, friendDndRules, date)
 
-  // lets find blob >= minDuration
   const slots = []
   let start = null
-  let count = 0
 
-  for (let i = 0; i < bitmap.length; i++) {
-    if (bitmap[i] === 1 && i < bitmap.length - 1) {
+  // <= total : le dernier tour ferme un créneau encore ouvert
+  for (let i = 0; i <= total; i++) {
+    const free = i < total && bitmap[i] === 1
+    if (free) {
       if (start === null) start = i
-      count++
-    } else { //encountered 0 now lets see if the slot is valid
-      if (count >= minDuration) {
-          //slot is long enough now lets push this availabilty
+    } else if (start !== null) {
+      const duration = i - start
+      if (duration >= minDuration) {
         slots.push({
-            start: minutesToTime(date, start),
-            end:   minutesToTime(date, start + count),
-            duration: count,
+          start: minutesToTime(date, start),
+          end: minutesToTime(date, i),
+          duration,
         })
       }
       start = null
-      count = 0
     }
   }
-  //log('bitmap', bitmap)
 
   return slots
 }

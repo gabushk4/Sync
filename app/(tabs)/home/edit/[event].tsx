@@ -18,6 +18,7 @@ import { toastTypes } from '@/constants/toastConfig'
 import { useAPI } from '@/contextes/contexteAPI'
 import { usePalette } from '@/contextes/contextePalette'
 import { DateTime } from 'luxon'
+import { EventDraftProvider } from '@/contextes/contexteEventDraft'
 
 export default function EditEvent() {
     const { t } = useTranslation('events')
@@ -164,8 +165,10 @@ export default function EditEvent() {
     })
 
     return (
-        <View style={{ flex: 1 }}>
-            <EventForm ref={formRef} event={event} mode={'edit'} />
-        </View>
+        <EventDraftProvider>
+            <View style={{ flex: 1 }}>            
+                <EventForm ref={formRef} event={event} mode={'edit'} />
+            </View>
+        </EventDraftProvider>
     )
 }

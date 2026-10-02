@@ -1,3 +1,4 @@
+import Radius from '@/constants/Radius';
 import { useAPI } from '@/contextes/contexteAPI';
 import { useInvites } from '@/contextes/contexteInvites';
 import { useMembre } from '@/contextes/contexteMembre';
@@ -38,6 +39,7 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
     const [p, setParticipant] = useState<Participant>()
 
     const getParticipant = async () => {
+        //log("participant", participant)
         const {fp_url, pseudo} = participant
         if(!fp_url || !pseudo){
             try {
@@ -75,9 +77,7 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
             marginTop:-1,
             width:'90%',
             paddingVertical:4,
-            borderTopWidth:1,
             alignSelf: 'center',
-            borderColor: colors.border,
             height: height
         },
         photo:{
@@ -108,15 +108,15 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
             gap: 8,
         },
         leftIcon: {
-            flex: 1,
-            width:'20%',
+            flex: 0,
+            width: 32,
             height: '100%',
             alignItems: 'center',
             justifyContent: 'center',
         },
         rightAction: {
-            flex: 1,
-            width:'20%',
+            flex: 0,
+            width: 32,
             height: '100%',
             alignItems: 'flex-end',
             justifyContent: 'center',
@@ -126,10 +126,11 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
             width: '100%',
             flexDirection: 'row',
             padding: 8,
-            borderRadius: 8,
             alignItems: 'center',
-            justifyContent: 'space-between',
-            backgroundColor: colors.primary
+            justifyContent: 'space-between',     
+            borderWidth:1,
+            borderColor: colors.border,
+            borderRadius: Radius.xl,
         }
     })
 
