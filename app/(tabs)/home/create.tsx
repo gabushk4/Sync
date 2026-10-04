@@ -21,8 +21,6 @@ import Icon from "@react-native-vector-icons/ionicons";
 import ToastAbs from "@/abstractions/toastAbs";
 import { EventFormHandle } from "@/components/eventForm";
 import { toastTypes } from "@/constants/toastConfig";
-import { EventDraftProvider } from "@/contextes/contexteEventDraft";
-import ceilBy5 from "@/functions/ceilBy5";
 import { convertLocalToUTC } from "@/functions/convertirUTCenLocal";
 import formaterDatePourServeur from "@/functions/formaterDatePourServeur";
 import { Participant } from "@/types/invites";
@@ -47,8 +45,6 @@ export default function CreateEvent({ }) {
     
     const diffNowStart = DateTime.fromISO(start as string).diff(DateTime.now(), 'hours').hours
     const minimumStart = diffNowStart > 1 ? DateTime.fromISO(start as string) : DateTime.now().plus({hours:1})
-    const initialEnd = end ? DateTime.fromISO(end as string) : ceilBy5(minimumStart.plus({ hours: 1 }))
-
     const [enChargement, setEnChargement] = useState(false)
     
     //log('setter end')
@@ -145,22 +141,20 @@ export default function CreateEvent({ }) {
 
     return true
         ? (  
-            <EventDraftProvider initialStart={minimumStart} initialEnd={initialEnd}>
-                <EventForm
-                    ref={formRef}
-                    event={event}
-                    mode={'create'}
-                    prefills={{
-                        start: minimumStart ?? undefined,
-                        end: end ? DateTime.fromISO(end as string) : undefined,
-                        participants: friend ? [JSON.parse(friend as string)] as Array<Participant> : undefined
-                    }}
-                    constraints={{
-                        maximumStart: end ? DateTime.fromISO(end as string) : undefined,
-                        minimumStart: minimumStart ?? undefined
-                    }}
-                />
-            </EventDraftProvider>
+            <EventForm
+                ref={formRef}
+                event={event}
+                mode={'create'}
+                prefills={{
+                    start: minimumStart ?? undefined,
+                    end: end ? DateTime.fromISO(end as string) : undefined,
+                    participants: friend ? [JSON.parse(friend as string)] as Array<Participant> : undefined
+                }}
+                constraints={{
+                    maximumStart: end ? DateTime.fromISO(end as string) : undefined,
+                    minimumStart: minimumStart ?? undefined
+                }}
+            />
         )
         :(<View/>)
     

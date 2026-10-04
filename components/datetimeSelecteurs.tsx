@@ -72,7 +72,7 @@ export default function DateTimeSelecteur({timezone, disabled=false, minimumStar
 
     // When changing the event date
     const handleStartDateChange = (jsDate : Date) => {
-        const newDate = DateTime.fromJSDate(jsDate).startOf('day');
+        const newDate = ceilBy5(DateTime.fromJSDate(jsDate).startOf('day'));
         let newFin = end.startOf('day')
 
         let diffTime = end.diff(start, 'minutes').minutes //for keeping same event length
@@ -96,7 +96,7 @@ export default function DateTimeSelecteur({timezone, disabled=false, minimumStar
     };
 
     const handleEndDateChange = (jsDate: Date) => {
-        let newDate: DateTime | null = DateTime.fromJSDate(jsDate).set({second:0});
+        let newDate: DateTime | null = ceilBy5(DateTime.fromJSDate(jsDate).set({second:0}));
 
         // Change only the date not the time
         let newEnd = end.set({
@@ -110,7 +110,7 @@ export default function DateTimeSelecteur({timezone, disabled=false, minimumStar
 
     // When changing start time
     const handleStartTimeChange = (jsDate: Date) => {
-        const newDebut = DateTime.fromJSDate(jsDate).set({ second: 0 });        
+        const newDebut = ceilBy5(DateTime.fromJSDate(jsDate).set({ second: 0 }));        
         let newFin = end;
 
         let diffTime = newFin.diff(start, 'minutes').minutes //for keeping same event length
@@ -133,7 +133,7 @@ export default function DateTimeSelecteur({timezone, disabled=false, minimumStar
     // When changing end time
     const handleEndTimeChange = (jsDate: Date) => {
         log('handleEndChange', jsDate)
-        let newFin = DateTime.fromJSDate(jsDate).set({ second: 0 });
+        let newFin = ceilBy5(DateTime.fromJSDate(jsDate).set({ second: 0 }));
 
         log('newFin', newFin, "startOf day", newFin.startOf('day').toJSDate())
         setEnd(newFin)       

@@ -2,7 +2,7 @@
 	"list": {
 		"title": "Amis",
 		"invite": "inviter",
-		"availableForSlot": "disponibles",
+		"availableForSlot": "disponibles entre {{start}} et {{end}}",
 		"noAvailableFriends": "aucun ami disponible pour ce créneau",
 		"otherFriends": "autres amis",
 		"loadMore": "charger plus d'amis disponibles",

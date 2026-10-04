@@ -33,13 +33,13 @@ import { NotificationProvider } from '@/contextes/contexteNotifications';
 import { SettingsProvider, useSettings } from '@/contextes/contexteSettings';
 import { TimelineProvider } from '@/contextes/contexteTimeline';
 import {
-  configureReanimatedLogger,
-  ReanimatedLogLevel,
+    configureReanimatedLogger,
+    ReanimatedLogLevel,
 } from 'react-native-reanimated';
 
 import { toastConfig } from '@/constants/toastConfig';
-import { initLocalization } from '@/locales/initLocale';
 import { EventDraftProvider } from '@/contextes/contexteEventDraft';
+import { initLocalization } from '@/locales/initLocale';
 
 // This is the default configuration
 configureReanimatedLogger({
@@ -111,7 +111,11 @@ function AppLoader() {
 
   if (!fontsLoaded || !settingsLoaded || !localeLoaded) return null;
 
-  return <RootLayoutNav />;
+  return (
+    <EventDraftProvider makeReq={false}>
+      <RootLayoutNav />
+    </EventDraftProvider>
+  );
 }
 
 function RootLayoutNav() {

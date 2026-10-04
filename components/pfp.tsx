@@ -24,7 +24,7 @@ export default function ProfilPic({ size, pfp, style}: Props) {
     const [source, setSource] = useState<ImageSourcePropType>()
 
     useEffect(() => {
-        log("type of pfp", typeof pfp, pfp)
+        //log("type of pfp", typeof pfp, pfp)
         if (typeof pfp === 'string')
             setSource({ uri: `${APIBaseURL}/${pfp}` })
         else if (pfp === null || !pfp) {

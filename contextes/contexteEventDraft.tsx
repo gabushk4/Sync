@@ -10,6 +10,7 @@ import { DateTime } from "luxon"
 import { createContext, Dispatch, ReactNode, SetStateAction, useCallback, useContext, useEffect, useRef, useState } from "react"
 import { useAPI } from "./contexteAPI"
 import { useInvites } from "./contexteInvites"
+import ceilBy5 from "@/functions/ceilBy5"
 
 type LoadingStatus = 'loading' | 'idle' | 'error';
 
@@ -23,6 +24,7 @@ type EventDraftContextType = {
     friendsSuggestions: Array<FriendIntervals>;
     loadingStatus: LoadingStatus;
     friendsHasMore: boolean;
+    setRequestsEnabled: Dispatch<SetStateAction<boolean>>;
 }
 
 const EventDraftContext = createContext<EventDraftContextType | undefined>(undefined)
@@ -47,8 +49,10 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
 
     const DEBOUNCE_MS = 350
 
-    const [start, setStart] = useState<DateTime>(initialStart ?? now.plus({hour:1}))
-    const [end, setEnd] = useState<DateTime>(initialEnd ?? start.plus({ hour: 1 }))
+    const [requestsEnabled, setRequestsEnabled] = useState(makeReq)
+
+    const [start, setStart] = useState<DateTime>(ceilBy5(initialStart ?? now.plus({hour:1})))
+    const [end, setEnd] = useState<DateTime>(ceilBy5(initialEnd ?? start.plus({ hour: 1 })))
     
     const [slotSuggestions, setSlotSuggestions] = useState<Array<Interval>>([])
     const [friendsSuggestions, setFriendsSuggestions] = useState<Array<FriendIntervals>>([])
@@ -63,8 +67,8 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
             if (start.toMillis() > end.toMillis()) return
             
             const res = await api.post("/disponibilites/communes", {
-                debut: formaterDatePourServeur(convertLocalToUTC(start)),
-                fin: formaterDatePourServeur(convertLocalToUTC(end)),
+                debut: formaterDatePourServeur(ceilBy5(convertLocalToUTC(start))),
+                fin: formaterDatePourServeur(ceilBy5(convertLocalToUTC(end))),
                 offset: suggestionsOffset.current,
                 ids: invites.map(i => i.id)
             },
@@ -144,7 +148,7 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
     }, [api, end, start])
 
     useEffect(() => {      
-        if (makeReq) {
+        if (requestsEnabled) {
             //log("invites", invites)
             
             commonAvailController.current = new AbortController()
@@ -167,10 +171,10 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
                 clearTimeout(timeout)
             }
         }
-    }, [invites])
+    }, [invites, requestsEnabled])
 
     useEffect(() => {
-        if (makeReq) {
+        if (requestsEnabled) {
             friendsAvailController.current.abort()
             friendsAvailController.current = new AbortController()
             friendsListOffset.current = 0
@@ -191,15 +195,15 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
                 friendsAvailController.current.abort()
             }
         }
-    }, [start, end, makeReq])
+    }, [start, end, requestsEnabled])
 
     useEffect(() => {
-        if (!makeReq) return
+        if (!requestsEnabled) return
         return friendsAvailabilityEvents.onRequestMore(() => getFriendsAvail(true))
-    }, [getFriendsAvail, makeReq])
+    }, [getFriendsAvail, requestsEnabled])
 
     return (
-        <EventDraftContext.Provider value={{invites, start, setStart, end, setEnd, slotSuggestions, friendsSuggestions, friendsHasMore, loadingStatus}}>
+        <EventDraftContext.Provider value={{invites, start, setStart, end, setEnd, slotSuggestions, friendsSuggestions, friendsHasMore, loadingStatus, setRequestsEnabled}}>
             {children}
         </EventDraftContext.Provider>
     )

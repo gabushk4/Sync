@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next'
 import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native'
 
 import SwitchAbs from '@/abstractions/switchAbs'
+import { useEventDraft } from '@/contextes/contexteEventDraft'
 import { useInvites } from '@/contextes/contexteInvites'
 import { Participant } from '@/types/invites'
 import Icon from "@react-native-vector-icons/ionicons"
@@ -26,7 +27,6 @@ import Animated from 'react-native-reanimated'
 import DateTimeSelecteur from './datetimeSelecteurs'
 import MenuDeroulant from './menuDeroulant'
 import ParticipantsListe from './participantsListe'
-import { useEventDraft } from '@/contextes/contexteEventDraft'
 
 const MAX_LONG_TITLE = 50
 const MAX_LONG_DESC = 2000
@@ -77,7 +77,7 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
     const { membre } = useMembre()
     const colorScheme = useColorScheme()
     const { ajouterInvite, invites } = useInvites()    
-    const {start, end, setStart, setEnd} = useEventDraft()        
+    const {start, end, setStart, setEnd, setRequestsEnabled} = useEventDraft()
         
     const minimumStart = constraints?.minimumStart || mode === 'create' ? dtNow : undefined
     const maximumStart = constraints?.maximumStart || undefined
@@ -127,8 +127,8 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
             return {start, end}
         }
 
-        let start = convertUTCToLocal(event.debut ?? dtNow) ?? dtNow
-        let end = convertUTCToLocal(event.fin ?? dtNow) ?? dtNow        
+        let start = ceilBy5(convertUTCToLocal(event.debut ?? dtNow) ?? dtNow)
+        let end = ceilBy5(convertUTCToLocal(event.fin ?? dtNow) ?? dtNow)        
 
         return {start, end}
     }
@@ -161,8 +161,13 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
             }
             if (mode === 'create' && prefills?.participants)
                 appliquerInvites(prefills.participants)
-        }, [event])
+        }, [event, mode, prefills, setEnd, setStart])
     )    
+
+    useEffect(() => {
+        setRequestsEnabled(mode !== 'details')
+        return () => setRequestsEnabled(false)
+    }, [mode, setRequestsEnabled])
 
     useEffect(() => {
         setFinRecurrence(start.startOf('day'))
@@ -439,7 +444,7 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
 
             <View style={[s.champ, {height:'auto', paddingBottom:0}]}>
                 <Text style={s.label}>{t('form.participants')} - {invites.length}</Text>
-                <ParticipantsListe participantsUrl={eventParticipantsControlUrl} />                
+                <ParticipantsListe participantsUrl={eventParticipantsControlUrl} listType='event' />                
             </View>
 
             <Modal visible={showTextModal} transparent={true} backdropColor="transparent">

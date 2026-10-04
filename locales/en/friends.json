@@ -2,7 +2,7 @@
 	"list": {
 		"title": "friends",
 		"invite": "invite",
-		"availableForSlot": "available",
+		"availableForSlot": "available between {{start}} and {{end}}",
 		"noAvailableFriends": "no friends available during this time",
 		"otherFriends": "other friends",
 		"loadMore": "load more available friends",

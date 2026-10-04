@@ -409,7 +409,9 @@ export default function ProfilEcran(){
                             <Text style={[{color:colors.muted, fontSize:14, paddingLeft:4, fontFamily:fonts.body}]}>{t('memberSince', { date: convertirTimestampDateCourte(membre.tempsCreation) })}</Text>                
                         </Animated.View>
                         <Animated.View>
-
+                            <TouchableOpacity
+                                onPress={()=> router.push("/(modals)/listeAmis")}
+                            ><Text>Amis</Text></TouchableOpacity>
                         </Animated.View>
                         {/* Bio */}
                         <Animated.View style={{ width:'100%', height:'auto', borderRadius:8, paddingLeft:16}}>                            

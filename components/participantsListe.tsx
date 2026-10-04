@@ -1,7 +1,7 @@
 import { useFocusEffect } from 'expo-router/react-navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image, StyleSheet, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, useColorScheme, View } from 'react-native';
 
 import { useAPI } from '@/contextes/contexteAPI';
 import { useInvites } from '@/contextes/contexteInvites';
@@ -13,25 +13,27 @@ import catcher from '@/functions/catcher';
 import log from '@/functions/log';
 
 import { LinkAbs } from '@/abstractions/linkAbs';
+import { ListType } from '@/app/(modals)/listeAmis';
 import { checkMark } from '@/constants/dismissButtons';
 import { withTimingConfig } from '@/constants/ReanimatedConfs';
 import { useEventDraft } from '@/contextes/contexteEventDraft';
 import { useModal } from '@/contextes/contexteModals';
 import { Participant } from '@/types/invites';
+import Ionicons from '@react-native-vector-icons/ionicons';
 import { router } from 'expo-router';
 import { FlatList } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import Ionicons from '@react-native-vector-icons/ionicons';
 // Garde tes imports actuels et ajoute simplement `useMemo` à l'import de 'react'
 // import { useState, useEffect, useCallback, useMemo } from 'react'
 
 type Props = {
     participantsUrl: string | undefined;
+    listType: ListType
 }
 
 const LINE_HEIGHT = 56
 const INVITER_HEIGHT = 40
-const MAX_COUNT = 4
+const MAX_COUNT = 3
 const DATA_RENDERER_KEY = "ParticipantsListe"
 
 // Styles statiques : créés UNE fois, pas à chaque render
@@ -62,7 +64,7 @@ const s = StyleSheet.create({
     },
 })
 
-export default function ParticipantsListe({ participantsUrl } : Props){
+export default function ParticipantsListe({ participantsUrl, listType } : Props){
     const { t } = useTranslation()
     const { colors } = usePalette();
     const { api } = useAPI()
@@ -176,7 +178,7 @@ export default function ParticipantsListe({ participantsUrl } : Props){
                <Line key={`${p.id}`} participant={p}/>
             ))}   
             {showMore &&
-                <LinkAbs href={{ pathname: "/(modals)/dataRenderer", params: { key: DATA_RENDERER_KEY, title:t('events:form.particpants') } }} style={{ alignSelf: 'center', marginBottom:8, marginTop:4 }}>
+                <LinkAbs href={{ pathname: "/(modals)/dataRenderer", params: { key: DATA_RENDERER_KEY, title:t('events:form.participants') } }} style={{ alignSelf: 'center', marginBottom:8, marginTop:4 }}>
                     {t('common:showMore')}
                 </LinkAbs>
             }
@@ -185,7 +187,7 @@ export default function ParticipantsListe({ participantsUrl } : Props){
                     router.push({
                         pathname: '/(modals)/listeAmis',
                         params: {
-                            type: 'select',
+                            type: listType,
                             inviterUrl: participantsUrl,
                             availableFriendIds: JSON.stringify(availableFriendIds),
                             hasMoreFriends: String(friendsHasMore),

@@ -157,7 +157,7 @@ export default function CommonSlotsSuggestions() {
     return (
         <Animated.View style={[s.suggestionsContainer, {borderTopWidth: suggestionsCount > 0 ? 1 : 0}, animatedSuggestions]}>
             {suggestionsCount > 0 && 
-                <Text style={{ fontFamily: fonts.body, color: colors.muted, fontSize: 20, width: '100%', textAlign: 'left' }}>suggestions - { suggestionsCount}</Text>
+                <Text style={{ fontFamily: fonts.body, color: colors.muted, fontSize: 20, width: '100%', textAlign: 'left', marginBottom:4 }}>suggestions - { suggestionsCount}</Text>
             }
             <View style={{marginBottom:8, width:'100%'}}>
             {orderedSuggestions.slice(0, MAX_SUGG - 1).map((sugg, i) => (
