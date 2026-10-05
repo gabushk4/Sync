@@ -51,8 +51,8 @@ export default function ImporterCalendrier(){
                 uid: ev.uid,
                 titre: ev.titre,
                 description: ev.description ?? '',
-                debut: formaterDatePourServeur(convertirUTCversLocale(ev.debut)),
-                fin: formaterDatePourServeur(convertirUTCversLocale(ev.fin)),
+                debut: formaterDatePourServeur(ev.debut.toUTC()),
+                fin: formaterDatePourServeur(ev.fin.toUTC()),
                 source:'ics'
             }) ),
         })
@@ -84,7 +84,7 @@ export default function ImporterCalendrier(){
 
             if(conflits.length > 0){
                 definirImportEnCours({ aImporter, ignores, conflits })
-                router.push('/(modals/resolutionConflitImport)')
+                router.push('/(modals)/resolutionConflitImport')
                 return
             }
             if(aImporter.length > 0){

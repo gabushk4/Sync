@@ -1,18 +1,19 @@
-import {DateTime} from 'luxon '
+import {DateTime} from 'luxon'
 import log from './log'
 
 
 // "Déplie" les lignes .ics : une ligne qui commence par un espace ou une
 // tabulation est la continuation de la ligne précédente (RFC 5545 §3.1).
-function deplierLignes(texteIcd){
+function deplierLignes(texteIcs){
     const lignesBrutes = texteIcs.split(/\r\n|\n|\r/)
     const lignes = []
 
     for(const ligne of lignesBrutes) {
-        if((ligne.startsWith(' ') || lignes.startsWith('\t')) && lignes.length > 0){
-
+        if((ligne.startsWith(' ') || ligne.startsWith('\t')) && lignes.length > 0){
+            // continuation : coller à la ligne précédente sans le premier caractère
+            lignes[lignes.length - 1] += ligne.slice(1)
         }else {
-            lignes.push(ligne)
+            lignes.push(ligne.trimEnd())
         }
     }
     return lignes
@@ -31,14 +32,14 @@ function parserLigne(ligne){
     const indexDeuxPoints = ligne.indexOf(':')
     if(indexDeuxPoints ===-1) return null
     
-    const fauche = ligne.slice(0,indexDeuxPoints)
+    const gauche = ligne.slice(0,indexDeuxPoints)
     const valeur = ligne.slice(indexDeuxPoints + 1)
     const [nom, ...paramsBruts] = gauche.split(";")
     
     const params = {}
     for(const p of paramsBruts){
         const [cle,val] = p.split('=')
-        if(cle) params[cle.toUpperCase()] = val
+        if(cle) params[cle.toUpperCase()] = val?.replace(/^"|"$/g, '') // TZID="America/Toronto"
     }
     return {nom: nom.toUpperCase(),params,valeur}
 }

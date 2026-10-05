@@ -12,7 +12,7 @@ export function definirImportEnCours(etat){
     importEnCours = etat
 }
 
-export function obtenirImportEnCoir(){
+export function obtenirImportEnCours(){
     return importEnCours
 }
 

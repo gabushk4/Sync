@@ -24,13 +24,13 @@ export default function ResolutionConflitImport(){
     const conflits = etat?.conflits ?? []
     const aImporter = etat?.aImporter ?? []
 
-    const [resolution,setResolution] = useState<Record<number,ResolutionConflit>>({})
+    const [resolutions,setResolutions] = useState<Record<number,ResolutionConflit>>({})
     const [enConfirmation,setEnConfirmation] = useState(false)
 
     const toutesResolues = conflits.length === 0 || conflits.every((_:any, i:number) => resolutions[i])
 
     const choisir = (index:number, resolution: ResolutionConflit) => {
-        setResolution((prev) => ({...prev,[index]: resolution}))
+        setResolutions((prev) => ({...prev,[index]: resolution}))
     }
 
     const confirmer = async () => {
@@ -40,9 +40,9 @@ export default function ResolutionConflitImport(){
             
             conflits.forEach((conflit:any, i: number) => {
                 const resolution = resolutions[i]
-                if(resolution === 'garder_importe' || resolution ==='garder_les_deux'{
+                if(resolution === 'garder_importe' || resolution === 'garder_les_deux'){
                     evenementsFinal.push(conflit.importe)
-                })
+                }
             })
             if(evenementsFinal.length > 0){
                 await api.post('/evenements/import',{
@@ -50,8 +50,8 @@ export default function ResolutionConflitImport(){
                         uid: ev.uid,
                         titre: ev.titre,
                         description: ev.description ?? '',
-                        debut: formaterDatePourServeur(ev.debut),
-                        fin: formaterDatePourServeur(ev.fin),
+                        debut: formaterDatePourServeur(ev.debut.toUTC()),
+                        fin: formaterDatePourServeur(ev.fin.toUTC()),
                         source:'ics'
 
                     }))
@@ -70,7 +70,7 @@ export default function ResolutionConflitImport(){
          } catch (error) {
             catcher(error,"erreur lors de la résolution des conflits d'import")
          }finally{
-            setConfirmation(false)
+            setEnConfirmation(false)
          }
     }
     return (

@@ -1,5 +1,5 @@
 import * as DocumentPicker from 'expo-document-picker'
-import * as FileSystem from 'expo-file-system'
+import { File } from 'expo-file-system'
 
 import parseIcs from './parseIcs'
 import log from './log'
@@ -11,13 +11,18 @@ import log from './log'
 
 export async function choisirFichierIcs(){
     const resultat = await DocumentPicker.getDocumentAsync({
-        type: ['text/calendar','.ics'],
+        // '.ics' n'est pas un type MIME : on accepte tout et on vérifie l'extension
+        type: '*/*',
         copyToCacheDirectory: true,
     })
     if(resultat.canceled || !resultat.assets?.[0]) return null
 
-    const uri = resultat.assets[0].uri
-    return await FileSystem.readAsStringAsync(uri)
+    const fichier = resultat.assets[0]
+    if(!fichier.name?.toLowerCase().endsWith('.ics')){
+        throw new Error('choisis un fichier .ics')
+    }
+    // SDK 54+ : readAsStringAsync n'existe plus dans 'expo-file-system' (seulement dans /legacy)
+    return await new File(fichier.uri).text()
 }
 /**
  * Un "doublon" (story #7) : même évènement (même UUID) ET mêmes début/fin/titre
@@ -58,18 +63,18 @@ export function dedupliquerEtDetecterConflits(evenementsImportes,evenementsExist
     const dejaVus = []
 
     for(const importe of evenementsImportes){
-        const doublon = evenementsExistants.find((existant) = > estDoublon(importe,existant))
+        const doublon = evenementsExistants.find((existant) => estDoublon(importe,existant))
         if(doublon){
             ignores.push(importe)
             continue
         }
-        const conflitExistant = evenementsEvistants.find((existant)= > memeCreneau(importe,existant))
-        const conflitImporte = dejaVus.find((autre) => memeCreneau(import,autre))
+        const conflitExistant = evenementsExistants.find((existant) => memeCreneau(importe,existant))
+        const conflitImporte = dejaVus.find((autre) => memeCreneau(importe,autre))
 
         if(conflitExistant){
             conflits.push({importe,existant:conflitExistant})
         } else if(conflitImporte){
-            conflits.push(impoprte,existant:conflitImporte)
+            conflits.push({importe,existant:conflitImporte})
         }
         else {
             aImporter.push(importe)

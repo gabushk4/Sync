@@ -46,8 +46,20 @@ function versLocale(date?: string | null): DateTime {
     }
 }
 
-function convertirMessage(m: MessageBrut): Message {
-    return { ...m, envoyeLe: versLocale(m.envoyeLe) }
+/**
+ * Le serveur construit l'adresse des vocaux avec son BASE_URL, qui devient faux dès que
+ * l'IP du Mac change (autre Wi-Fi, partage de connexion...). On garde seulement le chemin
+ * (/audio/xxx.m4a) et on le colle à l'adresse que l'app utilise déjà pour joindre le serveur.
+ */
+function versUrlAudio(url: string | undefined, baseApp: string): string | undefined {
+    if (!url) return undefined
+    const debutChemin = url.indexOf('/audio/')
+    if (debutChemin === -1) return url
+    return `${baseApp.replace(/\/$/, '')}${url.slice(debutChemin)}`
+}
+
+function convertirMessage(m: MessageBrut, baseApp: string): Message {
+    return { ...m, audioUrl: versUrlAudio(m.audioUrl, baseApp), envoyeLe: versLocale(m.envoyeLe) }
 }
 
 function convertirConversation(c: ConversationBrute): Conversation {
@@ -76,8 +88,11 @@ function typeMimeAudio(nomFichier: string) {
 /* ---------- provider ---------- */
 
 export function ConversationsProvider({ children }: { children: React.ReactNode }) {
-    const { api } = useAPI()
+    const { api, APIBaseURL } = useAPI()
     const { state } = useAuth()
+
+    const baseRef = useRef(APIBaseURL)
+    baseRef.current = APIBaseURL
 
     const [conversations, setConversations] = useState<Conversation[]>([])
     const [messages, setMessages] = useState<Message[]>([])
@@ -149,7 +164,7 @@ export function ConversationsProvider({ children }: { children: React.ReactNode 
                 // ignorer une réponse arrivée après avoir changé de conversation
                 if (idOuvertRef.current !== conversationId) return
                 const liste: MessageBrut[] = data?.messages ?? []
-                setMessages(liste.map(convertirMessage))
+                setMessages(liste.map((m) => convertirMessage(m, baseRef.current)))
                 // le serveur vient de marquer les messages comme lus
                 setConversations((cs) => cs.map((c) => (c.id === conversationId ? { ...c, nonLus: 0 } : c)))
             },
@@ -190,7 +205,7 @@ export function ConversationsProvider({ children }: { children: React.ReactNode 
 
         const brut: MessageBrut | undefined = reponse?.data?.message
         if (!brut) return undefined
-        const message = convertirMessage(brut)
+        const message = convertirMessage(brut, baseRef.current)
 
         // afficher tout de suite, sans attendre le prochain rafraîchissement
         if (idOuvertRef.current === conversationId) {

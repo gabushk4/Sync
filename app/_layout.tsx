@@ -19,6 +19,7 @@ import { ThemeProvider } from "expo-router/react-navigation";
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 //Components
 import Toast from 'react-native-toast-message';
@@ -53,46 +54,48 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   return (
-    <PaletteProvider>
-      <FontProvider>
-        <AccessTokenProvider>
-          <MockModeProvider>
-            <APIProvider>
-              <SettingsProvider>
-                <MembreProvider>
-                <AuthProvider> 
-                  <NotificationProvider>
-                    <ConversationsProvider>
-                    <RouteAbsProvider>
-                      <ModalProvider>                  
-                        <NavFABProvider>
-                          <ActionFABProvider>
-                            <TimelineProvider>
-                              <GestionScrollProvider> 
-                                <InvitesProvider>
-                                  <AppLoader />    
-                                </InvitesProvider>  
-                              </GestionScrollProvider>
-                            </TimelineProvider>
-                          </ActionFABProvider>
-                        </NavFABProvider>                  
-                      </ModalProvider>
-                    </RouteAbsProvider>   
-                    </ConversationsProvider>
-                  </NotificationProvider>  
-                </AuthProvider>
-                </MembreProvider>
-              </SettingsProvider>
-            </APIProvider>
-          </MockModeProvider>
-        </AccessTokenProvider>            
-      </FontProvider>
-    </PaletteProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <PaletteProvider>
+        <FontProvider>
+          <AccessTokenProvider>
+            <MockModeProvider>
+              <APIProvider>
+                <SettingsProvider>
+                  <MembreProvider>
+                    <AuthProvider>
+                      <NotificationProvider>
+                        <ConversationsProvider>
+                          <RouteAbsProvider>
+                            <ModalProvider>
+                              <NavFABProvider>
+                                <ActionFABProvider>
+                                  <TimelineProvider>
+                                    <GestionScrollProvider>
+                                      <InvitesProvider>
+                                        <AppLoader />
+                                      </InvitesProvider>
+                                    </GestionScrollProvider>
+                                  </TimelineProvider>
+                                </ActionFABProvider>
+                              </NavFABProvider>
+                            </ModalProvider>
+                          </RouteAbsProvider>
+                        </ConversationsProvider>
+                      </NotificationProvider>
+                    </AuthProvider>
+                  </MembreProvider>
+                </SettingsProvider>
+              </APIProvider>
+            </MockModeProvider>
+          </AccessTokenProvider>
+        </FontProvider>
+      </PaletteProvider>
+    </GestureHandlerRootView>
   );
 }
 
 function AppLoader() {
-  const { fontsLoaded } = useFont();  
+  const { fontsLoaded } = useFont();
   const { settings, hydrated: settingsLoaded } = useSettings();
   const [localeLoaded, setLocaleLoaded] = useState(false);
 
@@ -112,7 +115,7 @@ function AppLoader() {
 
 function RootLayoutNav() {
   const { navTheme } = usePalette();
-  const { state } = useAuth()  
+  const { state } = useAuth()
 
   /* const enregistrerPushToken = async (accessToken: string)=>{
     
@@ -156,35 +159,35 @@ function RootLayoutNav() {
   } */
 
   if (state === 'loading') {
-    return <ChargementEcran/>;
+    return <ChargementEcran />;
   }
 
   return (
     <ThemeProvider value={navTheme}>
       <Stack>
         <Stack.Protected guard={state === 'authenticated'}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />          
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         </Stack.Protected>
         <Stack.Protected guard={state === 'unauthenticated'}>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        </Stack.Protected>  
+        </Stack.Protected>
         <Stack.Screen
           name="(modals)"
           options={{
             presentation: 'transparentModal',
-            animation: 'none',                
-            gestureEnabled: false,            
+            animation: 'none',
+            gestureEnabled: false,
             headerShown: false,
           }}
         />
         <Stack.Screen
           name='scanQR'
           options={{
-            headerShown:false
+            headerShown: false
           }}
         />
-      </Stack>      
-      <Toast config={toastConfig}/>
+      </Stack>
+      <Toast config={toastConfig} />
     </ThemeProvider>
   );
 }
