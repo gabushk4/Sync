@@ -26,7 +26,7 @@ export default function ProfilPic({ size, pfp, style}: Props) {
     useEffect(() => {
         //log("type of pfp", typeof pfp, pfp)
         if (typeof pfp === 'string')
-            setSource({ uri: `${APIBaseURL}/${pfp}` })
+            setSource({ uri: /^https?:\/\//i.test(pfp) ? pfp : `${APIBaseURL}/${pfp.replace(/^\//, '')}` })
         else if (pfp === null || !pfp) {
             setSource(icones.pfpDefault)
         }

@@ -37,6 +37,12 @@
     "public": "public",
     "participants": "participants"
   },
+  "participantRemoval": {
+    "confirmTitle": "Remove this participant?",
+    "confirmMessage": "Do you want to remove {{pseudo}} from this event?",
+    "cancel": "Cancel",
+    "remove": "Remove"
+  },
   "recurrence": {
     "never": "never",
     "daily": "daily",

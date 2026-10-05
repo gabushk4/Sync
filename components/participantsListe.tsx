@@ -19,11 +19,13 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 
 type Props = {
     participantsUrl: string | undefined;
+    peutGererParticipants: boolean;
 }
 
 const LINE_HEIGHT = 56
 
-export default function ParticipantsListe({ participantsUrl } : Props){
+/** Affiche les participants et retire une ligne après confirmation de l'API. */
+export default function ParticipantsListe({ participantsUrl, peutGererParticipants } : Props){
     const { t } = useTranslation('events')
     const { colors } = usePalette();
     const { api } = useAPI()
@@ -123,9 +125,17 @@ export default function ParticipantsListe({ participantsUrl } : Props){
                 persistentScrollbar={true}
                 /* ItemSeparatorComponent={() => (<View style={[s.separator, { backgroundColor:theme.colors.secondary }]} />)} */                    
             >
-                {participants?.map((item, index) => 
+                {participants?.map((item) => 
                     <View key={item.id} style={{flexDirection:'row', justifyContent:'center', alignItems:'center'}}>
-                        <ParticipantLigne participantsUrl={participantsUrl} participant={item} height={LINE_HEIGHT}/>                                
+                        <ParticipantLigne
+                            participantsUrl={participantsUrl}
+                            participant={item}
+                            height={LINE_HEIGHT}
+                            peutGererParticipants={peutGererParticipants}
+                            onParticipantSupprime={(participantId) => {
+                                setParticipants((prev) => prev?.filter((participant) => participant.id !== participantId))
+                            }}
+                        />
                     </View>    
                 )}
                 <View style={{

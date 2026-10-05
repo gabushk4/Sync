@@ -452,7 +452,10 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
             <View style={s.champ}>
                 <Text style={s.label}>{t('form.participants')}</Text>
                 <View style={{width: '100%', borderRadius: 8, minHeight:32, maxHeight:192 }}>
-                    <ParticipantsListe participantsUrl={eventParticipantsControlUrl} />
+                    <ParticipantsListe
+                        participantsUrl={eventParticipantsControlUrl}
+                        peutGererParticipants={mode === 'details' && event.privilege_membre === 'editeur'}
+                    />
                 </View>
             </View>
 

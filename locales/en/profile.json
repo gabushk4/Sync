@@ -9,7 +9,9 @@
 		"usernameLabel": "username",
 		"usernamePlaceholder": "username",
 		"bioLabel": "bio",
-		"bioPlaceholder": "a few words about you"
+		"bioPlaceholder": "a few words about you",
+		"moodLabel": "mood",
+		"moodPlaceholder": "how are you feeling right now?"
 	},
 	"qrCode": {
 		"brightnessTitle": "sync wants to adjust your screen brightness",
@@ -22,8 +24,13 @@
 	},
 	"memberSince": "member since {{date}}",
 	"memberIdLabel": "member ID",
+	"friendMood": "Mood",
+	"moodEmpty": "No mood shared right now.",
+	"bioEmpty": "No bio yet.",
 	"errors": {
 		"widgetsLoadFailed": "error loading widgets",
-		"updateFailed": "unable to update profile"
+		"updateFailed": "unable to update profile",
+		"loadFriendProfileFailed": "unable to load this friend's profile",
+		"friendProfileUnavailable": "this profile is unavailable"
 	}
 }

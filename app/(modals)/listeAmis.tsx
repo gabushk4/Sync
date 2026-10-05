@@ -18,7 +18,7 @@ import { usePalette } from "@/contextes/contextePalette";
 import ModalBase from "@/components/modalBase";
 
 import { modalEvents } from "@/events/modalEvents";
-import { FriendListType, useFriendList } from "@/hooks/useFriendList";
+import { useFriendList } from "@/hooks/useFriendList";
 
 import { Participant } from "@/types/invites";
 
@@ -27,7 +27,7 @@ type Friend = {
     temps_amitie: string,
     id_publique: string,
     pseudo: string,
-    pfp_url: string
+    fp_url: string
 }
 
 export default function ListeAmis(){
@@ -56,11 +56,30 @@ export default function ListeAmis(){
         try {
             const response = await api.get('/amis')
             
-            const data = response.data.map((ami: Friend)=>{
+            let amisResponse: Friend[] = Array.isArray(response.data) ? response.data : []
+
+            // L'API /amis peut renvoyer id_publique vide; /evenements/amis expose le même
+            // identifiant sous `id`. On s'en sert en repli pour garder la sélection utilisable.
+            if (amisResponse.some((ami: any) => !(ami.id_publique ?? ami.ami_id_publique ?? ami.id))) {
+                const fallback = await api.get('/evenements/amis', {
+                    params: { force_refresh: true, limiteAmi: 100 },
+                })
+                const amisAvecId = Array.isArray(fallback.data?.resultat) ? fallback.data.resultat : []
+                const parPseudo = new Map(amisAvecId.map((ami: any) => [ami.pseudo, ami]))
+                amisResponse = amisResponse.map((ami: any) => {
+                    const amiAvecId = parPseudo.get(ami.pseudo) as any
+                    return {
+                        ...ami,
+                        id_publique: ami.id_publique ?? ami.ami_id_publique ?? ami.id ?? amiAvecId?.id,
+                    }
+                })
+            }
+
+            const data = amisResponse.filter((ami: any) => ami.id_publique ?? ami.ami_id_publique ?? ami.id).map((ami: Friend)=>{
                 const amitie = convertUTCToLocal(ami.temps_amitie )
                 return{
-                    id:ami.id_publique,
                     ...ami,
+                    id:ami.id_publique ?? (ami as any).ami_id_publique ?? (ami as any).id,
                     temps_amitie:amitie
                 }
             })
@@ -82,7 +101,8 @@ export default function ListeAmis(){
         }
     }
 
-    const onPress = useFriendList(type as FriendListType)
+    const onPressSelect = useFriendList('select')
+    const onPressConsult = useFriendList('consult')
 
     useFocusEffect(useCallback(()=>{
         getAmis()
@@ -101,11 +121,9 @@ export default function ListeAmis(){
                     {select &&
                         <TouchableOpacity style={{position:'absolute', right:16,}} 
                             onPress={()=>{
-                                if(onPress){
-                                    log('inviter', amisSelec)
-                                    onPress(amisSelec, inviterUrl ?? undefined)
-                                    modalEvents.emitClosing()
-                                }
+                                log('inviter', amisSelec)
+                                onPressSelect(amisSelec, typeof inviterUrl === 'string' ? inviterUrl : undefined)
+                                modalEvents.emitClosing()
                             }}>
                             <Text style={{color:colors.text, fontFamily:fonts.body, fontSize:16}}>{t('list.invite')}</Text>
                         </TouchableOpacity>
@@ -134,11 +152,11 @@ export default function ListeAmis(){
                                             setAmisSelec((prev)=>[...prev, item])
                                     }
                                     else if(type === 'consult')
-                                        onPress?.(item)
+                                        onPressConsult(item)
                                 }}>
                                     <View style={{ width:'20%', height:64, alignItems:'center', justifyContent:'center', alignSelf:'center'}}>
                                         <Image
-                                            source={item.fp_url?{uri:item.fp_url}:icones.profilDef}
+                                            source={item.fp_url?{uri:`${api.defaults.baseURL}/${item.fp_url.replace(/^\//, '')}`}:icones.profilDef}
                                             style={{width:'100%', height:'100%', borderRadius:200, overflow:'hidden',}}
                                             
                                         />

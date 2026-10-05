@@ -183,7 +183,7 @@ export default function Home() {
                   const start = convertUTCToLocal(ev.debut, membre.timezone) 
                   const end = convertUTCToLocal(ev.fin, membre.timezone)
                   return {
-                    id: ev.id,
+                    id: ev.id_publique ?? ev.id,
                     url: ev.url,
                     ...(ev.prive ? {} : { title: ev.titre }),
                     debut: start?.toMillis(),
@@ -546,12 +546,18 @@ export default function Home() {
                       return(
                         <View key={friend.id} style={[s.friendList]}>
                           {/* Photo de profil */}
+                          <TouchableOpacity
+                            accessibilityRole="button"
+                            accessibilityLabel={t('viewFriendProfile', { name: friend.pseudo })}
+                            onPress={() => router.push({ pathname: '/(tabs)/profile/[membreId]', params: { membreId: friend.id } })}
+                          >
                           <BlurView tint='dark' style={[s.column,{ backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' }]}>
                             <ProfilPic
                               pfp={friend.fp_url}
                               size={64}
                             />
                           </BlurView>
+                          </TouchableOpacity>
                           {/* Événements horizontaux */}
                           <EventsList
                             owner={friend}

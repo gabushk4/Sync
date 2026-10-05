@@ -55,7 +55,10 @@ export default function NotificationsList({}){
         if (filtre === '') {
             setNotificationsCopie(notifsCopie)
         } else if (filtre !== 'non_lue') {
-            setNotificationsCopie(notifsCopie.filter(notif => notif.payload.type.includes(filtre)))
+            setNotificationsCopie(notifsCopie.filter((notif) => {
+                const type = notif.payload?.type ?? notif.type
+                return type?.includes(filtre) || (filtre === 'amis' && type === 'demande_ami')
+            }))
         } else {
             setNotificationsCopie(notifsCopie.filter(notif => notif.statut === 'non_lue'))
         }

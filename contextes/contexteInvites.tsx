@@ -8,7 +8,7 @@ import React, { createContext, useContext, useState } from 'react';
 type InvitesContextValue = {
     invites: Participant[]
     ajouterInvite: (invite: Participant | Participant[], inviterUrl?: string) => Promise<void>
-    supprimerInvite: (inviteSupp: Participant, supprimerUrl?: string | undefined) => Promise<void>
+    supprimerInvite: (inviteSupp: Participant, supprimerUrl?: string | undefined) => Promise<boolean>
     resetInvites: () => void
 }
 
@@ -26,6 +26,16 @@ export const InvitesProvider: React.FC<React.PropsWithChildren<{}>> = ({ childre
         log('ajouter invite', invite, inviterUrl)
 
         const newInvitesArray: Participant[] = Array.isArray(invite) ? invite : [invite]
+
+        if (newInvitesArray.some((item) => typeof item.id !== 'string' || item.id.trim() === '')) {
+            log('invitation ignorée: identifiant public manquant')
+            ToastAbs.show({
+                type: 'persoErreur',
+                text1: 'Invitation impossible',
+                text2: 'Recharge la liste d’amis et réessaie.',
+            })
+            return
+        }
 
         const invitations: Participant[] = newInvitesArray.map((inv) => ({
             id: inv.id,
@@ -78,7 +88,8 @@ export const InvitesProvider: React.FC<React.PropsWithChildren<{}>> = ({ childre
         }
     }
 
-    const supprimerInvite = async (inviteSupp: Participant, supprimerUrl?: string) => {
+    /** Retire un participant côté API puis du contexte local si la suppression réussit. */
+    const supprimerInvite = async (inviteSupp: Participant, supprimerUrl?: string): Promise<boolean> => {
         log('supprimer invite', inviteSupp)       
 
         let valid = true
@@ -102,6 +113,7 @@ export const InvitesProvider: React.FC<React.PropsWithChildren<{}>> = ({ childre
         if (valid) {
             setInvites((prev) => prev.filter((invite) => invite.id !== inviteSupp.id))
         }
+        return valid
     }
 
     const resetInvites = ()=>{

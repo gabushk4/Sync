@@ -36,6 +36,17 @@
 		"warning": "Warning",
 		"warningWithoutMessage": "A warning occurred without a message"
 	},
+	"bugReport": {
+		"title": "Report a bug",
+		"instructions": "Describe what happened and the steps to reproduce the problem.",
+		"descriptionLabel": "Bug description",
+		"descriptionPlaceholder": "What happened?",
+		"send": "Send report",
+		"close": "Close",
+		"successTitle": "Thanks for the report",
+		"successMessage": "The developers can now review this issue.",
+		"submitFailed": "Unable to send the report"
+	},
 	"tabs": {
 		"home": "Sync",
 		"feed": "Feed",

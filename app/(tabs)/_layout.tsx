@@ -24,6 +24,10 @@ export default function TabLayout() {
   const { colors } = usePalette()
   const { fonts } = useFont()
   const {notifications, nonLues} = useNotifications()
+  const demandesAmisEnAttente = notifications.filter((notification) =>
+    (notification.payload?.type ?? notification.type) === 'demande_ami'
+    && notification.statut_metier === 'en_attente'
+  ).length
 
   return (
     <Tabs
@@ -74,6 +78,7 @@ export default function TabLayout() {
           title: t('common:tabs.inbox'),
           headerTitle:t('common:tabs.inboxTitle'),
           tabBarIcon: ({ color }) => <TabBarIcon name="chatbox-ellipses-outline" color={color} />,          
+          tabBarBadge: demandesAmisEnAttente > 0 ? demandesAmisEnAttente : undefined,
         }}
       />
       <Tabs.Screen

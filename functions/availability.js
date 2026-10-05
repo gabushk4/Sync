@@ -1,5 +1,4 @@
 import { DateTime } from 'luxon'
-import log from '@/functions/log'
 
 const dateToMinutes = (datetime) => {
 
@@ -70,14 +69,7 @@ const applyDndRules = (bitmap, dndRules, date) => {
  * @param {number} minutes 
  * @returns 
  */
-const minutesToTime = (date, minutes) => {
-    const hour = Math.floor(minutes / 60)
-    const minute = minutes % 60
-
-    const dt = DateTime.now().set({ day: date.day, hour: hour, minute: minute })
-    
-    return dt
-}
+const minutesToTime = (date, minutes) => date.startOf('day').plus({ minutes })
 
 export const getCommonFreeSlots = (
     userEvents,
@@ -88,6 +80,12 @@ export const getCommonFreeSlots = (
     minDuration = 60,  
 ) => {
   const bitmap = new Uint8Array(MINUTES).fill(1) // Filled with free times (1)
+
+  // Today's already elapsed minutes cannot be offered as a new meeting slot.
+  const now = DateTime.now()
+  if (date?.hasSame(now, 'day')) {
+    bitmap.fill(0, 0, now.hour * 60 + now.minute)
+  }
 
   // Events busy times
   applyBusyTimes(bitmap, userEvents, date) 
@@ -102,8 +100,8 @@ export const getCommonFreeSlots = (
   let start = null
   let count = 0
 
-  for (let i = 0; i < bitmap.length; i++) {
-    if (bitmap[i] === 1 && i < bitmap.length - 1) {
+  for (let i = 0; i <= bitmap.length; i++) {
+    if (i < bitmap.length && bitmap[i] === 1) {
       if (start === null) start = i
       count++
     } else { //encountered 0 now lets see if the slot is valid
