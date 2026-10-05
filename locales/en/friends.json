@@ -32,5 +32,15 @@
 		"deleteFailed": "unable to delete friend",
 		"requestFailed": "The request could not be sent",
 		"emailFailed": "Error sending email"
+	},
+	"requests": {
+		"popupTitle": "New friend request",
+		"popupMessage": "{{pseudo}} wants to be your friend. Do you accept?",
+		"accept": "Accept",
+		"decline": "Decline",
+		"later": "Later",
+		"errors": {
+			"responseFailed": "Unable to respond to this friend request"
+		}
 	}
 }

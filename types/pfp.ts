@@ -2,6 +2,7 @@ type MimeType = 'image' | 'video' | 'livePhoto' | 'pairedVideo' | null;
 
 export type FPType =
     | string
+    | null
     | {
             uri: string;
             mimeType?: MimeType

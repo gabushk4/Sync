@@ -45,6 +45,14 @@ const AnimatedStyleMinVal = 0.1
 const LIST_HEIGHT = 104
 const { width: WIN_W, height: WIN_H } = Dimensions.get('window') 
 
+/** Formats the displayed local day as the UTC date range expected by the events API. */
+function getEventDateRangeParams(date: DateTime) {
+  return {
+    debut: formaterDatePourServeur(convertLocalToUTC(date.startOf('day'))),
+    fin: formaterDatePourServeur(convertLocalToUTC(date.endOf('day'))),
+  }
+}
+
 /**
  * 
  * @returns 
@@ -175,7 +183,7 @@ export default function Home() {
                   const start = convertUTCToLocal(ev.debut, membre.timezone) 
                   const end = convertUTCToLocal(ev.fin, membre.timezone)
                   return {
-                    id: ev.id,
+                    id: ev.id_publique ?? ev.id,
                     url: ev.url,
                     ...(ev.prive ? {} : { title: ev.titre }),
                     debut: start?.toMillis(),
@@ -341,10 +349,7 @@ export default function Home() {
       //chargerEvenements(now, now)
 
       userEventsRefresh.current = new AutoRefresh(api, '/evenements/', {        
-        extraParams: {
-          start: formaterDatePourServeur(convertLocalToUTC(now.startOf('day'))),
-          end: formaterDatePourServeur(convertLocalToUTC(now.endOf('day')))
-        },
+        extraParams: getEventDateRangeParams(now),
         onData: modifierEvenementsMembreFetched,
         onError: (error) => {
           log("impossible de charger les évènements du membre", error)
@@ -353,10 +358,7 @@ export default function Home() {
       })
 
       friendsEventsRefresh.current = new AutoRefresh(api, '/evenements/amis', {
-        extraParams: {
-          start: formaterDatePourServeur(convertLocalToUTC(now.startOf('day'))),
-          end: formaterDatePourServeur(convertLocalToUTC(now.endOf('day')))
-        },
+        extraParams: getEventDateRangeParams(now),
         onData: modifierEvenementsAmisFetched,
         onError: (error) => {
           log("impossible de charger les évènements d'amis", error)
@@ -539,12 +541,18 @@ export default function Home() {
                       return(
                         <View key={friend.id} style={[s.friendList]}>
                           {/* Photo de profil */}
+                          <TouchableOpacity
+                            accessibilityRole="button"
+                            accessibilityLabel={t('viewFriendProfile', { name: friend.pseudo })}
+                            onPress={() => router.push({ pathname: '/(tabs)/profile/[membreId]', params: { membreId: friend.id } })}
+                          >
                           <BlurView tint='dark' style={[s.column,{ backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' }]}>
                             <ProfilPic
                               pfp={friend.fp_url}
                               size={64}
                             />
                           </BlurView>
+                          </TouchableOpacity>
                           {/* Événements horizontaux */}
                           <EventsList
                             owner={friend}

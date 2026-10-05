@@ -4,6 +4,7 @@
     "english":"anglais",
     "french":"français",
     "timezone":"fuseau horaire",
+    "importCalendar":"importer mon calendrier système",
     "local":"fuseau horaire local",
     "permissions":"permissions système",
     "camera":"caméra",
