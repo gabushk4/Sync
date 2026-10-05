@@ -15,6 +15,10 @@ export type Event = {
   id_parent?: string;
   debut_occurence?: DateTime;
   timezone: string;
+  // D'où provient l'évènement — utile pour l'import .ics (story #7) et,
+  // plus tard, l'import du calendrier système (story #4) qui a besoin
+  // de la même colonne côté serveur pour savoir où réimporter depuis.
+  source?: 'sync' | 'ics' | 'google' | 'outlook' | 'device';
 };
 
 export const defaultEvent = <Event>{

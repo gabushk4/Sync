@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DarkTheme, DefaultTheme } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme } from 'expo-router/react-navigation';
 import { generateTheme, ThemeColors } from '@/themes/generateTheme';
 import { useSettings } from './contexteSettings';
 import { DEFAULT_HUE } from '@/constants/Colors';
