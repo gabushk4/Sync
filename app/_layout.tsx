@@ -33,11 +33,12 @@ import { NotificationProvider } from '@/contextes/contexteNotifications';
 import { SettingsProvider, useSettings } from '@/contextes/contexteSettings';
 import { TimelineProvider } from '@/contextes/contexteTimeline';
 import {
-  configureReanimatedLogger,
-  ReanimatedLogLevel,
+    configureReanimatedLogger,
+    ReanimatedLogLevel,
 } from 'react-native-reanimated';
 
 import { toastConfig } from '@/constants/toastConfig';
+import { EventDraftProvider } from '@/contextes/contexteEventDraft';
 import { initLocalization } from '@/locales/initLocale';
 
 // This is the default configuration
@@ -56,32 +57,36 @@ export default function RootLayout() {
       <FontProvider>
         <AccessTokenProvider>
           <MockModeProvider>
-          <APIProvider>              
-            <SettingsProvider>
-              <PaletteProvider>
-                <MembreProvider>
-                <AuthProvider> 
-                  <NotificationProvider>
-                    <RouteAbsProvider>
-                      <ModalProvider>                  
-                        <NavFABProvider>
-                          <ActionFABProvider>
-                            <TimelineProvider>
-                              <GestionScrollProvider> 
-                                <InvitesProvider>
-                                  <AppLoader />    
-                                </InvitesProvider>  
-                              </GestionScrollProvider>
-                            </TimelineProvider>
-                          </ActionFABProvider>
-                        </NavFABProvider>                  
-                      </ModalProvider>
-                    </RouteAbsProvider>   
-                  </NotificationProvider>  
-                </AuthProvider>
-                </MembreProvider>
-              </PaletteProvider>
-            </SettingsProvider>          
+            <APIProvider>   
+              
+                <SettingsProvider>
+                  <PaletteProvider>
+                    <MembreProvider>
+                      <AuthProvider> 
+                        <NotificationProvider>
+                          <RouteAbsProvider>
+                            <ModalProvider>                  
+                              <NavFABProvider>
+                                <ActionFABProvider>
+                                  <TimelineProvider>
+                                    <GestionScrollProvider> 
+                                      <InvitesProvider>
+                                        
+                                          <AppLoader />  
+                                    
+                                      </InvitesProvider>  
+                                    </GestionScrollProvider>
+                                  </TimelineProvider>
+                                </ActionFABProvider>
+                              </NavFABProvider>                  
+                            </ModalProvider>
+                          </RouteAbsProvider>   
+                        </NotificationProvider>  
+                      </AuthProvider>
+                    </MembreProvider>
+                  </PaletteProvider>
+                </SettingsProvider>        
+              
             </APIProvider>
           </MockModeProvider>
         </AccessTokenProvider>            
@@ -106,7 +111,11 @@ function AppLoader() {
 
   if (!fontsLoaded || !settingsLoaded || !localeLoaded) return null;
 
-  return <RootLayoutNav />;
+  return (
+    <EventDraftProvider makeReq={false}>
+      <RootLayoutNav />
+    </EventDraftProvider>
+  );
 }
 
 function RootLayoutNav() {

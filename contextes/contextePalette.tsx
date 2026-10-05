@@ -6,7 +6,7 @@ import { generateTheme, ThemeColors } from '@/themes/generateTheme';
 import { useSettings } from './contexteSettings';
 import { DEFAULT_HUE } from '@/constants/Colors';
 
-type PaletteContextType = {
+export type PaletteContextType = {
   colors: ThemeColors;
   hue: number;
   setHue: (h: number) => void;

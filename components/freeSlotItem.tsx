@@ -12,6 +12,8 @@ import { StyleSheet, Text, TouchableOpacity } from "react-native";
 import { useTranslation } from 'react-i18next';
 import Animated, { SharedValue } from "react-native-reanimated";
 import useTimelineLabelOffset from "@/hooks/useTimelineLabelOffset";
+import ToastAbs from "@/abstractions/toastAbs";
+import { toastTypes } from "@/constants/toastConfig";
 
 type Props = {
     freeSlot: any;
@@ -39,6 +41,8 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
     const width = horizontal 
                     ? findWidth(freeSlot.start, freeSlot.end, displayedDate, pxHeures + L_HEURES)
         : '100%'
+    
+    const isInPast = freeSlot.start.toMillis() < DateTime.now().toMillis() && freeSlot.end.toMillis() < DateTime.now().toMillis() 
 
     const LABEL_W = 96
     const itemSize = (horizontal ? width : height) as number
@@ -97,7 +101,7 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
                 top: top,
                 height: height,
                 width: width,
-                
+                ...(isInPast ? {borderColor:colors.muted} : {}) 
             }]}
             onPress={() => {
                 log("common free slot with", owner)

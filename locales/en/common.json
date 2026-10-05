@@ -1,7 +1,8 @@
 {
 	"friendRequestSentTitle": "Friend request sent",
 	"friendRequestSentMessage": "I have a feeling this is the beginning of a unique, almost magical bond!",
-	"copiedToClipboard": "Copied to clipboard"
+	"copiedToClipboard": "Copied to clipboard",
+	"showMore": "show more"
 	,"signOut": {
 		"title": "Sign out",
 		"confirmation": "Do you really want to sign out?",

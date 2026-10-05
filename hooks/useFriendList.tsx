@@ -5,9 +5,7 @@ import { router } from "expo-router"
 
 export type FriendListType = 'select' | 'consult'
 
-/** Returns the selection handler used to add one or more friends to an event. */
 export function useFriendList(type: 'select'): (friends: Participant | Array<Participant>, inviterUrl?: string) => void
-/** Returns the navigation handler used to open a friend's profile. */
 export function useFriendList(type: 'consult'): (friend: Participant) => void
 export function useFriendList(type: FriendListType) {
     const {ajouterInvite} = useInvites()

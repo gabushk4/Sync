@@ -1,4 +1,4 @@
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useColorScheme, View } from 'react-native';
@@ -31,6 +31,7 @@ export default function CreateEvent({ }) {
     const { colors } = usePalette()
     const colorScheme = useColorScheme()
     const { fonts } = useFont()
+    const navigation = useNavigation()
     
     const {api} = useAPI()
     const {invites, resetInvites} = useInvites()
@@ -44,7 +45,6 @@ export default function CreateEvent({ }) {
     
     const diffNowStart = DateTime.fromISO(start as string).diff(DateTime.now(), 'hours').hours
     const minimumStart = diffNowStart > 1 ? DateTime.fromISO(start as string) : DateTime.now().plus({hours:1})
-
     const [enChargement, setEnChargement] = useState(false)
     
     //log('setter end')
@@ -114,9 +114,13 @@ export default function CreateEvent({ }) {
         icon: <Icon name="checkmark" color={colors.text} size={28} />
     })
 
-    useFocusEffect(useCallback(()=>{  
-        return ()=>{
-            resetInvites()  
+    useFocusEffect(useCallback(() => { 
+        const listener = navigation.addListener('beforeRemove', (e) => {
+            console.log('on back')
+            resetInvites()
+        })
+        return () => {
+            navigation.removeListener('beforeRemove', listener)
         }
     },[]))
 
@@ -136,7 +140,7 @@ export default function CreateEvent({ }) {
     }, [event])
 
     return true
-        ?(       
+        ? (  
             <EventForm
                 ref={formRef}
                 event={event}

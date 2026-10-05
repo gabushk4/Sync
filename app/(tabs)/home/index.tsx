@@ -174,7 +174,7 @@ export default function Home() {
 
   const modifierEvenementsAmisFetched = (data: any) => {
     const events = data.resultat ?? []
-    //log("modifier evenements amis data: ", data)
+    log("modifier evenements amis data: ", data)
     try {
       const amisFinal = events?.map((ami: Friend) => {
           //log('ami evenements', ami.evenements)
@@ -191,7 +191,7 @@ export default function Home() {
                   }
                 })
             // Sort from earliest to latest
-            .sort((a:any, b: any) => a.start - b.start)
+            .sort((a:any, b: any) => a.debut - b.debut)
             // Conversion from ms to DateTime (luxon)
             .map((ev: any) => (
               {
@@ -235,41 +235,36 @@ export default function Home() {
       afficher: diffFromNow > 0 || diffFromNow < 0
     }
   }
-  /**
-   * Modifies current displayed date by going back in time
-   */
-  const reculerDate = () => {
-    if (todayDateTime) {
-      const newDt = todayDateTime.minus({ day: 1 });
-      toggleBackToNow(newDt)
-      setTodayDateTime(newDt);
-      dateAujShared.value = newDt.toMillis();
-      userEventsRefresh.current?.forceRefresh({ extraParams: getEventDateRangeParams(newDt) })
-      friendsEventsRefresh.current?.forceRefresh({ extraParams: getEventDateRangeParams(newDt) })
-    }
+
+  const buildRange = (dt: DateTime) => ({
+    start: formaterDatePourServeur(convertLocalToUTC(dt.startOf('day'))),
+    end: formaterDatePourServeur(convertLocalToUTC(dt.endOf('day'))),
+  });
+
+  const refreshAt = (dt: DateTime) => {
+    const extraParams = buildRange(dt);
+    userEventsRefresh.current?.setParams(extraParams);
+    friendsEventsRefresh.current?.setParams(extraParams);
   };
 
-  /**
-   * Modifies current displayed date by going forward in time
-   */
-  const avancerDate = () => {
-    if (todayDateTime) {
-      const newDt = todayDateTime.plus({ day: 1 });
-      setTodayDateTime(newDt);
-      dateAujShared.value = newDt.toMillis();
-      toggleBackToNow(newDt)
-      userEventsRefresh.current?.forceRefresh({ extraParams: getEventDateRangeParams(newDt) })
-      friendsEventsRefresh.current?.forceRefresh({ extraParams: getEventDateRangeParams(newDt) })
-    }
+  const changerJour = (delta: number) => {
+    if (!todayDateTime) return;
+    const newDt = todayDateTime.plus({ days: delta });
+    setTodayDateTime(newDt);
+    dateAujShared.value = newDt.toMillis();
+    toggleBackToNow(newDt);
+    refreshAt(newDt);
   };
+
+  const reculerDate = () => changerJour(-1);
+  const avancerDate = () => changerJour(1);
 
   const retourMaintenant = () => {
     const now = DateTime.now();
     initialiserOffset(now.hour * (pxHeures + L_HEURES));
     if (todayDateTime?.day !== now.day) {
       setTodayDateTime(now.startOf('day'));
-      userEventsRefresh.current?.forceRefresh({ extraParams: getEventDateRangeParams(now) })
-      friendsEventsRefresh.current?.forceRefresh({ extraParams: getEventDateRangeParams(now) })
+      refreshAt(now)
     }
     setAfficherRetour(prev => ({ ...prev, afficher: false }))
     afficherRetourMaintenant.value = {...afficherRetourMaintenant.value, afficher:false}
@@ -372,8 +367,8 @@ export default function Home() {
       })      
 
       return () => {
-        userEventsRefresh.current?.stop()
-        friendsEventsRefresh.current?.stop()
+        userEventsRefresh.current?.destroy()
+        friendsEventsRefresh.current?.destroy()
       }
     }, [])
   );
@@ -568,7 +563,7 @@ export default function Home() {
                             textColor={colors.text}
                             offsetSnap={L_HEURES + pxHeures}
                             displayedDate={todayDateTime}
-                            getEvenements={() => friendsEventsRefresh.current?.forceRefresh({extraParams:{start: todayDateTime?.startOf('day'), end:todayDateTime?.endOf('day')}})}
+                            getEvenements={() => { refreshAt(todayDateTime ?? DateTime.now()) }}
                           />
                         </View>                    
                       )})}
@@ -593,7 +588,7 @@ export default function Home() {
                 textColor={colors.text}
                 listSize={LIST_HEIGHT}
                 displayedDate={todayDateTime}
-                getEvenements={() => userEventsRefresh.current?.forceRefresh({ extraParams: getEventDateRangeParams(todayDateTime ?? DateTime.now()) })}
+                getEvenements={() => {refreshAt(todayDateTime ?? DateTime.now())}}
                 horizontal={true}
               />
             </Animated.View>
