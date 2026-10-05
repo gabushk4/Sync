@@ -1,11 +1,29 @@
 {
 	"friendRequestSentTitle": "demande d'ami envoyée",
 	"friendRequestSentMessage": "je sens que c'est le début d'un lien unique, presque magique!",
-	"copiedToClipboard": "ajouté au presse-papier"
+	"copiedToClipboard": "ajouté au presse-papier",
+	"showMore": "voir plus"
 	,"signOut": {
 		"title": "déconnexion",
 		"confirmation": "voulez-vous vraiment vous déconnecter?",
 		"confirm": "oui"
+	},
+	"confirmAction": {
+		"confirmation": "voulez-vous vraiment continuer?",
+		"confirm": "confirmer"
+	},
+	"exportData":{
+		"explanation":"un courriel de confirmation sera envoyé à l'adresse {{email}}. Il contiendra les prochaines étapes.",
+		"confirm":"exporter mes données",
+		"errorTitle":"exportant vos données",
+		"errorOccured": "impossible de vous enregistrer pour l'exportation de vos données",
+		"done":"un lien de téléchargement vous sera envoyé lorsque votre fichier sera prêt"
+	},
+	"deleteAccount": {
+		"explanation": "Vos renseignements personnels seront anonymisés de façon irréversible conformément à la Loi 25 du Québec. Votre compte ne pourra plus être associé à ces renseignements. Un courriel de confirmation sera envoyé à l’adresse {{email}} et contiendra les prochaines étapes.",
+		"confirm": "anonymiser mes données",
+		"errorTitle":"anonymisant vos données",
+		"errorOccured": "impossible de vous enregistrer pour anonymiser vos données"
 	},
 	"loading": "chargement",
 	"serverWaking": "merci de patienter; le serveur prend du temps à se réveiller",
@@ -18,6 +36,17 @@
 		"reportBug": "pour signaler un bug!",
 		"warning": "avertissement",
 		"warningWithoutMessage": "un avertissement sans message est survenu"
+	},
+	"bugReport": {
+		"title": "Signaler un bug",
+		"instructions": "Décris ce qui s'est passé et les étapes pour reproduire le problème.",
+		"descriptionLabel": "Description du bug",
+		"descriptionPlaceholder": "Que s'est-il passé?",
+		"send": "Envoyer le signalement",
+		"close": "Fermer",
+		"successTitle": "Merci pour le signalement",
+		"successMessage": "Les développeurs pourront examiner ce problème.",
+		"submitFailed": "impossible d'envoyer le signalement"
 	},
 	"tabs": {
 		"home": "sync",

@@ -1,0 +1,50 @@
+{
+	"403": {
+		"title": "Access error",
+		"message": "Please sign out and sign in again."
+	},
+	"304": {
+		"title": "No changes",
+		"message": "The resource has not been modified."
+	},
+	"409": {
+		"title": "Conflict detected",
+		"message": "This action conflicts with another change."
+	},
+	"502": {
+		"title": "Server problem",
+		"message": "The server is currently unavailable."
+	},
+	"ECONNABORTED": {
+		"title": "Network error",
+		"message": "The connection is too slow."
+	},
+	"ENOTFOUND": {
+		"title": "Server error",
+		"message": "The server is not responding."
+	},
+	"ECONNREFUSED": {
+		"title": "Server error",
+		"message": "The server is not responding."
+	},
+	"EHOSTUNREACH": {
+		"title": "Server error",
+		"message": "The server cannot be reached."
+	},
+	"ERR_BAD_REQUEST": {
+		"title": "Conflict detected",
+		"message": "An event is in conflict."
+	},
+	"ERR_NETWORK": {
+		"title": "No connection",
+		"message": "The app cannot connect to the Internet."
+	},
+	"ERR_BAD_RESPONSE": {
+		"title": "Server error",
+		"message": "The server returned an invalid response."
+	},
+	"default": {
+		"title": "Unknown error",
+		"message": "An unexpected error occurred."
+	}
+}

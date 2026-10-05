@@ -35,11 +35,12 @@ import { NotificationProvider } from '@/contextes/contexteNotifications';
 import { SettingsProvider, useSettings } from '@/contextes/contexteSettings';
 import { TimelineProvider } from '@/contextes/contexteTimeline';
 import {
-  configureReanimatedLogger,
-  ReanimatedLogLevel,
+    configureReanimatedLogger,
+    ReanimatedLogLevel,
 } from 'react-native-reanimated';
 
 import { toastConfig } from '@/constants/toastConfig';
+import { EventDraftProvider } from '@/contextes/contexteEventDraft';
 import { initLocalization } from '@/locales/initLocale';
 
 // This is the default configuration
@@ -54,43 +55,45 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <PaletteProvider>
-        <FontProvider>
-          <AccessTokenProvider>
-            <MockModeProvider>
-              <APIProvider>
+    <GestureHandlerProvider>
+      <FontProvider>
+        <AccessTokenProvider>
+          <MockModeProvider>
+            <APIProvider>   
+              
                 <SettingsProvider>
-                  <MembreProvider>
-                    <AuthProvider>
-                      <NotificationProvider>
-                        <ConversationsProvider>
+                  <PaletteProvider>
+                    <MembreProvider>
+                      <AuthProvider> 
+                        <NotificationProvider>
                           <RouteAbsProvider>
-                            <ModalProvider>
+                            <ModalProvider>                  
                               <NavFABProvider>
                                 <ActionFABProvider>
                                   <TimelineProvider>
-                                    <GestionScrollProvider>
+                                    <GestionScrollProvider> 
                                       <InvitesProvider>
-                                        <AppLoader />
-                                      </InvitesProvider>
+                                        
+                                          <AppLoader />  
+                                    
+                                      </InvitesProvider>  
                                     </GestionScrollProvider>
                                   </TimelineProvider>
                                 </ActionFABProvider>
-                              </NavFABProvider>
+                              </NavFABProvider>                  
                             </ModalProvider>
-                          </RouteAbsProvider>
-                        </ConversationsProvider>
-                      </NotificationProvider>
-                    </AuthProvider>
-                  </MembreProvider>
-                </SettingsProvider>
-              </APIProvider>
-            </MockModeProvider>
-          </AccessTokenProvider>
-        </FontProvider>
-      </PaletteProvider>
-    </GestureHandlerRootView>
+                          </RouteAbsProvider>   
+                        </NotificationProvider>  
+                      </AuthProvider>
+                    </MembreProvider>
+                  </PaletteProvider>
+                </SettingsProvider>        
+              
+            </APIProvider>
+          </MockModeProvider>
+        </AccessTokenProvider>            
+      </FontProvider>
+    </GestureHandlerProvider>
   );
 }
 
@@ -110,7 +113,11 @@ function AppLoader() {
 
   if (!fontsLoaded || !settingsLoaded || !localeLoaded) return null;
 
-  return <RootLayoutNav />;
+  return (
+    <EventDraftProvider makeReq={false}>
+      <RootLayoutNav />
+    </EventDraftProvider>
+  );
 }
 
 function RootLayoutNav() {

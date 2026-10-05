@@ -27,6 +27,7 @@ import { FPType, isFpObject } from '@/types/pfp';
 import Haptics from '@/abstractions/haptics';
 import MemberCode from '@/components/memberCode';
 import { withSpringConfig, withTimingConfig } from '@/constants/ReanimatedConfs';
+import { convertirTimestampDateCourte, convertirTimestampDateLongue } from "@/functions/convertirTimestamp";
 
 const MENU_OPTIONS_GAP = 8
 const FLOATING_BTN_HEIGHT = 64
@@ -289,6 +290,7 @@ export default function ProfilEcran(){
     useFocusEffect(
         React.useCallback(() => {
             ajouterEcran('profil')
+            log("temps creation", membre.tempsCreation)
             
             if(!membre.fp || !membre.pseudo || !membre.bio || !membre.idPublique)
                 getMembre()
@@ -413,10 +415,12 @@ export default function ProfilEcran(){
                                 <Text style={[s.pseudo, { }]}>@{membre.pseudo}</Text>
                                 <MemberCode code={membre.idPublique??''}/>
                             </View>                            
-                            <Text style={[{color:colors.muted, fontSize:14, paddingLeft:4, fontFamily:fonts.body}]}>{t('memberSince', { date: membre.tempsCreation })}</Text>                
+                            <Text style={[{color:colors.muted, fontSize:14, paddingLeft:4, fontFamily:fonts.body}]}>{t('memberSince', { date: convertirTimestampDateCourte(membre.tempsCreation) })}</Text>                
                         </Animated.View>
                         <Animated.View>
-
+                            <TouchableOpacity
+                                onPress={()=> router.push("/(modals)/listeAmis")}
+                            ><Text>Amis</Text></TouchableOpacity>
                         </Animated.View>
                         {/* Bio */}
                         <Animated.View style={{ width:'100%', height:'auto', borderRadius:8, paddingLeft:16}}>                            
@@ -466,19 +470,30 @@ export default function ProfilEcran(){
                             </Svg>
                         </AnimatedTouchableOpacity>
                         {/* Hamburger menu options */}
-                        <AnimatedTouchableOpacity style={[s.floatingButton, s.floatingOption, paramsOptionAnimated]}>
+                        <AnimatedTouchableOpacity style={[s.floatingButton, s.floatingOption, paramsOptionAnimated]}
+                        onPress={() => {
+                            toggleHamburgerMenu()
+                            router.push('/(tabs)/profile/settings')
+                        }}
+                        >
                             <Icon name='cog' color={colors.text} size={28} />
                         </AnimatedTouchableOpacity>
                         <AnimatedTouchableOpacity
                             style={[s.floatingButton, s.floatingOption, editOptionAnimated]}
-                            onPress={()=> router.push('/(tabs)/profile/edit')}
+                        onPress={() => {
+                            toggleHamburgerMenu()
+                            router.push('/(tabs)/profile/edit')
+                        }}
                         >
                             <Icon name='pencil' color={colors.text} size={28} />
                         </AnimatedTouchableOpacity>
                         <AnimatedTouchableOpacity
                             style={[s.floatingButton, s.floatingOption, { borderColor: colors.error }, logOutOptionAnimated]}
                             onPress={() => {
-                                router.push('/(modals)/confirmSignOut')    
+                                router.push({
+                                    pathname: '/(modals)/confirm',
+                                    params: { action: 'signOut' },
+                                })
                             }}
                         >
                             <Icon name='log-out' color={colors.error} size={28} />

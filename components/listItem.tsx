@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react'
 import { TouchableOpacity, Text, StyleSheet, View } from 'react-native'
-import Animated, {SharedValue, useAnimatedStyle} from 'react-native-reanimated'
+import Animated, {SharedValue} from 'react-native-reanimated'
 import { findWidth, findLeft } from '@/functions/calculerDimensionsEvenements'
 import { convertirTimestampDateCourte, convertirTimestampHeure } from '@/functions/convertirTimestamp'
 import { DateTime } from 'luxon'
@@ -10,6 +10,7 @@ import { usePalette } from '@/contextes/contextePalette'
 import { Event } from '@/types/calendar'
 import EventBloc from './eventBloc'
 import { router } from 'expo-router'
+import useTimelineLabelOffset from '@/hooks/useTimelineLabelOffset'
 
 type Props = {
     event: Event;
@@ -60,20 +61,14 @@ export default function ListItem({ event, horizontal, displayedDate, listOffset,
     const blocHeight = horizontal ? '100%' : findWidth(event.debut, event.fin, displayedDate, pxHeures + H_HEURES)
     const blocWidth = horizontal ? eventWidth > pxHeures ? eventWidth : pxHeures : '100%'
 
-    const textAnimated = useAnimatedStyle(() => {
-        if (horizontal) {
-            const maxLocal = Math.min(
-                (blocWidth as number) - (textWidth + pxHeures),       // ne pas dépasser la droite du bloc
-                maxTimelineLength - left - (textWidth + pxHeures)           // ne pas dépasser la fin de la timeline
-            )
-            return { left: Math.min(Math.max((listOffset.value - left) + pxHeures, pxHeures), maxLocal) }
-        } else {
-            const maxLocal = Math.min(
-                (blocHeight as number) - (textHeight + pxHeures),
-                maxTimelineLength - top - (textHeight + pxHeures)
-            )
-            return { top: Math.min(Math.max((listOffset.value - top) + pxHeures, pxHeures), maxLocal) }
-        }
+    const textAnimated = useTimelineLabelOffset({
+        axis: horizontal ? 'x' : 'y',
+        itemOffset: horizontal ? left : top,
+        itemSize: (horizontal ? blocWidth : blocHeight) as number,
+        labelSize: horizontal ? textWidth : textHeight,
+        listOffset,
+        inset: pxHeures,
+        timelineLength: maxTimelineLength,
     })
 
     const s = StyleSheet.create({

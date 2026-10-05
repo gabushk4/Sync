@@ -6,7 +6,7 @@ export type SupprimerUrl = {
     | undefined
 export type Participant = {
     id: string;
-    fp_url: string;
+    fp_url: string | null;
     pseudo: string;
     privilege: 'editeur' | 'lecteur';
     statut: 'en_attente' | 'acceptee' | 'refusee',

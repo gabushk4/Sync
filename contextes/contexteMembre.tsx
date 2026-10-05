@@ -1,15 +1,13 @@
-import catcher from '@/functions/catcher'
 import { convertirTimestampDateLongue } from '@/functions/convertirTimestamp'
-import { convertirUTCversLocale } from '@/functions/convertirUTCenLocal'
+import { convertUTCToLocal } from '@/functions/convertirUTCenLocal'
 import log from '@/functions/log'
 import { createContext, useContext, useState } from 'react'
-import Toast from 'react-native-toast-message'
 import { useAPI } from './contexteAPI'
 import { useAccessToken } from './contexteToken'
 
+import ToastAbs from '@/abstractions/toastAbs'
 import { FPType } from '@/types/pfp'
 import { DateTime } from 'luxon'
-import ToastAbs from '@/abstractions/toastAbs'
 
 //Types
 
@@ -17,8 +15,9 @@ type Membre = {
     idPublique: string | undefined;
     pseudo: string | undefined;
     bio: string | undefined;
+    etatAme: string | undefined;
     fp: FPType;
-    tempsCreation: string | undefined;
+    tempsCreation: DateTime | undefined;
     admin: boolean | false;
     emailConfirme: boolean | false;
     timezone: string;
@@ -27,7 +26,7 @@ type Membre = {
 
 type MembreContextType = {
     membre: Membre;
-    patchProfil: (pseudo?: string | undefined, bio?: string | undefined, fp?: FPType) => Promise<void>;
+    patchProfil: (pseudo?: string | undefined, bio?: string | undefined, fp?: FPType, etatAme?: string) => Promise<void>;
     getMembre: () => Promise<void>;
     resetMembre: () => void;
     setMockMembre: () => void;
@@ -43,6 +42,7 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
         idPublique: undefined,
         pseudo: undefined,
         bio: undefined,
+        etatAme: undefined,
         fp: undefined,
         tempsCreation: undefined,
         admin: false,
@@ -63,18 +63,13 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
                 idPublique: data.id_publique ?? null,
                 pseudo: data.pseudo ?? null,
                 bio: data.bio ? data.bio : "cette personne n'a rien à dire",
+                etatAme: data.etat_ame ?? '',
                 fp: data.fp_url ?? null,
                 admin: data.role === 'admin',
                 emailConfirme: data.email_confirme ?? false,
-                email: data.courriel                
-            }))
-            /* widgetsMembresRef.current = data.widgets
-            setWidgetsMembre(data.widgets) */
-            let t = convertirTimestampDateLongue(
-                convertirUTCversLocale(data.temps_creation)
-            );
-            t = t.substring(t.indexOf('.') + 2);
-            setMembre((prev) => ({ ...prev, tempsCreation: t }));
+                email: data.courriel,
+                tempsCreation: convertUTCToLocal(data.temps_creation)
+            }))            
             
         } catch (error : any) {
             throw error
@@ -86,8 +81,9 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
             pseudo: 'mocker',
             idPublique: "Mmoc1234",
             bio: "Je ne suis qu'un mock de donnée",
+            etatAme: '',
             fp: undefined,
-            tempsCreation: DateTime.now().toISO(),
+            tempsCreation: DateTime.now(),
             admin: true,
             emailConfirme: true,
             timezone: 'local',
@@ -95,7 +91,7 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
         })
     }
 
-    const patchProfil = async (pseudo : string | undefined, bio : string | undefined, fp: FPType = undefined ) => {
+    const patchProfil = async (pseudo : string | undefined, bio : string | undefined, fp: FPType = undefined, etatAme?: string ) => {
         const token = await getToken()
         const url = `/membres/profil`
 
@@ -111,6 +107,11 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
             setMembre((prev) => ({ ...prev, bio }));
         }
 
+        if (etatAme !== undefined) {
+            formData.append("etat_ame", etatAme);
+            setMembre((prev) => ({ ...prev, etatAme }));
+        }
+
         if (fp) {
             formData.append("image", {
                 uri: (fp as any).uri,
@@ -124,6 +125,7 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
         if (pseudo) modifiedFields.push('pseudo');
         if (bio) modifiedFields.push('bio');
         if (fp) modifiedFields.push('image');
+        if (etatAme !== undefined) modifiedFields.push('etat_ame');
 
         if (modifiedFields.length > 0) {
             try {           

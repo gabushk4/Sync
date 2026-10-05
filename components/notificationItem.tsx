@@ -12,8 +12,8 @@ import { usePalette } from "@/contextes/contextePalette";
 import { useAccessToken } from "@/contextes/contexteToken";
 
 import catcher from "@/functions/catcher";
-import { convertirTimestampDateCourte, convertirTimestampHeure, convertirTimestampQuand } from "@/functions/convertirTimestamp";
-import { convertirUTCversLocale } from "@/functions/convertirUTCenLocal";
+import { convertirTimestampDateCourte, convertirTimestampHeure, convertToWhen } from "@/functions/convertirTimestamp";
+import { convertUTCToLocal } from "@/functions/convertirUTCenLocal";
 import log from "@/functions/log";
 
 import Haptics from "@/abstractions/haptics";
@@ -265,7 +265,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
 
     let expired = false
     if (item.expiration === "expired") expired = true
-    const expiration = item.expiration ? convertirUTCversLocale(item.expiration) : undefined
+    const expiration = item.expiration ? convertUTCToLocal(item.expiration) : undefined
     let expirationLabel
 
     if (expired)
@@ -314,7 +314,19 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
         },
     })   
     
-    const options = parsedPayload?.actions?.map((action: Action) => {
+    // Les anciennes notifications peuvent contenir `actions: {}`. Le serveur
+    // renvoie normalement un tableau, mais le rendu doit tolérer les données historiques.
+    const notificationActions: Action[] = Array.isArray(parsedPayload?.actions)
+        ? parsedPayload.actions.filter((action: unknown): action is Action =>
+            !!action
+            && typeof action === "object"
+            && typeof (action as Action).label === "string"
+            && typeof (action as Action).method === "string"
+            && typeof (action as Action).url === "string"
+        )
+        : []
+
+    const options = notificationActions.map((action: Action) => {
         //log('notification:', item.payload)
         const repondue = item.statut_metier !== "en_attente"
         const buttonColor = action.label === "accepter" ? colors.success : colors.error
@@ -326,7 +338,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                     s.optionBouton,
                     {
                         zIndex: 1,
-                        opacity: item.statut_metier === action.body.statut || !repondue ? 1 : 0.3,
+                        opacity: item.statut_metier === action.body?.statut || !repondue ? 1 : 0.3,
                         borderColor: buttonColor,
                     },
                 ]}
@@ -364,7 +376,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                         </Text>
                     </View>
                     <Text style={s.timestamp}>
-                        {convertirTimestampQuand(convertirUTCversLocale(item.date_envoie) ?? DateTime.now().toLocal())}
+                        {convertToWhen(convertUTCToLocal(item.date_envoie) ?? DateTime.now().toLocal()) as string}
                     </Text>
                 </View>
                 <TouchableOpacity

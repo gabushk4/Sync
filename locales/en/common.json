@@ -1,11 +1,29 @@
 {
 	"friendRequestSentTitle": "Friend request sent",
 	"friendRequestSentMessage": "I have a feeling this is the beginning of a unique, almost magical bond!",
-	"copiedToClipboard": "Copied to clipboard"
+	"copiedToClipboard": "Copied to clipboard",
+	"showMore": "show more"
 	,"signOut": {
 		"title": "Sign out",
 		"confirmation": "Do you really want to sign out?",
 		"confirm": "Yes"
+	},
+	"confirmAction": {
+		"confirmation": "Do you really want to continue?",
+		"confirm": "Confirm"
+	},
+	"exportData":{
+		"explanation":"A verification email will be sent to {{email}}. It will contain the next steps.",
+		"confirm":"export my data",
+		"errorTitle":"exporting data",
+		"errorOccured": "impossible to register for the exportation of your data",
+		"done":"a download link will be sent to you when your file is ready"
+	},
+	"deleteAccount": {
+		"explanation": "Your personal information will be irreversibly anonymized in accordance with Quebec’s Law 25. Your account will no longer be associated with this information. A confirmation email will be sent to {{email}} and will contain the next steps.",
+		"confirm": "anonymize my data",
+		"errorTitle":"anonymising data",
+		"errorOccured": "impossible to register for the anonymisation of your data"
 	},
 	"loading": "Loading",
 	"serverWaking": "Please wait; the server is taking a while to wake up",
@@ -18,6 +36,17 @@
 		"reportBug": "Report a bug!",
 		"warning": "Warning",
 		"warningWithoutMessage": "A warning occurred without a message"
+	},
+	"bugReport": {
+		"title": "Report a bug",
+		"instructions": "Describe what happened and the steps to reproduce the problem.",
+		"descriptionLabel": "Bug description",
+		"descriptionPlaceholder": "What happened?",
+		"send": "Send report",
+		"close": "Close",
+		"successTitle": "Thanks for the report",
+		"successMessage": "The developers can now review this issue.",
+		"submitFailed": "Unable to send the report"
 	},
 	"tabs": {
 		"home": "Sync",

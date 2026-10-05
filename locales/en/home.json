@@ -1,5 +1,7 @@
 {
   "friendsListEmptyState": "Add friends here:",
+  "commonFreeSlot": "Common free time",
+  "viewFriendProfile": "View {{name}}'s profile",
   "errors": {
     "formatMemberEvents": "Error formatting the member's events",
     "formatFriendEvents": "Error formatting friends' events",

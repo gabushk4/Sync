@@ -1,0 +1,50 @@
+{
+    "403": {
+        "title": "Erreur d'accès",
+        "message": "Il faut te déconnecter puis te reconnecter."
+    },
+    "304": {
+        "title": "Aucune modification",
+        "message": "La ressource n'a pas été modifiée."
+    },
+    "409": {
+        "title": "Conflit détecté",
+        "message": "Cette action entre en conflit avec une autre modification."
+    },
+    "502": {
+        "title": "Problème avec le serveur",
+        "message": "Le serveur est indisponible pour le moment."
+    },
+    "ECONNABORTED": {
+        "title": "Erreur réseau",
+        "message": "La connexion est trop lente."
+    },
+    "ENOTFOUND": {
+        "title": "Erreur serveur",
+        "message": "Le serveur ne répond pas."
+    },
+    "ECONNREFUSED": {
+        "title": "Erreur serveur",
+        "message": "Le serveur ne répond pas."
+    },
+    "EHOSTUNREACH": {
+        "title": "Erreur serveur",
+        "message": "Le serveur est inaccessible."
+    },
+    "ERR_BAD_REQUEST": {
+        "title": "Conflit détecté",
+        "message": "Un évènement est en conflit."
+    },
+    "ERR_NETWORK": {
+        "title": "Aucune connexion",
+        "message": "L'application n'arrive pas à se connecter à Internet."
+    },
+    "ERR_BAD_RESPONSE": {
+        "title": "Erreur serveur",
+        "message": "Le serveur a renvoyé une réponse invalide."
+    },
+    "default": {
+        "title": "Erreur inconnue",
+        "message": "Une erreur inattendue est survenue."
+    }
+}

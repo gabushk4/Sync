@@ -3,8 +3,10 @@ import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DarkTheme, DefaultTheme } from 'expo-router/react-navigation';
 import { generateTheme, ThemeColors } from '@/themes/generateTheme';
+import { useSettings } from './contexteSettings';
+import { DEFAULT_HUE } from '@/constants/Colors';
 
-type PaletteContextType = {
+export type PaletteContextType = {
   colors: ThemeColors;
   hue: number;
   setHue: (h: number) => void;
@@ -27,10 +29,14 @@ function buildNavTheme(hue: number, scheme: 'light' | 'dark') {
   };
 }
 
+
+
 // Provider
 export function PaletteProvider({ children }: { children: ReactNode }) {
   const scheme = useColorScheme() ?? 'light';
-  const [hue, setHueState] = useState(80);
+  const { settings } = useSettings()
+  
+  const [hue, setHueState] = useState(settings.theme || DEFAULT_HUE);
 
   // gets saved hue
   useEffect(() => {

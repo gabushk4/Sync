@@ -13,7 +13,7 @@ import { usePalette } from "@/contextes/contextePalette";
 import { useAccessToken } from "@/contextes/contexteToken";
 
 import catcher from "@/functions/catcher";
-import { convertirLocalVersUTC, convertirUTCversLocale } from "@/functions/convertirUTCenLocal";
+import { convertLocalToUTC, convertUTCToLocal } from "@/functions/convertirUTCenLocal";
 import formaterDatePourServeur from "@/functions/formaterDatePourServeur";
 import log from "@/functions/log";
 
@@ -69,9 +69,9 @@ export default function Details(){
                             string: '/evenements/exceptions/',
                             data: {
                                 id_parent:event.id, 
-                                date_occurence:formaterDatePourServeur(convertirLocalVersUTC(event.debut)), 
-                                debut:formaterDatePourServeur(convertirLocalVersUTC(event.debut)), 
-                                fin:formaterDatePourServeur(convertirLocalVersUTC(event.fin)), 
+                                date_occurence:formaterDatePourServeur(convertLocalToUTC(event.debut)), 
+                                debut:formaterDatePourServeur(convertLocalToUTC(event.debut)), 
+                                fin:formaterDatePourServeur(convertLocalToUTC(event.fin)), 
                                 type: 'annule' 
                             }
                         };
@@ -143,11 +143,11 @@ export default function Details(){
                 method: "GET",
                 url: `/evenements/${id}`,
                 params: {
-                    debut: formaterDatePourServeur(convertirLocalVersUTC(
+                    debut: formaterDatePourServeur(convertLocalToUTC(
                         typeof start === "string"
                             ? start
                             : DateTime.now())),
-                    fin: formaterDatePourServeur(convertirLocalVersUTC(
+                    fin: formaterDatePourServeur(convertLocalToUTC(
                         typeof end === "string"
                             ? end 
                             : DateTime.now().plus({ hour: 1 })
@@ -155,8 +155,8 @@ export default function Details(){
                 }
             })
 
-            res.data.debut = convertirUTCversLocale(res.data.debut, timezone)
-            res.data.fin = convertirUTCversLocale(res.data.fin, timezone)
+            res.data.debut = convertUTCToLocal(res.data.debut, timezone)
+            res.data.fin = convertUTCToLocal(res.data.fin, timezone)
             setEvent(res.data)
         } catch (error) {
             router.back()
@@ -206,7 +206,7 @@ export default function Details(){
         <View style={{flex:1}}>
             <EventForm
                 event={event}
-                mode={'details'}
+                mode={'details'}                
             />
             {/* quit (non-creators) / delete (creator) button */}
             <TouchableOpacity style={s.floatingBtn} onPress={() => {

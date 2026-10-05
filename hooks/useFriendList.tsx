@@ -10,6 +10,8 @@ export type FriendListType = 'select' | 'consult' | 'message'
 const DELAI_FERMETURE_MODAL_MS = 350
 const attendre = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
+export function useFriendList(type: 'select'): (friends: Participant | Array<Participant>, inviterUrl?: string) => void
+export function useFriendList(type: 'consult'): (friend: Participant) => void
 export function useFriendList(type: FriendListType) {
     const {ajouterInvite} = useInvites()
     const {demarrerConversationAvecAmi} = useConversations()

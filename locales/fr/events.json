@@ -37,6 +37,12 @@
     "public": "public",
     "participants": "participants"
   },
+  "participantRemoval": {
+    "confirmTitle": "Retirer ce participant ?",
+    "confirmMessage": "Voulez-vous retirer {{pseudo}} de cet événement ?",
+    "cancel": "Annuler",
+    "remove": "Retirer"
+  },
   "recurrence": {
     "never": "jamais",
     "daily": "quotidien",

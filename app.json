@@ -36,6 +36,9 @@
         "expo-audio",
         {
           "microphonePermission": "Sync utilise le micro pour enregistrer tes messages vocaux."
+        "expo-calendar",
+        {
+          "calendarPermission": "Sync doit accéder à vos calendriers pour importer vos événements."
         }
       ]
     ],

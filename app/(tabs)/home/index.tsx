@@ -4,9 +4,9 @@ import { usePalette } from '@/contextes/contextePalette';
 
 import { useNavFab } from '@/hooks/useNavFAB';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Animated, { ReduceMotion, scrollTo, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue, withDecay, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { cancelAnimation, ReduceMotion, scrollTo, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue, withDecay, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
 
 import { DateTime } from 'luxon';
 
@@ -16,7 +16,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { getCommonFreeSlots } from '@/functions/availability';
 import catcher from '@/functions/catcher';
-import { convertirLocalVersUTC, convertirUTCversLocale } from '@/functions/convertirUTCenLocal';
+import { convertLocalToUTC, convertUTCToLocal } from '@/functions/convertirUTCenLocal';
 import formaterDatePourServeur from '@/functions/formaterDatePourServeur';
 import log from '@/functions/log';
 
@@ -41,10 +41,17 @@ const WIDTH_COL = 80;
 const HEIGHT_BOT_BAR = 80;
 const HEIGHT_DATE = 56;
 const HEIGHT_TIMELINE = 32;
-const backToNowWidth = 56
 const AnimatedStyleMinVal = 0.1
 const LIST_HEIGHT = 104
 const { width: WIN_W, height: WIN_H } = Dimensions.get('window') 
+
+/** Formats the displayed local day as the UTC date range expected by the events API. */
+function getEventDateRangeParams(date: DateTime) {
+  return {
+    debut: formaterDatePourServeur(convertLocalToUTC(date.startOf('day'))),
+    fin: formaterDatePourServeur(convertLocalToUTC(date.endOf('day'))),
+  }
+}
 
 /**
  * 
@@ -56,15 +63,13 @@ export default function Home() {
   const { fonts } = useFont()
   const { api } = useAPI()
   const colorScheme = useColorScheme()
-  const { initialiserOffset, afficherRetourMaintenant, onPan, offset: offsetX, LEFT_GO_TO_BEFORE, LEFT_GO_TO_AFTER } = useGestionScroll()
+  const { initialiserOffset, afficherRetourMaintenant, onPan, offset: offsetX, LEFT_GO_TO_BEFORE, LEFT_GO_TO_AFTER, clampOffset, maxOffset } = useGestionScroll()
   const { pxHeures, pxHeuresShared, L_HEURES } = useTimeline();
   const { membre } = useMembre()
-
-  const MAX_OFFSET_X = (24.78 * (pxHeures + L_HEURES)) - WIN_W
   
   useNavFab({
     href: '/home/create',
-    icon: null,
+    icon: null,    
   })
 
   const icones = {
@@ -80,7 +85,6 @@ export default function Home() {
   
   //Refs
   const chargerEvenementsEvent = useRef(false)
-  const offsetMaintenant = useRef(0)
   const friendsList = useAnimatedRef<Animated.ScrollView>()
   const friendsEventsRefresh = useRef<AutoRefresh>(null)
   const userEventsRefresh = useRef<AutoRefresh>(null)
@@ -133,8 +137,8 @@ export default function Home() {
       if (events) { 
         const dataLocale = events.map((evenement: any) => {
           if (!evenement.id_publique.includes('factice')) {
-            const startLocalMs = convertirUTCversLocale(evenement.debut, membre.timezone)?.toMillis()
-            const endLocalMs = convertirUTCversLocale(evenement.fin, membre.timezone)?.toMillis()
+            const startLocalMs = convertUTCToLocal(evenement.debut, membre.timezone)?.toMillis()
+            const endLocalMs = convertUTCToLocal(evenement.fin, membre.timezone)?.toMillis()
 
             return {
               ...evenement,
@@ -146,7 +150,7 @@ export default function Home() {
           }
         })
 
-        const evenementsTries = dataLocale.sort((a: any, b: any) => a.debut - b.fin)
+        const evenementsTries = dataLocale.sort((a: any, b: any) => a.debut - b.debut)
 
         const evenementsFinal = evenementsTries.map((ev: any) => {
           if (ev) {
@@ -170,16 +174,16 @@ export default function Home() {
 
   const modifierEvenementsAmisFetched = (data: any) => {
     const events = data.resultat ?? []
-    //log("modifier evenements amis data: ", data)
+    log("modifier evenements amis data: ", data)
     try {
       const amisFinal = events?.map((ami: Friend) => {
           //log('ami evenements', ami.evenements)
           const evenements = (ami.evenements || [])
                 .map((ev: any) => {
-                  const start = convertirUTCversLocale(ev.debut, membre.timezone) 
-                  const end = convertirUTCversLocale(ev.fin, membre.timezone)
+                  const start = convertUTCToLocal(ev.debut, membre.timezone) 
+                  const end = convertUTCToLocal(ev.fin, membre.timezone)
                   return {
-                    id: ev.id,
+                    id: ev.id_publique ?? ev.id,
                     url: ev.url,
                     ...(ev.prive ? {} : { title: ev.titre }),
                     debut: start?.toMillis(),
@@ -187,7 +191,7 @@ export default function Home() {
                   }
                 })
             // Sort from earliest to latest
-            .sort((a:any, b: any) => a.start - b.start)
+            .sort((a:any, b: any) => a.debut - b.debut)
             // Conversion from ms to DateTime (luxon)
             .map((ev: any) => (
               {
@@ -231,90 +235,81 @@ export default function Home() {
       afficher: diffFromNow > 0 || diffFromNow < 0
     }
   }
-  /**
-   * Modifies current displayed date by going back in time
-   */
-  const reculerDate = () => {
-    if (todayDateTime) {
-      const newDt = todayDateTime.minus({ day: 1 });
-      toggleBackToNow(newDt)
-      setTodayDateTime(newDt);
-      dateAujShared.value = newDt.toMillis();
-      userEventsRefresh.current?.forceRefresh({ extraParams: { start: newDt.startOf('day'), end: newDt.endOf('day') } })
-      friendsEventsRefresh.current?.forceRefresh({extraParams:{start:newDt.startOf('day'), end:newDt.endOf('day')}})
-    }
+
+  const buildRange = (dt: DateTime) => ({
+    start: formaterDatePourServeur(convertLocalToUTC(dt.startOf('day'))),
+    end: formaterDatePourServeur(convertLocalToUTC(dt.endOf('day'))),
+  });
+
+  const refreshAt = (dt: DateTime) => {
+    const extraParams = buildRange(dt);
+    userEventsRefresh.current?.setParams(extraParams);
+    friendsEventsRefresh.current?.setParams(extraParams);
   };
 
-  /**
-   * Modifies current displayed date by going forward in time
-   */
-  const avancerDate = () => {
-    if (todayDateTime) {
-      const newDt = todayDateTime.plus({ day: 1 });
-      setTodayDateTime(newDt);
-      dateAujShared.value = newDt.toMillis();
-      toggleBackToNow(newDt)
-      userEventsRefresh.current?.forceRefresh({ extraParams: { start: newDt.startOf('day'), end: newDt.endOf('day') } })
-      friendsEventsRefresh.current?.forceRefresh({extraParams:{start:newDt.startOf('day'), end:newDt.endOf('day')}})
-    }
+  const changerJour = (delta: number) => {
+    if (!todayDateTime) return;
+    const newDt = todayDateTime.plus({ days: delta });
+    setTodayDateTime(newDt);
+    dateAujShared.value = newDt.toMillis();
+    toggleBackToNow(newDt);
+    refreshAt(newDt);
   };
+
+  const reculerDate = () => changerJour(-1);
+  const avancerDate = () => changerJour(1);
 
   const retourMaintenant = () => {
     const now = DateTime.now();
     initialiserOffset(now.hour * (pxHeures + L_HEURES));
     if (todayDateTime?.day !== now.day) {
       setTodayDateTime(now.startOf('day'));
-      userEventsRefresh.current?.forceRefresh({ extraParams: { start: now.startOf('day'), end: now.endOf('day') } })
-      friendsEventsRefresh.current?.forceRefresh({extraParams:{start:now.startOf('day'), end:now.endOf('day')}})
+      refreshAt(now)
     }
     setAfficherRetour(prev => ({ ...prev, afficher: false }))
     afficherRetourMaintenant.value = {...afficherRetourMaintenant.value, afficher:false}
   };
   const lockedAxis = useSharedValue<string | null>(null)
 
+  const maxY = useSharedValue(0)
+  const zoneH = useRef(0)
+  const majMaxY = () => {
+    maxY.value = Math.max(0, friends.length * (LIST_HEIGHT + 4) - zoneH.current)
+  }
+  useEffect(majMaxY, [friends.length])
+
   const panGesture = Gesture.Pan()
     .onBegin(() => {
+      cancelAnimation(offsetX)            // stoppe l'inertie en cours
       lockedAxis.value = null
       offsetXBase.value = offsetX.value
       offsetYBase.value = offsetY.value
     })
     .onChange((e) => {
       // Lock la direction au premier mouvement significatif
-      if (!lockedAxis.value) {
-        if (Math.abs(e.translationX) > Math.abs(e.translationY)) {
-          lockedAxis.value = 'x'
-        } else {
-          lockedAxis.value = 'y'
-        }
+      if (!lockedAxis.value && (Math.abs(e.translationX) > 8 || Math.abs(e.translationY) > 8)) {
+        lockedAxis.value = Math.abs(e.translationX) > Math.abs(e.translationY) ? 'x' : 'y'
       }
-
       if (lockedAxis.value === 'x') {
-        offsetX.value = Math.min(Math.max(offsetXBase.value - e.translationX, 0), MAX_OFFSET_X)
-        scheduleOnRN(onPan, offsetX.value)
-      } else {
-        offsetY.value = Math.max(offsetYBase.value + e.translationY, 0)
+        offsetX.value = clampOffset(offsetXBase.value - e.translationX)
+      }else if(lockedAxis.value === 'y') {
+        offsetY.value = clampOffset(offsetYBase.value - e.translationY)
       }
     })
     .onEnd((e) => {
       //scheduleOnRN(log, "offsetX", offsetX.value, "base", offsetXBase.value)
       //scheduleOnRN(log, "offsetY", offsetY.value, "base", offsetYBase.value)
-      if (lockedAxis.value = 'x') {
-        offsetXBase.value = offsetX.value
+      if (lockedAxis.value === 'x') {
         offsetX.value = withDecay(
-          {
-            reduceMotion:ReduceMotion.Never,
-            velocity: -e.velocityX,
-            },
-            (endished) => {
-              if (endished) {
-                //Snap to nearest hour
-                const cellWidth = pxHeures + L_HEURES
-                const nearest = Math.round(offsetX.value / cellWidth) * cellWidth
-                offsetX.value = withSpring(nearest, withSpringConfig)            
-                offsetXBase.value = nearest
-              }
-            }
-        )
+        { velocity: -e.velocityX, clamp: [0, maxOffset] },   // la ligne clé
+        (finished) => {
+          'worklet'
+          if (!finished) return
+          const cell = pxHeures + L_HEURES
+          const snapped = clampOffset(Math.round(offsetX.value / cell) * cell)
+          offsetX.value = withSpring(snapped, withSpringConfig)
+        }
+      )
       }
       else {
         offsetYBase.value = offsetY.value      
@@ -325,7 +320,7 @@ export default function Home() {
           (endished) => {
             if (endished) {
               //Snap to nearest friend
-              offsetYBase.value = offsetY.value
+              offsetY.value = withDecay({ velocity: -e.velocityY, clamp: [0, maxY.value] })
             }
           }
         )
@@ -338,6 +333,13 @@ export default function Home() {
           scrollTo(friendsList, 0, offset, false)
   )
 
+  useAnimatedReaction(
+    () => offsetX.value,
+    (current, previous) => {
+      onPan(current)
+    }
+  )
+
   useFocusEffect(
     useCallback(() => {
       const now = DateTime.now();
@@ -347,10 +349,7 @@ export default function Home() {
       //chargerEvenements(now, now)
 
       userEventsRefresh.current = new AutoRefresh(api, '/evenements/', {        
-        extraParams: {
-          start: formaterDatePourServeur(convertirLocalVersUTC(now.startOf('day'))),
-          end: formaterDatePourServeur(convertirLocalVersUTC(now.endOf('day')))
-        },
+        extraParams: getEventDateRangeParams(now),
         onData: modifierEvenementsMembreFetched,
         onError: (error) => {
           log("impossible de charger les évènements du membre", error)
@@ -359,10 +358,7 @@ export default function Home() {
       })
 
       friendsEventsRefresh.current = new AutoRefresh(api, '/evenements/amis', {
-        extraParams: {
-          start: formaterDatePourServeur(convertirLocalVersUTC(now.startOf('day'))),
-          end: formaterDatePourServeur(convertirLocalVersUTC(now.endOf('day')))
-        },
+        extraParams: getEventDateRangeParams(now),
         onData: modifierEvenementsAmisFetched,
         onError: (error) => {
           log("impossible de charger les évènements d'amis", error)
@@ -371,8 +367,8 @@ export default function Home() {
       })      
 
       return () => {
-        userEventsRefresh.current?.stop()
-        friendsEventsRefresh.current?.stop()
+        userEventsRefresh.current?.destroy()
+        friendsEventsRefresh.current?.destroy()
       }
     }, [])
   );
@@ -419,6 +415,7 @@ export default function Home() {
     friendList: {
       flexDirection: 'row',
       height: 104,
+      marginBottom: 4
     },
     column: {
       width: WIDTH_COL,
@@ -530,6 +527,10 @@ export default function Home() {
                   <Animated.ScrollView
                     ref={friendsList}
                     showsVerticalScrollIndicator={false}
+                    onLayout={(e) => {
+                      zoneH.current = e.nativeEvent.layout.height;
+                      majMaxY();
+                    }}
                   >
                     {friends.map((friend) => {
                       const commonFreeSlots = getCommonFreeSlots(
@@ -540,12 +541,18 @@ export default function Home() {
                       return(
                         <View key={friend.id} style={[s.friendList]}>
                           {/* Photo de profil */}
-                          <BlurView style={[s.column,{ backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' }]}>
+                          <TouchableOpacity
+                            accessibilityRole="button"
+                            accessibilityLabel={t('viewFriendProfile', { name: friend.pseudo })}
+                            onPress={() => router.push({ pathname: '/(tabs)/profile/[membreId]', params: { membreId: friend.id } })}
+                          >
+                          <BlurView tint='dark' style={[s.column,{ backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' }]}>
                             <ProfilPic
                               pfp={friend.fp_url}
                               size={64}
                             />
                           </BlurView>
+                          </TouchableOpacity>
                           {/* Événements horizontaux */}
                           <EventsList
                             owner={friend}
@@ -556,7 +563,7 @@ export default function Home() {
                             textColor={colors.text}
                             offsetSnap={L_HEURES + pxHeures}
                             displayedDate={todayDateTime}
-                            getEvenements={() => friendsEventsRefresh.current?.forceRefresh({extraParams:{start: todayDateTime?.startOf('day'), end:todayDateTime?.endOf('day')}})}
+                            getEvenements={() => { refreshAt(todayDateTime ?? DateTime.now()) }}
                           />
                         </View>                    
                       )})}
@@ -581,7 +588,7 @@ export default function Home() {
                 textColor={colors.text}
                 listSize={LIST_HEIGHT}
                 displayedDate={todayDateTime}
-                getEvenements={() => userEventsRefresh.current?.forceRefresh({extraParams:{start: todayDateTime?.startOf('day'), end:todayDateTime?.endOf('day')}})}
+                getEvenements={() => {refreshAt(todayDateTime ?? DateTime.now())}}
                 horizontal={true}
               />
             </Animated.View>
