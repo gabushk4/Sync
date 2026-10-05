@@ -1,9 +1,9 @@
+import log from '@/functions/log';
 import * as Haptics from 'expo-haptics';
 import { createContext, ReactNode, useContext, useRef, useState } from "react";
 import { Dimensions, ScrollView } from "react-native";
 import { Easing, SharedValue, useSharedValue, withTiming } from "react-native-reanimated";
 import { useTimeline } from "./contexteTimeline";
-import log from '@/functions/log';
 
 // Types
 type GestionScrollContextType = {

@@ -139,8 +139,11 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
             await SecureStore.deleteItemAsync('refresh_token'); // c'est souvent parce que le refresh token est invalide
             // TODO: avoir une erreur spécifique pour un refresh token invalide pour ne pas l'invalider par une erreur qui n'a pas rapport
             setToken(null); // on déconnecte le membre donc on invalide son access token
-            authEvents.emitUnauthorized() 
-            return Promise.reject(refreshError);
+            authEvents.emitUnauthorized()
+            // The member is being sent to the login screen: flag the error so
+            // catcher() doesn't also show a toast for it (see catcher.js).
+            error.deconnecte = true
+            return Promise.reject(error);
           }
         }
         return Promise.reject(error);

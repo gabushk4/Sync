@@ -7,11 +7,12 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } fr
 
 import { useAPI } from "@/contextes/contexteAPI";
 import { useFont } from "@/contextes/contexteFont";
-import { Notification, NotificationPayload, useNotifications } from "@/contextes/contexteNotifications";
+import { Notification, NotificationAction, useNotifications } from "@/contextes/contexteNotifications";
 import { usePalette } from "@/contextes/contextePalette";
 import { useAccessToken } from "@/contextes/contexteToken";
 
 import catcher from "@/functions/catcher";
+import categorieNotification from "@/functions/categorieNotification";
 import { convertirTimestampDateCourte, convertirTimestampHeure, convertirTimestampQuand } from "@/functions/convertirTimestamp";
 import { convertirUTCversLocale } from "@/functions/convertirUTCenLocal";
 import log from "@/functions/log";
@@ -25,19 +26,23 @@ import AppIcon from "@/svgs/appIcon";
 import Icon from "@react-native-vector-icons/ionicons";
 import { Gesture } from "react-native-gesture-handler";
 
-type Action = {
-    label: string
-    method: string
-    url: string
-    body: any
-}
-
 type ItemProps = {
     item: Notification
     index: number
     vu: string
 }
 
+/**
+ * One notification card. Tapping expands it to show its expiration and, for an
+ * invitation or friend request still awaiting an answer, accept/refuse buttons
+ * (`item.actions`, resolved live by the API). Once answered, the buttons are
+ * replaced by the answer ("accepted" / "refused").
+ * Updated for user story 9 (accept/refuse an event invitation from a notification).
+ * SUBJECT TO CHANGE: may be revised depending on how teammates implement their own user stories.
+ *
+ * @param {ItemProps} props
+ * @returns {JSX.Element}
+ */
 export default function NotificationItem({ item, index, vu }: ItemProps) {
     const { t } = useTranslation('notifications')
     const { colors } = usePalette()
@@ -47,9 +52,10 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
     const { APIBaseURL } = useAPI()
     const { notifRefresh } = useNotifications()
 
-    //log("payload", item.payload, typeof item.payload)
-
-    const payload = item.payload as NotificationPayload
+    // User story 9: the API sends type/actions/statuses at the notification's top
+    // level; there's no `payload` anymore.
+    const categorie = categorieNotification(item.type)
+    const nonLue = item.statut_notification === "non_lue"
 
     const [selectionner, setSelectionner] = useState(false)
     const [notificationsSelec, setNotificationsSelec] = useState<Array<string>>([])
@@ -96,6 +102,17 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
             
         })
 
+    /**
+     * Runs one of the notification's actions (e.g. accept/refuse an event
+     * invitation via PATCH /evenements/invitations/:id), then refreshes the
+     * notifications so the answer replaces the buttons — and, for a refusal,
+     * so the notification moves to the refused invitations page (user story 9).
+     *
+     * @param {string} method - HTTP method of the action.
+     * @param {string} url - API path of the action.
+     * @param {Object} [body] - Request body (e.g. `{ statut: 'acceptee' }`).
+     * @returns {Promise<void>}
+     */
     const actionnerNotif = async (method: string, url: string, body = undefined) => {
         log("actionner notif", {method, url, body})
         try {
@@ -125,6 +142,12 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
         }
     }
 
+    /**
+     * Deletes the given notifications (soft delete server-side), then refreshes the list.
+     *
+     * @param {Array<string>} ids - Public ids of the notifications to delete.
+     * @returns {Promise<void>}
+     */
     const supprNotif = async (ids: Array<string> = []) => {
         if (ids.length === 0) {
             return
@@ -183,19 +206,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
         }
     })
 
-    const typeLabel = payload?.type
-        ? t(`types.${payload.type}`, { defaultValue: payload.type.replaceAll("_", " ") })
-        : ""
-
-    const parsedPayload = (() => {
-        if (!item.payload) return null
-        if (typeof item.payload === "object") return item.payload
-        try {
-            return JSON.parse(item.payload)
-        } catch {
-            return null
-        }
-    })()
+    const typeLabel = t(`types.${categorie}`)
 
     const montrerDetailsNotif = () => {
         heightNotif.value = withTiming(heightMaxNotif, withTimingConfig)
@@ -231,7 +242,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
     }
 
     const typeIcon = () => {
-        switch (item.type) {
+        switch (categorie) {
             case "amis":
                 return <Icon name="person-outline" color={colors.muted} size={20} />
             case "sync":
@@ -286,7 +297,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
             paddingBottom: 4,
             borderRadius: 16,
             overflow: "hidden",
-            borderWidth: item.statut === "non_lue" ? 2 : 1,
+            borderWidth: nonLue ? 2 : 1,
             borderColor: colors.border,
         },
         timestamp: {
@@ -312,11 +323,16 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
             justifyContent: "center",
             marginBottom:4
         },
-    })   
+        reponse: {
+            fontFamily: fonts.body,
+            fontSize: 16,
+            marginHorizontal: 8,
+        },
+    })
     
-    const options = parsedPayload?.actions?.map((action: Action) => {
-        //log('notification:', item.payload)
-        const repondue = item.statut_metier !== "en_attente"
+    // User story 9: the API only sends actions while the invitation/request awaits an
+    // answer and hasn't expired, so no "already answered" handling is needed here.
+    const options = (item.actions ?? []).map((action: NotificationAction) => {
         const buttonColor = action.label === "accepter" ? colors.success : colors.error
 
         return (
@@ -326,14 +342,12 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                     s.optionBouton,
                     {
                         zIndex: 1,
-                        opacity: item.statut_metier === action.body.statut || !repondue ? 1 : 0.3,
                         borderColor: buttonColor,
                     },
                 ]}
                 onPress={() => {
                     actionnerNotif(action.method, action.url, action.body)
                 }}
-                disabled={repondue}
             >
                 {action.label === "accepter"
                     ? <Icon name="checkmark" color={buttonColor} size={28} />
@@ -389,11 +403,11 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                     style={{ flex: 1, flexDirection: "row", justifyContent: "space-between", height: "80%" }}
                 >
                     <View style={{ paddingVertical: 4, paddingHorizontal: 8, height: "100%" }}>
-                        <Text style={{ color: colors.text, fontSize: 16, fontFamily: fonts.body, fontWeight: item.statut === "non_lue" ? "bold" : "100" }} numberOfLines={lines}>
+                        <Text style={{ color: colors.text, fontSize: 16, fontFamily: fonts.body, fontWeight: nonLue ? "bold" : "100" }} numberOfLines={lines}>
                             {item.message}
                         </Text>
                     </View>
-                    {item.statut === "non_lue" && <View style={s.unreadFlag} />}
+                    {nonLue && <View style={s.unreadFlag} />}
                     {expired && (
                         <Animated.View style={[expirationPreviewIconAnime, { height: "100%", width: "20%", alignItems: "center", justifyContent: "center" }]}> 
                             <Image source={icones.expiration} style={{ height: "70%" }} resizeMode="contain" />
@@ -467,7 +481,13 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                         </TouchableOpacity>
                     )}
                 </View>
-                <View style={{ flexDirection: "row" }}>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    {/* User story 9: once answered, show the answer instead of the buttons. */}
+                    {(item.statut_metier === "acceptee" || item.statut_metier === "refusee") && (
+                        <Text style={[s.reponse, { color: item.statut_metier === "acceptee" ? colors.success : colors.error }]}>
+                            {t(`answer.${item.statut_metier}`)}
+                        </Text>
+                    )}
                     {options}
                     <TouchableOpacity onPress={() => supprNotif([item.id])} style={[{ position: "relative", right: 0, backgroundColor: colors.error, borderColor: colors.border }]}> 
                         <Image source={icones.corbeille} style={{ width: "80%", height: "80%" }} resizeMode="contain" />

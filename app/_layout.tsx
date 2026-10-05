@@ -159,28 +159,32 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={navTheme}>
       <Stack>
+        {/* Modals and scanQR are only ever opened by a signed-in member, so they live
+            behind the same guard as the tabs: signing out removes them all at once and
+            shows (auth). Outside the guard, an open modal (e.g. the sign-out confirmation)
+            stayed on top of the login screen. */}
         <Stack.Protected guard={state === 'authenticated'}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />          
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="(modals)"
+            options={{
+              presentation: 'transparentModal',
+              animation: 'none',
+              gestureEnabled: false,
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name='scanQR'
+            options={{
+              headerShown:false
+            }}
+          />
         </Stack.Protected>
         <Stack.Protected guard={state === 'unauthenticated'}>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        </Stack.Protected>  
-        <Stack.Screen
-          name="(modals)"
-          options={{
-            presentation: 'transparentModal',
-            animation: 'none',                
-            gestureEnabled: false,            
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name='scanQR'
-          options={{
-            headerShown:false
-          }}
-        />
-      </Stack>      
+        </Stack.Protected>
+      </Stack>
       <Toast config={toastConfig}/>
     </ThemeProvider>
   );

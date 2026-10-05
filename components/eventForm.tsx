@@ -107,7 +107,8 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
     // Parenthesized explicitly: `? :` binds looser than `||`, so without the
     // parens this would evaluate as `(constraints?.minimumStart || mode ===
     // 'create') ? dtNow : undefined` — always `dtNow` in create mode,
-    // silently ignoring any constraint the caller passed in.
+    // silently ignoring any constraint the caller passed in (e.g. the month
+    // calendar's range, user story 5).
     const minimumStart = constraints?.minimumStart || (mode === 'create' ? dtNow : undefined)
     const maximumStart = constraints?.maximumStart || undefined
 

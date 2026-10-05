@@ -49,7 +49,8 @@ export default function DateTimeSelecteur({timezone, start, setStart, end, setEn
     // before this form's own minimum references (minimumStart, or a few
     // minutes after `start` for the end-time picker below) — otherwise the
     // native picker's "minimumDate < maximumDate" invariant crashes,
-    // regardless of what upstream miscalculated.
+    // regardless of what upstream miscalculated. Found via the month
+    // calendar's range selection (user story 5).
     let maximumSur = maximum
     if (maximumSur) {
         if (minimumStart && maximumSur < minimumStart) maximumSur = minimumStart

@@ -9,6 +9,12 @@ import Ionicons from "@react-native-vector-icons/ionicons"
 
 
 
+/**
+ * Sign-out confirmation, opened from the profile's menu. Confirming closes
+ * this modal and signs the member out, which sends them to the login screen.
+ *
+ * @returns {JSX.Element}
+ */
 export default function ConfirmSignOut({ }) {
     const { t } = useTranslation()
     const { colors } = usePalette()
@@ -64,6 +70,10 @@ export default function ConfirmSignOut({ }) {
                 <View style={s.btnContainer}>
                     <TouchableOpacity style={[s.btn, {}]}
                         onPress={() => {
+                            // No router.back() here: (modals) is behind the authenticated
+                            // Stack.Protected (app/_layout.tsx), so signing out removes this
+                            // modal along with the tabs. A back() raced that removal and
+                            // triggered "GO_BACK was not handled by any navigator".
                             signOut()
                         }}
                     >

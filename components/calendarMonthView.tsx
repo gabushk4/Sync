@@ -2,13 +2,11 @@ import { useFont } from '@/contextes/contexteFont'
 import { usePalette } from '@/contextes/contextePalette'
 import { Event } from '@/types/calendar'
 import { DateTime } from 'luxon'
-import { ComponentType, Ref, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Animated, FlatList, FlatListProps, Image, NativeScrollEvent, NativeSyntheticEvent, PanResponder, Pressable, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Image, NativeScrollEvent, NativeSyntheticEvent, PanResponder, Pressable, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native'
+import Animated, { scrollTo, useAnimatedReaction, useAnimatedRef, useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated'
 
-// Animated.FlatList loses the generic type param, so it's reconstructed here
-// to keep `data`/`renderItem` typed as number[] instead of any[].
-const FlatListAnime = Animated.FlatList as unknown as ComponentType<FlatListProps<number> & { ref?: Ref<FlatList<number>> }>
-
+/** Props of CalendarMonthView. Part of user story 5 (conventional month calendar view). */
 export type CalendarMonthViewProps = {
     monthDate: DateTime;
     selectedDate?: DateTime;
@@ -70,6 +68,8 @@ function construireSemaines(mois: DateTime): DateTime[][] {
  * language (see `locales/initLocale.js`). This component only uses
  * locale-agnostic format tokens ('MMMM', 'EEE').
  *
+ * Part of user story 5 (conventional month calendar view).
+ *
  * Implementation: months are addressed by a fixed index (0..NOMBRE_MOIS-1)
  * into a bounded `FlatList`, rather than a small window of months that gets
  * shifted and re-centred on every swipe. This avoids needing to reset the
@@ -107,16 +107,20 @@ export default function CalendarMonthView({
         iconeDroite = require('@/assets/icones/fleche-d-dark-icon.png')
     }
 
-    // ISO date strings with at least one event, for the day dots.
+    // ISO date strings with at least one event, for the day dots. Every day an
+    // event spans gets a dot (it used to mark only the start day of multi-day events).
     const datesAvecEvenements = useMemo(() => {
-        const dates: string[] = []
+        const dates = new Set<string>()
         for (const evenement of events) {
-            if (evenement.debut) {
-                const dateTexte = evenement.debut.toISODate()
-                if (dateTexte && !dates.includes(dateTexte)) dates.push(dateTexte)
+            if (!evenement?.debut) continue
+            const dernierJour = (evenement.fin ?? evenement.debut).startOf('day')
+            // Capped at 62 days so a malformed range can't loop for long.
+            for (let jour = evenement.debut.startOf('day'), n = 0; jour <= dernierJour && n < 62; jour = jour.plus({ days: 1 }), n++) {
+                const dateTexte = jour.toISODate()
+                if (dateTexte) dates.add(dateTexte)
             }
         }
-        return dates
+        return Array.from(dates)
     }, [events])
 
     // Fixed reference point: index INDEX_INITIAL always maps to whichever
@@ -158,22 +162,51 @@ export default function CalendarMonthView({
     const semainesActuelRef = useRef(semainesActuel)
     semainesActuelRef.current = semainesActuel
 
-    // Measured grid width; also the width of one FlatList page.
+    // Measured grid width; also the width of one grid FlatList page.
     const [largeur, setLargeur] = useState(0)
     const largeurRef = useRef(largeur)
     largeurRef.current = largeur
 
-    const flatListRef = useRef<FlatList<number>>(null)
+    // Measured header title width; also the width of one title FlatList page.
+    const [largeurTitre, setLargeurTitre] = useState(0)
 
-    // Live horizontal scroll position, native-driven for smooth dragging.
-    const scrollX = useRef(new Animated.Value(0)).current
+    const flatListRef = useAnimatedRef<Animated.FlatList<number>>()
+    const titreListRef = useAnimatedRef<Animated.FlatList<number>>()
 
-    // Seeds scrollX to match the FlatList's initial position once the width
-    // is known (`initialScrollIndex` moves the FlatList itself, but doesn't
+    // Same approach as the home screen's linked lists: the grid (the only
+    // list the user drags) writes its offset into a shared value, and the
+    // title list follows it on the UI thread via scrollTo. The title pages
+    // are narrower than the grid pages, so the offset is scaled per page.
+    const scrollX = useSharedValue(0);
+    const largeurShared = useSharedValue(0)
+    const largeurTitreShared = useSharedValue(0)
+
+    useLayoutEffect(() => {
+        largeurShared.value = largeur
+        largeurTitreShared.value = largeurTitre
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [largeur, largeurTitre])
+
+    const surScrollGrille = useAnimatedScrollHandler({
+        onScroll: (e) => {
+            scrollX.value = e.contentOffset.x
+        },
+    })
+
+    useAnimatedReaction(
+        () => scrollX.value,
+        (x) => {
+            if (largeurShared.value === 0 || largeurTitreShared.value === 0) return
+            scrollTo(titreListRef, (x / largeurShared.value) * largeurTitreShared.value, 0, false)
+        }
+    )
+
+    // Seeds scrollX to match the grid's initial position once the width is
+    // known (`initialScrollIndex` moves the FlatList itself, but doesn't
     // fire an onScroll event, so scrollX wouldn't otherwise reflect it).
     useLayoutEffect(() => {
         if (largeur === 0) return
-        scrollX.setValue(indexActuelRef.current * largeur)
+        scrollX.value = indexActuelRef.current * largeur
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [largeur])
 
@@ -189,7 +222,7 @@ export default function CalendarMonthView({
         indexActuelRef.current = indexVoulu
         setIndexActuel(indexVoulu)
         flatListRef.current?.scrollToOffset({ offset: indexVoulu * largeur, animated: false })
-        scrollX.setValue(indexVoulu * largeur)
+        scrollX.value = indexVoulu * largeur
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [monthDate, largeur])
 
@@ -219,6 +252,26 @@ export default function CalendarMonthView({
         const direction = nouvelIndex > indexActuelRef.current ? 1 : -1
         indexActuelRef.current = nouvelIndex
         setIndexActuel(nouvelIndex)
+        onChangeMonth(direction)
+    }
+
+    /**
+     * Arrow tap: slides the grid (and, through scrollX, the title) to the
+     * adjacent month with an animation, then tells the parent. The index is
+     * updated up front so the resulting scroll-end event and the parent's
+     * new `monthDate` are both recognised as already handled.
+     *
+     * @param {1 | -1} direction - 1 for the next month, -1 for the previous one.
+     * @returns {void}
+     */
+    function allerAuMois(direction: 1 | -1) {
+        const nouvelIndex = indexActuelRef.current + direction
+        if (nouvelIndex < 0 || nouvelIndex > NOMBRE_MOIS - 1 || largeur === 0) return
+
+        dernierTraitementRef.current = Date.now()
+        indexActuelRef.current = nouvelIndex
+        setIndexActuel(nouvelIndex)
+        flatListRef.current?.scrollToOffset({ offset: nouvelIndex * largeur, animated: true })
         onChangeMonth(direction)
     }
 
@@ -332,6 +385,9 @@ export default function CalendarMonthView({
         entete: {
             flex: 1,
             overflow: 'hidden',
+        },
+        pageTitre: {
+            justifyContent: 'center',
         },
         monthLabel: {
             color: colors.text,
@@ -476,6 +532,20 @@ export default function CalendarMonthView({
         )
     }
 
+    /**
+     * Renders one page of the header's title FlatList: a month's name.
+     *
+     * @param {{ item: number }} info - `item` is the month index to render.
+     * @returns {JSX.Element}
+     */
+    function renderTitre({ item: index }: { item: number }) {
+        return (
+            <View style={[s.pageTitre, { width: largeurTitre }]}>
+                <Text style={s.monthLabel}>{moisPourIndex(index).toFormat('MMMM yyyy')}</Text>
+            </View>
+        )
+    }
+
     return (
         // Pressable, not a plain View: an empty-space tap bubbles up to
         // onDismiss, while child touchables (days, arrows, the FlatList)
@@ -485,19 +555,32 @@ export default function CalendarMonthView({
                 don't fall through to the container's onDismiss above. */}
             <Pressable style={s.header} onPress={() => {}}>
                 <TouchableOpacity
-                    onPress={() => indexActuel > 0 && onChangeMonth(-1)}
+                    onPress={() => allerAuMois(-1)}
                     disabled={indexActuel <= 0}
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
                     <Image source={iconeGauche} style={s.arrow} resizeMode="contain" />
                 </TouchableOpacity>
 
-                <View style={s.entete}>
-                    <Text style={s.monthLabel}>{moisActuel.toFormat('MMMM yyyy')}</Text>
+                <View style={s.entete} onLayout={(e) => setLargeurTitre(e.nativeEvent.layout.width)}>
+                    {largeurTitre > 0 && (
+                        // Driven by the grid's scroll (see scrollX), never dragged directly.
+                        <Animated.FlatList
+                            ref={titreListRef}
+                            data={INDICES_MOIS}
+                            keyExtractor={(index) => String(index)}
+                            renderItem={renderTitre}
+                            horizontal
+                            scrollEnabled={false}
+                            showsHorizontalScrollIndicator={false}
+                            initialScrollIndex={indexActuel}
+                            getItemLayout={(_, index) => ({ length: largeurTitre, offset: largeurTitre * index, index })}
+                        />
+                    )}
                 </View>
 
                 <TouchableOpacity
-                    onPress={() => indexActuel < NOMBRE_MOIS - 1 && onChangeMonth(1)}
+                    onPress={() => allerAuMois(1)}
                     disabled={indexActuel >= NOMBRE_MOIS - 1}
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
@@ -515,7 +598,7 @@ export default function CalendarMonthView({
 
             <View onLayout={(e) => setLargeur(e.nativeEvent.layout.width)}>
                 {largeur > 0 && (
-                    <FlatListAnime
+                    <Animated.FlatList
                         ref={flatListRef}
                         data={INDICES_MOIS}
                         keyExtractor={(index) => String(index)}
@@ -528,12 +611,9 @@ export default function CalendarMonthView({
                         showsHorizontalScrollIndicator={false}
                         initialScrollIndex={indexActuel}
                         getItemLayout={(_, index) => ({ length: largeur, offset: largeur * index, index })}
-                        onScroll={Animated.event(
-                            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-                            { useNativeDriver: true }
-                        )}
+                        onScroll={surScrollGrille}
                         scrollEventThrottle={16}
-                        onMomentumScrollEnd={surSwipeTermine}
+                        onScrollEndDrag={surSwipeTermine}
                     />
                 )}
             </View>

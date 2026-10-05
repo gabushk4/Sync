@@ -6,6 +6,9 @@ import {toastTypes} from "@/constants/toastConfig"
 export default function catcher(error, titre='erreur'){   
     //const {ouvirModal} = useModal()
     log(`catcher ${titre}`, error.response?.data, error.code)
+    // Session expired / signed out: contexteAPI already sends the member to the
+    // login screen, so there's nothing useful to show.
+    if (error?.deconnecte) return
     let message = ''
 
     if(error.status === 403){
@@ -25,8 +28,15 @@ export default function catcher(error, titre='erreur'){
             message='le serveur ne repond pas; il a surement planté on travail là-dessus'
           break;
         case 'ERR_BAD_REQUEST':
-          titre='conflit détecté'
-          message='un évènement est en conflit'            
+          // Axios uses this code for every 4xx, not only 409: only call it a
+          // conflict when it is one (it labelled e.g. a 401 "conflit détecté").
+          if (error.status === 409) {
+            titre='conflit détecté'
+            message='un évènement est en conflit'
+          } else {
+            titre='requête refusée'
+            message=error.response?.data?.message ?? ''
+          }
           //ouvirModal('detailsEvenement', evenementEnConflit)
           break;
         case 'ERR_NETWORK':
