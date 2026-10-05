@@ -84,6 +84,7 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
 
     const refDescription = useRef<TextInput>(null)
     const dateTimesCalculated = useRef(false)
+    const prefilledParticipantsApplied = useRef(false)
 
     const [dateTimeDisabled, setDateTimeDisabled] = useState<boolean>(false)
     const [titleLen, setTitleLen] = useState<number>(0)
@@ -159,8 +160,10 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
                 setStart(start)
                 setEnd(end)
             }
-            if (mode === 'create' && prefills?.participants)
+            if (mode === 'create' && prefills?.participants && !prefilledParticipantsApplied.current) {
+                prefilledParticipantsApplied.current = true
                 appliquerInvites(prefills.participants)
+            }
         }, [event, mode, prefills, setEnd, setStart])
     )    
 

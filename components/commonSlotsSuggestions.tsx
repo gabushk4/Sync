@@ -4,17 +4,16 @@ import { useFont } from "@/contextes/contexteFont"
 import { usePalette } from "@/contextes/contextePalette"
 
 import { LinkAbs } from "@/abstractions/linkAbs"
+import { checkMark } from "@/constants/dismissButtons"
 import { withTimingConfig } from "@/constants/ReanimatedConfs"
 import { useModal } from "@/contextes/contexteModals"
 import { convertirTimestampDateCourte, convertirTimestampHeure } from "@/functions/convertirTimestamp"
-import log from "@/functions/log"
 import { Interval } from "@/types/availabilities"
 import { DateTime } from "luxon"
-import { useEffect, useMemo, useState, useTransition } from "react"
+import { useEffect, useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated"
-import { useTranslation } from "react-i18next"
-import { checkMark } from "@/constants/dismissButtons"
 
 
 export default function CommonSlotsSuggestions() {    
@@ -76,6 +75,7 @@ export default function CommonSlotsSuggestions() {
 
     const Line = useMemo(() => ({ sugg, index } : {sugg: Interval, index: number}) => {
         if (sugg) {
+            const isPast = sugg.debut.toMillis() < DateTime.now().toMillis()
             const sameDay = sugg.fin.startOf('day').diff(sugg.debut.startOf('day'), 'days').days < 1                        
             const sameWeekDebut = sugg.debut.startOf('day').diff(DateTime.now().startOf('day'), 'days').days < 7
             const sameWeekFin = sugg.fin.startOf('day').diff(DateTime.now().startOf('day'), 'days').days < 7
@@ -86,8 +86,11 @@ export default function CommonSlotsSuggestions() {
                         style={[
                             s.suggestionLine,
                             { backgroundColor: sugg.id === suggSelected ? s.suggestionLine.borderColor : 'transparent' },
+                            isPast && { opacity: 0.4 },
                         ]}
+                        disabled={isPast}
                         onPress={() => {
+                            if (sugg.debut.toMillis() < DateTime.now().toMillis()) return
                             setSuggSelected(sugg.id)
                             
                             setStart(sugg.debut)

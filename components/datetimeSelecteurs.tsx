@@ -2,23 +2,18 @@ import { useFont } from '@/contextes/contexteFont';
 import { usePalette } from "@/contextes/contextePalette";
 
 import ceilBy5 from '@/functions/ceilBy5';
-import { convertirTimestampDateCourte, convertirTimestampDateLongue, convertirTimestampHeure } from "@/functions/convertirTimestamp";
+import { convertirTimestampDateLongue, convertirTimestampHeure } from "@/functions/convertirTimestamp";
 import log from "@/functions/log";
 
 import SwitchAbs from '@/abstractions/switchAbs';
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 import { DateTime } from "luxon";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from 'react-i18next';
-import { Platform, StyleSheet, Text, TouchableOpacity, View, ScrollView } from "react-native";
-import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Animated from "react-native-reanimated";
 
 import { useEventDraft } from '@/contextes/contexteEventDraft';
-import { withTimingConfig } from '@/constants/ReanimatedConfs';
-import { useFocusEffect } from 'expo-router';
-import { DateTimeSuggestions } from '@/types/availabilities';
-import Separator, { isLast } from './listSeparator';
-import Radius from '@/constants/Radius';
 import CommonSlotsSuggestions from './commonSlotsSuggestions';
 
 type Props = {
@@ -54,6 +49,9 @@ export default function DateTimeSelecteur({timezone, disabled=false, minimumStar
     const { colors } = usePalette();
     const { fonts } = useFont()
     const { setStart, setEnd, start, end } = useEventDraft();
+    const validMaximumStart = maximum && (!minimumStart || maximum >= minimumStart)
+        ? maximum
+        : undefined
     
     //log('datetimeSelecteurs: date', dateEvenement, 'debut', debutEvenement, 'fin', finEvenement)
 
@@ -241,7 +239,7 @@ export default function DateTimeSelecteur({timezone, disabled=false, minimumStar
                             value={start?.startOf('day').toJSDate() || dtNow.toJSDate()}
                             mode="date"
                             minimumDate={minimumStart?.startOf('day').toJSDate() ?? undefined}
-                            maximumDate={maximum?.toJSDate()}
+                            maximumDate={validMaximumStart?.toJSDate()}
                             display={Platform.OS === 'android' ? 'calendar' : 'default'}
                             onChange={(e, date) => date && handleStartDateChange(date)}
                             {...(Platform.OS === 'ios' ? { timeZoneName: timezone, accentColor: colors.text } : {})}
@@ -260,7 +258,7 @@ export default function DateTimeSelecteur({timezone, disabled=false, minimumStar
                             <RNDateTimePicker                        
                                 value={start.toJSDate()}
                                 minimumDate={minimumStart?.toJSDate() ?? undefined}
-                                maximumDate={maximum?.toJSDate()}
+                                maximumDate={validMaximumStart?.toJSDate()}
                                 mode="time"
                                 is24Hour={true}
                                 minuteInterval={5}

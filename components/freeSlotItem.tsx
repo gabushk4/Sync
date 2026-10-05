@@ -11,6 +11,8 @@ import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 import Animated, { SharedValue } from "react-native-reanimated";
 import useTimelineLabelOffset from "@/hooks/useTimelineLabelOffset";
+import ToastAbs from "@/abstractions/toastAbs";
+import { toastTypes } from "@/constants/toastConfig";
 
 type Props = {
     freeSlot: any;
@@ -37,6 +39,8 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
     const width = horizontal 
                     ? findWidth(freeSlot.start, freeSlot.end, displayedDate, pxHeures + L_HEURES)
         : '100%'
+    
+    const isInPast = freeSlot.start.toMillis() < DateTime.now().toMillis() && freeSlot.end.toMillis() < DateTime.now().toMillis() 
 
     const LABEL_W = 96
     const itemSize = (horizontal ? width : height) as number
@@ -93,11 +97,18 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
                 top: top,
                 height: height,
                 width: width,
-                
+                ...(isInPast ? {borderColor:colors.muted} : {}) 
             }]}
             onPress={() => {
                 //TODO: go to create with owner.id and start and end values passed 
-                
+                if (isInPast) {
+                    ToastAbs.show({
+                        type: toastTypes.warning,
+                        text1: 'dans le passé',
+                        text2: 'la disponibilité commune est déjà passée... focus sur le moment présent'
+                    })
+                    return 
+                }
                 log("common free slot with", owner)
                 router.push({
                     pathname: '/(tabs)/home/create',
