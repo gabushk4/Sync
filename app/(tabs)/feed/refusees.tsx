@@ -9,7 +9,7 @@ import { useMembre } from "@/contextes/contexteMembre";
 import { usePalette } from "@/contextes/contextePalette";
 import catcher from "@/functions/catcher";
 import { convertirTimestampDateLongue, convertirTimestampHeure } from "@/functions/convertirTimestamp";
-import { convertirUTCversLocale } from "@/functions/convertirUTCenLocal";
+import { convertUTCToLocal } from "@/functions/convertirUTCenLocal";
 import Icon from "@react-native-vector-icons/ionicons";
 
 /** One invitation, as returned by GET /evenements/invitations (see formaterInvitation server-side). */
@@ -81,8 +81,8 @@ export default function InvitationsRefusees() {
      * @returns {string | null}
      */
     const formaterPlage = (inv: InvitationRecue) => {
-        const debut = convertirUTCversLocale(inv.debut, membre.timezone)
-        const fin = convertirUTCversLocale(inv.fin, membre.timezone)
+        const debut = convertUTCToLocal(inv.debut, membre.timezone)
+        const fin = convertUTCToLocal(inv.fin, membre.timezone)
         if (!debut || !fin) return null
         return `${convertirTimestampDateLongue(debut)} · ${convertirTimestampHeure(debut)} - ${convertirTimestampHeure(fin)}`
     }

@@ -16,7 +16,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { getCommonFreeSlots } from '@/functions/availability';
 import catcher from '@/functions/catcher';
-import { convertirLocalVersUTC, convertirUTCversLocale } from '@/functions/convertirUTCenLocal';
+import { convertLocalToUTC, convertUTCToLocal } from '@/functions/convertirUTCenLocal';
 import formaterDatePourServeur from '@/functions/formaterDatePourServeur';
 import log from '@/functions/log';
 
@@ -63,8 +63,8 @@ const LIMITE_MOIS = 300
  * @returns {{ debut: string | null, fin: string | null, limite?: number }}
  */
 const paramsPlage = (debut: DateTime, fin: DateTime, limite?: number) => ({
-  debut: formaterDatePourServeur(convertirLocalVersUTC(debut)),
-  fin: formaterDatePourServeur(convertirLocalVersUTC(fin)),
+  debut: formaterDatePourServeur(convertLocalToUTC(debut)),
+  fin: formaterDatePourServeur(convertLocalToUTC(fin)),
   ...(limite ? { limite } : {}),
 })
 
@@ -208,8 +208,8 @@ export default function Home() {
         const dataLocale = events
           .filter((evenement: any) => evenement && !evenement.id_publique?.includes('factice'))
           .map((evenement: any) => {
-            const startLocalMs = convertirUTCversLocale(evenement.debut, membre.timezone)?.toMillis()
-            const endLocalMs = convertirUTCversLocale(evenement.fin, membre.timezone)?.toMillis()
+            const startLocalMs = convertUTCToLocal(evenement.debut, membre.timezone)?.toMillis()
+            const endLocalMs = convertUTCToLocal(evenement.fin, membre.timezone)?.toMillis()
 
             return {
               ...evenement,
@@ -263,8 +263,8 @@ export default function Home() {
           // (friends' events showed no title), and sorted on a missing `start` field.
           const evenements = (ami.evenements || [])
                 .map((ev: any) => {
-                  const start = convertirUTCversLocale(ev.debut, membre.timezone)
-                  const end = convertirUTCversLocale(ev.fin, membre.timezone)
+                  const start = convertUTCToLocal(ev.debut, membre.timezone)
+                  const end = convertUTCToLocal(ev.fin, membre.timezone)
                   return {
                     id: ev.id_publique,
                     url: ev.url,
@@ -528,7 +528,7 @@ export default function Home() {
       dateAujShared.value = now.toMillis();
       //chargerEvenements(now, now)
 
-      userEventsRefresh.current = new AutoRefresh(api, '/evenements/', {        
+      userEventsRefresh.current = new AutoRefresh(api, '/evenements/', {
         extraParams: paramsJour(now),
         onData: modifierEvenementsMembreFetched,
         onError: (error) => {

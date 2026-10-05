@@ -1,76 +1,33 @@
 import ToastAbs from "@/abstractions/toastAbs"
+import { toastTypes } from "@/constants/toastConfig"
+import i18n from "../i18n"
 import log from "./log"
-import { useModal } from "../contextes/contexteModals"
-import {toastTypes} from "@/constants/toastConfig"
 
-export default function catcher(error, titre='erreur'){   
+export default function catcher(error, titre){
     //const {ouvirModal} = useModal()
-    log(`catcher ${titre}`, error.response?.data, error.code)
+  log(`catcher ${titre}`, error?.response?.data, error?.code)
     // Session expired / signed out: contexteAPI already sends the member to the
-    // login screen, so there's nothing useful to show.
+    // login screen and flags the error, so there's nothing useful to show.
     if (error?.deconnecte) return
-    let message = ''
+    const status = error?.response?.status ?? error?.status
+    const errorKey = String(status ?? error?.code ?? 'default')
+    const fallback = i18n.t('default', { ns: 'errors', returnObjects: true })
+    const localized = i18n.t(errorKey, { ns: 'errors', returnObjects: true })
+    const hasLocalizedError = i18n.exists(errorKey, { ns: 'errors' })
+  const details = hasLocalizedError && typeof localized === 'object' ? localized : fallback
+  const errorTitle = hasLocalizedError ? details.title : (titre ?? details.title)
+    const errorMessage = error?.response?.data?.message ?? details.message ?? error?.message
 
-    if(error.status === 403){
-      titre = 'erreur d\'accès'
-      message = 'il faut te déconnecter et te reconnecter'
-    }else if(error.status === 304) return
-    else {
-      switch (error.code) {
-        case 'ECONNABORTED':
-            titre='erreur réseau'
-            message='connexion lente'
-          break;
-        case 'ENOTFOUND':
-        case 'ECONNREFUSED':
-        case 'EHOSTUNREACH':
-            titre='erreur serveur'
-            message='le serveur ne repond pas; il a surement planté on travail là-dessus'
-          break;
-        case 'ERR_BAD_REQUEST':
-          // Axios uses this code for every 4xx, not only 409: only call it a
-          // conflict when it is one (it labelled e.g. a 401 "conflit détecté").
-          if (error.status === 409) {
-            titre='conflit détecté'
-            message='un évènement est en conflit'
-          } else {
-            titre='requête refusée'
-            message=error.response?.data?.message ?? ''
-          }
-          //ouvirModal('detailsEvenement', evenementEnConflit)
-          break;
-        case 'ERR_NETWORK':
-          titre="aucune connexion"
-          message="il semble que l'app n'arrive pas à se connecter a internet"
-          break;
-        case 'ERR_BAD_RESPONSE':
-          log('bad response', error.status)
-          if(error.status == 502){
-            titre="problème avec le serveur"
-            message="le serveur est à plat; contactes-moi par instagram pour plus d'infos"
-          }
-          break;
-        default:
-          if (error.response) {
-            log('erreur avec response')
-            titre='introuvable'
-            message=error.response.data.message
-
-          } else {
-            log("erreur inconnue :", error.message);
-            titre = titre
-            message=error.message
-          }
-          break;
-        }
+    if (status === 304) {
+      return
     }
-    //log("titre", titre, "message", message)
-    if(error.response){
+
+    if(error?.response){
       log('Erreur serveur', /* error.response.data */)
         ToastAbs.show({
           type:toastTypes.error,
-          text1:titre,
-          text2:error.response.data.message??message,
+          text1:errorTitle,
+          text2:errorMessage,
           position:'top',
           autoHide:false
         })
@@ -79,8 +36,8 @@ export default function catcher(error, titre='erreur'){
       log('catcher toast erreur')      
       ToastAbs.show({
         type:toastTypes.error,
-        text1:titre,
-        text2:message,
+        text1:errorTitle,
+        text2:errorMessage,
         position:'top',
         autoHide:false
       })

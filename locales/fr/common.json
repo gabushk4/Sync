@@ -7,6 +7,23 @@
 		"confirmation": "voulez-vous vraiment vous déconnecter?",
 		"confirm": "oui"
 	},
+	"confirmAction": {
+		"confirmation": "voulez-vous vraiment continuer?",
+		"confirm": "confirmer"
+	},
+	"exportData":{
+		"explanation":"un courriel de confirmation sera envoyé à l'adresse {{email}}. Il contiendra les prochaines étapes.",
+		"confirm":"exporter mes données",
+		"errorTitle":"exportant vos données",
+		"errorOccured": "impossible de vous enregistrer pour l'exportation de vos données",
+		"done":"un lien de téléchargement vous sera envoyé lorsque votre fichier sera prêt"
+	},
+	"deleteAccount": {
+		"explanation": "Vos renseignements personnels seront anonymisés de façon irréversible conformément à la Loi 25 du Québec. Votre compte ne pourra plus être associé à ces renseignements. Un courriel de confirmation sera envoyé à l’adresse {{email}} et contiendra les prochaines étapes.",
+		"confirm": "anonymiser mes données",
+		"errorTitle":"anonymisant vos données",
+		"errorOccured": "impossible de vous enregistrer pour anonymiser vos données"
+	},
 	"loading": "chargement",
 	"serverWaking": "merci de patienter; le serveur prend du temps à se réveiller",
 	"returnToLogin": "Retour à la connexion",

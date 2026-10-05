@@ -4,5 +4,22 @@
     "english":"anglais",
     "french":"français",
     "timezone":"fuseau horaire",
-    "local":"fuseau horaire local"
+    "local":"fuseau horaire local",
+    "permissions":"permissions système",
+    "camera":"caméra",
+    "location":"localisation",
+    "notifications":"notifications",
+    "granted":"autorisée",
+    "notGranted":"non autorisée",
+    "dangerZone":"zone dangereuse",
+    "signOut":"se déconnecter",
+    "open":"ouvrir",
+    "deleteAccount":"supprimer mon compte",
+    "exportData":"exporter mes données",
+    "theme":"palette",
+    "setDefault":"rétablir la valeur par défaut",
+    "appVersion":"version {{version}}",
+    "about":"à propos de sync",
+    "privacyPolicy":"politique de confidentialité",
+    "minorSecurity":"sécurité des mineurs"
 }

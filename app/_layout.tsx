@@ -52,12 +52,13 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   return (
-    <PaletteProvider>
+    
       <FontProvider>
         <AccessTokenProvider>
           <MockModeProvider>
-            <APIProvider>
-              <SettingsProvider>
+          <APIProvider>              
+            <SettingsProvider>
+              <PaletteProvider>
                 <MembreProvider>
                 <AuthProvider> 
                   <NotificationProvider>
@@ -79,12 +80,13 @@ export default function RootLayout() {
                   </NotificationProvider>  
                 </AuthProvider>
                 </MembreProvider>
-              </SettingsProvider>
+              </PaletteProvider>
+            </SettingsProvider>          
             </APIProvider>
           </MockModeProvider>
         </AccessTokenProvider>            
       </FontProvider>
-    </PaletteProvider>
+    
   );
 }
 

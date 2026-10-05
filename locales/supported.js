@@ -24,6 +24,11 @@ export function getBestAvailableLocale() {
   return DEFAULT_LANGUAGE;
 }
 
+export function getCurrentDateLocale() {
+  const language = i18n.resolvedLanguage || i18n.language || 'fr';
+  return SUPPORTED_LANGUAGES[language]?.locale || 'fr-CA';
+}
+
 /**
  * Configure Luxon to globally use a specific locale string
  */

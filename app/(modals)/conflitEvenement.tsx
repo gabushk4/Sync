@@ -12,7 +12,7 @@ import { useMembre } from '@/contextes/contexteMembre'
 import { usePalette } from '@/contextes/contextePalette'
 import catcher from '@/functions/catcher'
 import { convertirTimestampDateLongue, convertirTimestampHeure } from '@/functions/convertirTimestamp'
-import { convertirUTCversLocale } from '@/functions/convertirUTCenLocal'
+import { convertUTCToLocal } from '@/functions/convertirUTCenLocal'
 import formaterDatePourServeur from '@/functions/formaterDatePourServeur'
 import { EvenementEnConflit, NouvelEvenement } from '@/types/conflit'
 import Ionicons from '@react-native-vector-icons/ionicons'
@@ -73,7 +73,7 @@ export default function ConflitEvenement() {
             await api.post('/evenements/exceptions', {
                 id_parent: ev.id,
                 // Must match the occurrence's start exactly (UTC SQL) for the server to skip it.
-                debut_occurence: formaterDatePourServeur(convertirUTCversLocale(ev.debut, 'utc')),
+                debut_occurence: formaterDatePourServeur(convertUTCToLocal(ev.debut, 'utc')),
                 type: 'annule',
             })
         } else {
@@ -142,8 +142,8 @@ export default function ConflitEvenement() {
      */
     const formaterPlage = (debut: string | null, fin: string | null) => {
         if (!debut || !fin) return null
-        const debutLocal = convertirUTCversLocale(debut, membre.timezone)
-        const finLocal = convertirUTCversLocale(fin, membre.timezone)
+        const debutLocal = convertUTCToLocal(debut, membre.timezone)
+        const finLocal = convertUTCToLocal(fin, membre.timezone)
         if (!debutLocal || !finLocal) return null
         return `${convertirTimestampDateLongue(debutLocal)} · ${convertirTimestampHeure(debutLocal)} - ${convertirTimestampHeure(finLocal)}`
     }
