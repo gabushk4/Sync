@@ -1,3 +1,5 @@
+import Spinner from "@/components/spinner";
+import { router } from "expo-router";
 import { useFocusEffect } from "expo-router/react-navigation";
 import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -188,21 +190,27 @@ export default function ConnexionEcran(){
                         >
                             <Text style={{color:colors.text, fontSize:18, fontFamily:fonts.body}}>{t('login.cancel')}</Text>
                         </TouchableOpacity>     
+                        {/* User story 12: spinner in place of the label while signing in. */}
                         <TouchableOpacity 
-                            disabled={estDesactive}
-                            style={[s.bouton,{backgroundColor:estDesactive?'transparent':colors.secondary}]}  
+                            disabled={estDesactive || enChargement}
+                            style={[s.bouton,{backgroundColor:estDesactive && !enChargement?'transparent':colors.secondary}]}  
                             onPress={() => connecter()}
                         >
-                        <Text style={{color:estDesactive?colors.muted:colors.text, fontSize:18, fontFamily:fonts.title}}>{t('login.submit')}</Text>
+                        {enChargement
+                            ? <Spinner size={22} accessibilityLabel={t('common:loading')} />
+                            : <Text style={{color:estDesactive?colors.muted:colors.text, fontSize:18, fontFamily:fonts.title}}>{t('login.submit')}</Text>
+                        }
                         </TouchableOpacity>   
                     </View> 
                     <View style={{ width:'100%', height:24, alignItems:'center', justifyContent:'space-evenly', gap:16}}>
                         <LinkAbs href={'/(auth)/register'}>
                             {t('login.noAccount')}
                         </LinkAbs>
+                        {/* User story 14 : ouvre le modal de récupération de mot de passe
+                            (remplace le placeholder log("push modal mdp oublie")) */}
                         <TouchableOpacity
                             onPress={()=>{
-                                log("push modal mdp oublie")
+                                router.push('/(auth)/mdpOublie')
                             }}
                         >
                             <Text style={linkStyle.link}>

@@ -39,7 +39,7 @@ export default function EditEvent() {
     // lui poser une question au moment du submit : "quelles sont tes valeurs ?"
     const formRef = useRef<EventFormHandle>(null)
 
-    const verifAvantPatch = (): void => {
+    const verifAvantPatch = async (): Promise<void> => {
         const values = formRef.current?.getValues()
         let valid = true
         let message = t('edit.defaultError')
@@ -131,9 +131,10 @@ export default function EditEvent() {
             )
         } else if (event.type === 'exception') {
             url = { method: 'PATCH', string: `/evenements/exceptions/${event.id}` }
-            patchEvenement(url, data, champsModifies)
+            // Awaited so the action FAB shows its spinner during the request (user story 12).
+            await patchEvenement(url, data, champsModifies)
         } else {
-            patchEvenement(url, data, champsModifies)
+            await patchEvenement(url, data, champsModifies)
         }
     }
 

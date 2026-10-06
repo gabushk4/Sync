@@ -1,5 +1,6 @@
 
 import ToastAbs from '@/abstractions/toastAbs'
+import Spinner from '@/components/spinner'
 import { toastTypes } from '@/constants/toastConfig'
 import { useAPI } from '@/contextes/contexteAPI'
 import { useFont } from '@/contextes/contexteFont'
@@ -8,6 +9,7 @@ import { usePalette } from '@/contextes/contextePalette'
 import { useAccessToken } from '@/contextes/contexteToken'
 import catcher from '@/functions/catcher'
 import { useTranslation } from 'react-i18next'
+import { useState } from 'react'
 import { StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native'
 
 type Props = {
@@ -24,7 +26,18 @@ export default function DemandeConfirmerCourriel({intro} : Props){
     const {membre} = useMembre()
     const {getToken} = useAccessToken()
 
+    // User story 12: true while the email is being sent (spinner in the button).
+    const [envoiEnCours, setEnvoiEnCours] = useState(false)
+
+    /**
+     * Asks the API to send the confirmation email again
+     * (POST /confirmation/envoyer_email). Ignored while a request is already in flight.
+     *
+     * @returns {Promise<void>}
+     */
     const envoyerCourriel = async ()=>{
+        if (envoiEnCours) return
+        setEnvoiEnCours(true)
         try {
             const token = await getToken()
             const reponse = await api.post("/confirmation/envoyer_email", 
@@ -42,6 +55,8 @@ export default function DemandeConfirmerCourriel({intro} : Props){
                 })
         } catch (error) {
             catcher(error, t('errors.emailFailed'))
+        } finally {
+            setEnvoiEnCours(false)
         }
     }
 
@@ -69,10 +84,15 @@ export default function DemandeConfirmerCourriel({intro} : Props){
                 <TouchableOpacity
                     style={{paddingHorizontal:8, width:'100%', height:56, borderWidth:1, borderRadius:12, alignItems:'center', justifyContent:'center', borderColor:colors.border, backgroundColor:colors.secondary}}
                     onPress={()=>{envoyerCourriel()}}
+                    disabled={envoiEnCours}
                 >
-                    <Text style={s.text}>
-                        {t('emailConfirmation.resend')}
-                    </Text>
+                    {/* User story 12: spinner while the email is being sent. */}
+                    {envoiEnCours
+                        ? <Spinner size={22} accessibilityLabel={t('common:loading')} />
+                        : <Text style={s.text}>
+                            {t('emailConfirmation.resend')}
+                        </Text>
+                    }
                 </TouchableOpacity>
             </View>
         </View>

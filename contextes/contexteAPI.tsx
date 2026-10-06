@@ -20,6 +20,16 @@ interface AxiosRequestConfigWithRetry extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
 
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    /**
+     * User story 12: background request (e.g. AutoRefresh polling) that must not
+     * show the global loading indicator, which would otherwise flash every few seconds.
+     */
+    silencieux?: boolean;
+  }
+}
+
 export const APIContexte = createContext<APIContextType | undefined>(undefined);
 
 export const APIProvider = ({ children }: { children: React.ReactNode }) => {
@@ -84,9 +94,14 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     // un requestInterceptor est un callback qui s'exécute lors d'un appel API
+    // User story 12: every setFetching(true) here is matched by one setFetching(false)
+    // in the response interceptor (success or error, including an error thrown by
+    // this callback), so the global loading indicator always ends. A 401 retry goes
+    // through here again and counts as a new request.
     const requestInterceptor = api.interceptors.request.use(
       async (config) => {
-        requestListener?.setFetching(true) //utile pour écouter si le client fait un appel
+        if (!config.silencieux)
+          requestListener?.setFetching(true) //utile pour écouter si le client fait un appel
 
         if (config.method === 'GET' && !config.params?.resource)
           throw Error('cannot get without resource parameter')
@@ -98,7 +113,8 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
         return config
       },
       (error) => { // si une erreur survient à l'envoie de la requete
-        requestListener?.setFetching(false)
+        if (!error?.config?.silencieux)
+          requestListener?.setFetching(false)
         catcher(error, "erreur à l'envoie de la requête")
         return Promise.reject(error)
       }
@@ -107,11 +123,13 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
     // un responseInterceptor est un callback qui s'exécute lorsqu'une réponse API est retournée
     const responseInterceptor = api.interceptors.response.use(
       response => {
-        requestListener?.setFetching(false) //utile pour écouter si le client ne fait plus appel
+        if (!response.config.silencieux)
+          requestListener?.setFetching(false) //utile pour écouter si le client ne fait plus appel
         return response; // retourne la réponse si aucune erreur est retournée
       },
       async error => { // si une erreur survient
-        requestListener?.setFetching(false) //utile pour écouter si le client ne fait plus appel
+        if (!error?.config?.silencieux)
+          requestListener?.setFetching(false) //utile pour écouter si le client ne fait plus appel
         const requeteOriginale: AxiosRequestConfigWithRetry = error.config;
         console.log("error response", error.response)
 

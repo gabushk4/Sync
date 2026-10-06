@@ -8,6 +8,7 @@ import { useInvites } from '@/contextes/contexteInvites';
 import { usePalette } from '@/contextes/contextePalette';
 
 import ParticipantLigne from '@/components/participantLigne';
+import Spinner from '@/components/spinner';
 
 import catcher from '@/functions/catcher';
 import log from '@/functions/log';
@@ -34,6 +35,9 @@ export default function ParticipantsListe({ participantsUrl } : Props){
     const { invites } = useInvites()
 
     const [participants, setParticipants] = useState<Array<Participant>>()
+    // User story 12: shows a spinner during the first load of an existing
+    // event's participants (a new event has no URL and nothing to load).
+    const [chargement, setChargement] = useState(!!participantsUrl)
 
     const containerHeight = useSharedValue(LINE_HEIGHT * (participants?.length ?? 1))
 
@@ -57,6 +61,8 @@ export default function ParticipantsListe({ participantsUrl } : Props){
             } catch (error) {
                 log('getParticipants', error)
                 catcher(error, t('errors.participantsLoadFailed'))
+            } finally {
+                setChargement(false)
             }
             if (invites.length > 0) {
                 log("getParticipants invites", invites)
@@ -123,6 +129,11 @@ export default function ParticipantsListe({ participantsUrl } : Props){
                 persistentScrollbar={true}
                 /* ItemSeparatorComponent={() => (<View style={[s.separator, { backgroundColor:theme.colors.secondary }]} />)} */                    
             >
+                {chargement && !participants &&
+                    <View style={{height:LINE_HEIGHT, justifyContent:'center', alignItems:'center'}}>
+                        <Spinner accessibilityLabel={t('common:loading')} />
+                    </View>
+                }
                 {participants?.map((item, index) => 
                     <View key={item.id} style={{flexDirection:'row', justifyContent:'center', alignItems:'center'}}>
                         <ParticipantLigne participantsUrl={participantsUrl} participant={item} height={LINE_HEIGHT}/>                                

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 
 import TextInputAbs from '@/abstractions/textInputAbs';
+import Spinner from '@/components/spinner';
 
 import { useAPI } from '@/contextes/contexteAPI';
 import { useAccessToken } from '@/contextes/contexteToken';
@@ -130,13 +131,18 @@ export default function AddFriendForm() {
                     autoCorrect={false}
                     autoCapitalize="none"
                 />
-                {/* Visible button: the keyboard's "send" key used to be the only way to submit. */}
+                {/* Visible button: the keyboard's "send" key used to be the only way to submit.
+                    Stays fully opaque while sending so the spinner is visible (user story 12). */}
                 <TouchableOpacity
-                    style={[s.boutonEnvoyer, { opacity: nettoyerCodeAmi(codeAmi) && !envoiEnCours ? 1 : 0.4 }]}
+                    style={[s.boutonEnvoyer, { opacity: nettoyerCodeAmi(codeAmi) || envoiEnCours ? 1 : 0.4 }]}
                     onPress={postDemande}
                     disabled={!nettoyerCodeAmi(codeAmi) || envoiEnCours}
                 >
-                    <Text style={s.texteEnvoyer}>{t('add.send')}</Text>
+                    {/* User story 12: spinner while the request is sent. */}
+                    {envoiEnCours
+                        ? <Spinner size={22} accessibilityLabel={t('common:loading')} />
+                        : <Text style={s.texteEnvoyer}>{t('add.send')}</Text>
+                    }
                 </TouchableOpacity>
             </View>
 

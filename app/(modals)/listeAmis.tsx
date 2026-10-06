@@ -16,6 +16,7 @@ import { useInvites } from "@/contextes/contexteInvites";
 import { usePalette } from "@/contextes/contextePalette";
 
 import ModalBase from "@/components/modalBase";
+import Spinner from "@/components/spinner";
 
 import { modalEvents } from "@/events/modalEvents";
 import { FriendListType, useFriendList } from "@/hooks/useFriendList";
@@ -51,7 +52,15 @@ export default function ListeAmis(){
 
     const [amis, setAmis] = useState<Array<Participant>>([])
     const [amisSelec, setAmisSelec] = useState<Array<Participant>>([])
+    // User story 12: true until the first answer, so the empty state ("no
+    // friends yet") isn't shown while the list is still loading.
+    const [chargement, setChargement] = useState(true)
 
+    /**
+     * Fetches the member's friends (GET /amis) and converts their friendship date to local time.
+     *
+     * @returns {Promise<void>}
+     */
     const getAmis = async ()=>{
         try {
             const response = await api.get('/amis')
@@ -68,6 +77,8 @@ export default function ListeAmis(){
             setAmis(data)
         } catch (error) {
             catcher(error, t('errors.loadFailed'))
+        } finally {
+            setChargement(false)
         }
     }
 
@@ -117,6 +128,11 @@ export default function ListeAmis(){
                     end={{x:0, y:1}}
                     colors={[colors.primary, 'transparent']}
                 />
+                {chargement && amis.length < 1 &&
+                    <View style={{height:'100%', width:'100%', justifyContent:'center', alignItems:'center'}}>
+                        <Spinner size={32} accessibilityLabel={t('common:loading')} />
+                    </View>
+                }
                 {amis.length > 0 && <FlatList
                     data={amis}
                     contentContainerStyle={{alignItems:'center', paddingTop:16, paddingBottom:16}}
@@ -164,7 +180,7 @@ export default function ListeAmis(){
                     }
                     }
                 />}
-                {amis.length < 1 &&
+                {!chargement && amis.length < 1 &&
                     <View style={{height:'100%', width:'100%', justifyContent:'center', alignItems:'center', gap:8}}>
                         <Text style={{color:colors.text, fontFamily:fonts.title, fontSize:18}}>
                             {t('list.emptyState')}

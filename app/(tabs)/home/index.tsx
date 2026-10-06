@@ -4,13 +4,13 @@ import { usePalette } from '@/contextes/contextePalette';
 
 import { useNavFab } from '@/hooks/useNavFAB';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Animated, { ReduceMotion, scrollTo, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue, withDecay, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { cancelAnimation, Easing, ReduceMotion, scrollTo, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue, withDecay, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
 
 import { DateTime } from 'luxon';
 
-import { Dimensions, Easing, Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { scheduleOnRN } from 'react-native-worklets';
 
@@ -24,6 +24,7 @@ import log from '@/functions/log';
 import CalendarMonthView from '@/components/calendarMonthView';
 import EventsList from '@/components/eventsList';
 import ProfilPic from '@/components/pfp';
+import Spinner from '@/components/spinner';
 import Timeline from '@/components/timeline';
 import { useFont } from '@/contextes/contexteFont';
 import { useMembre } from '@/contextes/contexteMembre';
@@ -43,7 +44,9 @@ const HEIGHT_BOT_BAR = 80;
 const HEIGHT_DATE = 56;
 const HEIGHT_TIMELINE = 32;
 const backToNowWidth = 56
-const AnimatedStyleMinVal = 0.1
+// Lowest opacity of the schedule while it reloads (user story 12). Was 0.1, too
+// dim now that the pulse actually plays.
+const AnimatedStyleMinVal = 0.4
 const LIST_HEIGHT = 104
 const { width: WIN_W, height: WIN_H } = Dimensions.get('window')
 // Max events per request in the month view (the API defaults to 20, too few for a month).
@@ -135,11 +138,19 @@ export default function Home() {
   const [userEvents, setUserEvents] = useState<Array<any>>([])
   const [todayDateTime, setTodayDateTime] = useState<DateTime>()
   const [chargementEchec, setChargementEchec] = useState(false)
-  const [chargementEvenements, setChargementEvenements] = useState(false)
+  // User story 12: number of forced event loads in flight (member + friends,
+  // reported by AutoRefresh's onChargement). A counter rather than a boolean
+  // because both loads run at once and end in any order.
+  const [chargementsEnCours, setChargementsEnCours] = useState(0)
+  const chargementEvenements = chargementsEnCours > 0
   const [afficherRetour, setAfficherRetour] = useState({afficher:afficherRetourMaintenant.value.afficher, left:afficherRetourMaintenant.value.left})
   // User story 5: whether the month calendar replaces the timeline, and which month it shows.
   const [vueCalendrier, setVueCalendrier] = useState(false)
   const [moisCalendrier, setMoisCalendrier] = useState<DateTime>()
+  // User story 12: true from opening the calendar until its month is loaded; a
+  // spinner replaces the grid meanwhile. Later month changes keep the grid (the
+  // header indicator shows those loads) so swiping between months isn't interrupted.
+  const [ouvertureCalendrier, setOuvertureCalendrier] = useState(false)
 
   // Pre-fills the create screen with the day currently displayed, at the
   // next full hour of the current time (create.tsx still bumps it to at
@@ -163,17 +174,47 @@ export default function Home() {
   const opaciteZoomableFlatlist = useSharedValue(1)
   const opaciteListeEv = useSharedValue(0)
   const opaciteRetour = useSharedValue(0);
-  const chargementShared = useSharedValue(chargementEvenements)
+  const opaciteChargement = useSharedValue(1)
   const offsetXBase = useSharedValue(0)
   const offsetYBase = useSharedValue(0)
   const offsetY = useSharedValue(0)
   
   //Animated Styles
+  // User story 12: the schedule pulses while its events load. The animation is
+  // started from JS (effect below) instead of inside the worklet: it used
+  // react-native's Easing, which can't run on the UI thread, and read a shared
+  // value that was never updated, so the pulse never played.
   const loadingAnimated = useAnimatedStyle(() => ({
-    opacity: chargementShared.value
-      ? withRepeat(withTiming(AnimatedStyleMinVal, { duration: 500, easing: Easing.inOut(Easing.ease) }), -1, true)
-      : withTiming(1, { duration: 500 }),
+    opacity: opaciteChargement.value
   }));
+
+  useEffect(() => {
+    if (chargementEvenements) {
+      opaciteChargement.value = withRepeat(
+        withTiming(AnimatedStyleMinVal, { duration: 500, easing: Easing.inOut(Easing.ease) }),
+        -1,
+        true
+      )
+    } else {
+      cancelAnimation(opaciteChargement)
+      opaciteChargement.value = withTiming(1, { duration: 300 })
+    }
+  }, [chargementEvenements])
+
+  // Ends the calendar's opening state once its month load is done.
+  useEffect(() => {
+    if (ouvertureCalendrier && !chargementEvenements) setOuvertureCalendrier(false)
+  }, [ouvertureCalendrier, chargementEvenements])
+
+  /**
+   * AutoRefresh `onChargement` callback: counts the forced loads in flight.
+   *
+   * @param {boolean} enCours - `true` when a load starts, `false` when it ends.
+   * @returns {void}
+   */
+  const suivreChargement = (enCours: boolean) => {
+    setChargementsEnCours((n) => Math.max(0, n + (enCours ? 1 : -1)))
+  }
 
   const retourMaintenantAnime = useAnimatedStyle(() => {
     "worklet"
@@ -374,6 +415,7 @@ export default function Home() {
     if (activation && todayDateTime) {
       const mois = todayDateTime.startOf('month')
       setMoisCalendrier(mois)
+      setOuvertureCalendrier(true)
       userEventsRefresh.current?.forceRefresh({ extraParams: paramsMois(mois) })
     } else if (todayDateTime) {
       userEventsRefresh.current?.forceRefresh({ extraParams: paramsJour(todayDateTime) })
@@ -531,6 +573,7 @@ export default function Home() {
       userEventsRefresh.current = new AutoRefresh(api, '/evenements/', {
         extraParams: paramsJour(now),
         onData: modifierEvenementsMembreFetched,
+        onChargement: suivreChargement,
         onError: (error) => {
           log("impossible de charger les évènements du membre", error)
           catcher(error, t('errors.loadMemberEvents'))
@@ -540,6 +583,7 @@ export default function Home() {
       friendsEventsRefresh.current = new AutoRefresh(api, '/evenements/amis', {
         extraParams: paramsJour(now),
         onData: modifierEvenementsAmisFetched,
+        onChargement: suivreChargement,
         onError: (error) => {
           log("impossible de charger les évènements d'amis", error)
           catcher(error, t('errors.loadFriendEvents'))
@@ -676,6 +720,11 @@ export default function Home() {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    spinnerCalendrier: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     calendarContainer: {
       flex:5
     },
@@ -707,7 +756,12 @@ export default function Home() {
         )}
 
         {/* ── Calendar view (month grid) — user story 5 ── */}
-        {vueCalendrier ? (
+        {/* User story 12: spinner in place of the month grid until the month's events are loaded. */}
+        {vueCalendrier && ouvertureCalendrier ? (
+          <View style={s.spinnerCalendrier}>
+            <Spinner size={40} accessibilityLabel={t('common:loading')} />
+          </View>
+        ) : vueCalendrier ? (
           <CalendarMonthView
             monthDate={moisCalendrier ?? todayDateTime ?? DateTime.now()}
             selectedDate={todayDateTime}
@@ -723,7 +777,13 @@ export default function Home() {
           <View style={s.calendarContainer}>
           <Animated.View style={[loadingAnimated, s.friendsZone]}>
             {/* TODO: ScrollView verticale des amis */}
-            {friends.length === 0 ? (
+            {/* User story 12: spinner during the first load, instead of the
+                "no friends yet" placeholder the member used to see meanwhile. */}
+            {friends.length === 0 && chargementEvenements ? (
+              <View style={s.addFriendPlaceholderContainer}>
+                <Spinner size={32} accessibilityLabel={t('common:loading')} />
+              </View>
+            ) : friends.length === 0 ? (
               <View style={s.addFriendPlaceholderContainer}>
                 <Text style={s.addFriendPlaceholderText}>
                   {t('friendsListEmptyState')}

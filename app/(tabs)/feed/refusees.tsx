@@ -1,8 +1,9 @@
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 
+import Spinner from "@/components/spinner";
 import { useAPI } from "@/contextes/contexteAPI";
 import { useFont } from "@/contextes/contexteFont";
 import { useMembre } from "@/contextes/contexteMembre";
@@ -127,10 +128,11 @@ export default function InvitationsRefusees() {
         },
     })
 
+    // User story 12: shared Spinner component while the invitations load.
     if (chargement) {
         return (
-            <View style={[s.container, { justifyContent: 'center' }]}>
-                <ActivityIndicator color={colors.text} />
+            <View style={[s.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <Spinner size={32} accessibilityLabel={t('common:loading')} />
             </View>
         )
     }

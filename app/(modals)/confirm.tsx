@@ -1,9 +1,11 @@
 import { router, useLocalSearchParams } from 'expo-router'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 import ToastAbs from '@/abstractions/toastAbs'
 import ModalBase from '@/components/modalBase'
+import Spinner from '@/components/spinner'
 import { toastTypes } from '@/constants/toastConfig'
 import { useAPI } from '@/contextes/contexteAPI'
 import { useAuth } from '@/contextes/contexteAuth'
@@ -97,6 +99,15 @@ export default function Confirm() {
 
     const selectedAction = action ? actionConfig[action] : undefined
 
+    // User story 12: true while the confirmed action's request runs (spinner in the button).
+    const [enCours, setEnCours] = useState(false)
+
+    /**
+     * Runs the confirmed action. Sign-out closes the modal first; the other
+     * actions show a spinner on the button until their request ends (user story 12).
+     *
+     * @returns {Promise<void>}
+     */
     const confirmerAction = async () => {
         if (action === 'signOut') {
             if (router.canDismiss()) {
@@ -106,7 +117,12 @@ export default function Confirm() {
             return
         }
 
-        await selectedAction?.callback?.()
+        setEnCours(true)
+        try {
+            await selectedAction?.callback?.()
+        } finally {
+            setEnCours(false)
+        }
         modalEvents.emitClosing()
     }
 
@@ -159,11 +175,16 @@ export default function Confirm() {
                 <Text style={[s.text, {marginVertical:32}]}>{selectedAction?.confirmation}</Text>
                 <View style={s.btnContainer}>
                     <TouchableOpacity style={[s.btn, {}]}
-                        disabled={!selectedAction?.callback}
+                        disabled={!selectedAction?.callback || enCours}
                         onPress={confirmerAction}
                     >
-                        <Text style={s.text}>{selectedAction?.confirm}</Text>
-                        <Ionicons name={selectedAction?.icon ?? 'help-circle'} color={colors.error} size={20}/>
+                        {enCours
+                            ? <Spinner size={22} color={colors.error} accessibilityLabel={t('common:loading')} />
+                            : <>
+                                <Text style={s.text}>{selectedAction?.confirm}</Text>
+                                <Ionicons name={selectedAction?.icon ?? 'help-circle'} color={colors.error} size={20}/>
+                            </>
+                        }
                     </TouchableOpacity>
                 </View>
             </View>

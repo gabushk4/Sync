@@ -17,6 +17,7 @@ import TextInputAbs from '@/abstractions/textInputAbs';
 import ToastAbs from "@/abstractions/toastAbs";
 import BetaTag from '@/components/betaTag';
 import ServerStatus from '@/components/serverStatus';
+import Spinner from '@/components/spinner';
 import { toastTypes } from "@/constants/toastConfig";
 import catcher from '@/functions/catcher';
 import { router } from 'expo-router';
@@ -62,6 +63,8 @@ export default function InscriptionEcran({
     const [courrielValide, setCourrielValide] = useState(true)
 
     const [isInactive, setEstDesactive] = useState(true)
+    // User story 12: true while the account is being created (spinner in the submit button).
+    const [enChargement, setEnChargement] = useState(false)
 
     let inputPositions = useRef({
         pseudo: 0,
@@ -83,7 +86,16 @@ export default function InscriptionEcran({
         }
     }
 
+    /**
+     * Creates the account (POST /membres/inscription) with the member's timezone,
+     * then goes back to the login screen. Ignored while a request is already in
+     * flight, so a double tap can't create two requests (user story 12).
+     *
+     * @returns {Promise<void>}
+     */
     const inscrire = async () =>{
+        if (enChargement) return
+        setEnChargement(true)
         try {
             const method = "POST"
             const url = "/membres/inscription"
@@ -118,6 +130,8 @@ export default function InscriptionEcran({
           } catch (error : any) {
             log('Erreur inscription :', error.message)
             catcher(error, t('errors.registerFailed'))
+          } finally {
+            setEnChargement(false)
           }
     }    
 
@@ -440,14 +454,18 @@ export default function InscriptionEcran({
                         >
                             <Text style={{color:colors.text, fontSize:18, fontFamily:fonts.body}}>{t('register.cancel')}</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[s.button, {backgroundColor:isInactive?'transparent':colors.secondary, }]} 
-                            disabled={isInactive}
+                        {/* User story 12: spinner in place of the label while the account is created. */}
+                        <TouchableOpacity style={[s.button, {backgroundColor:isInactive && !enChargement?'transparent':colors.secondary, }]} 
+                            disabled={isInactive || enChargement}
                             onPress={()=> {
                                 inscrire()
                             }}>
-                            <Text style={{color:isInactive?colors.muted:colors.text, fontSize:18, fontFamily:fonts.body}}>
-                                {t('register.submit')}
-                            </Text>
+                            {enChargement
+                                ? <Spinner size={22} accessibilityLabel={t('common:loading')} />
+                                : <Text style={{color:isInactive?colors.muted:colors.text, fontSize:18, fontFamily:fonts.body}}>
+                                    {t('register.submit')}
+                                </Text>
+                            }
                         </TouchableOpacity>
                     </View>
                     <View style={{ width:'100%', height:24, alignItems:'center'}}>

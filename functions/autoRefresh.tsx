@@ -11,6 +11,12 @@ interface AutoRefreshOptions {
     onData?: (data: any) => void
     onPostRequest?: PostRequestCallback
     onError?: (error: any) => void
+    /**
+     * User story 12: called with `true` when a forced load (first load, or
+     * forceRefresh, e.g. after changing day) starts and `false` when it ends, so
+     * the screen can show a loader. Background polls don't trigger it.
+     */
+    onChargement?: (enCours: boolean) => void
     extraParams?: Record<string, any>
 }
 
@@ -20,6 +26,8 @@ interface AutoRefreshOptions {
  * returns the full payload when something changed (`has_changed`). Backs off
  * exponentially on temporary errors and stops on 401/403/404.
  * Starts polling as soon as it's constructed.
+ * Background polls are sent with `silencieux: true` so they don't show the
+ * global loading indicator every few seconds (user story 12); forced loads do.
  */
 class AutoRefresh {
     private api: AxiosInstance
@@ -36,6 +44,7 @@ class AutoRefresh {
     private onData?: (data: any) => void
     private onPostRequest?: PostRequestCallback
     private onError?: (error: any) => void
+    private onChargement?: (enCours: boolean) => void
     private extraParams: Record<string, any>
 
     constructor(api: AxiosInstance, url: string, options: AutoRefreshOptions = {}) {
@@ -68,6 +77,7 @@ class AutoRefresh {
         if (options.onData !== undefined) this.onData = options.onData
         if (options.onPostRequest !== undefined) this.onPostRequest = options.onPostRequest
         if (options.onError !== undefined) this.onError = options.onError
+        if (options.onChargement !== undefined) this.onChargement = options.onChargement
         if (options.extraParams !== undefined) {
             // New query (e.g. another day): the last version seen was for the old
             // range, so drop it and let the next poll get a full answer.
@@ -91,7 +101,8 @@ class AutoRefresh {
 
     /**
      * Runs one request (skipped if one is already in flight). Calls `onData`
-     * when the API reports a change, `onError` on failure.
+     * when the API reports a change, `onError` on failure. A forced request also
+     * calls `onChargement` before and after, and shows the global loading indicator.
      *
      * @param {boolean} [forceRefresh=false] - Ask for the full payload even if unchanged.
      * @returns {Promise<void>}
@@ -100,6 +111,7 @@ class AutoRefresh {
         //log('autoRefreshed', this.url, 'force refresh', forceRefresh, 'last_checked', this.lastChecked, 'with', this.extraParams)
         if (this.inFlight) return
         this.inFlight = true
+        if (forceRefresh) this.onChargement?.(true)
 
         try {
             let params: Record<string, any> = { ...this.extraParams }
@@ -109,7 +121,8 @@ class AutoRefresh {
             params.force_refresh = forceRefresh
             
             const response = await this.api.get(this.url, {
-                params
+                params,
+                silencieux: !forceRefresh
             })
             
             this.onPostRequest?.(response)            
@@ -141,6 +154,7 @@ class AutoRefresh {
             this.restart()
         } finally {
             this.inFlight = false
+            if (forceRefresh) this.onChargement?.(false)
         }
     }
 
