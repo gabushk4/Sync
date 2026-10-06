@@ -4,9 +4,9 @@ import { usePalette } from '@/contextes/contextePalette';
 
 import { useNavFab } from '@/hooks/useNavFAB';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Animated, { ReduceMotion, scrollTo, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue, withDecay, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { cancelAnimation, ReduceMotion, scrollTo, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue, withDecay, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
 
 import { DateTime } from 'luxon';
 
@@ -42,12 +42,19 @@ const WIDTH_COL = 80;
 const HEIGHT_BOT_BAR = 80;
 const HEIGHT_DATE = 56;
 const HEIGHT_TIMELINE = 32;
-const backToNowWidth = 56
 const AnimatedStyleMinVal = 0.1
 const LIST_HEIGHT = 104
 const { width: WIN_W, height: WIN_H } = Dimensions.get('window')
 // Max events per request in the month view (the API defaults to 20, too few for a month).
 const LIMITE_MOIS = 300
+
+/** Formats the displayed local day as the UTC date range expected by the events API. */
+function getEventDateRangeParams(date: DateTime) {
+  return {
+    debut: formaterDatePourServeur(convertLocalToUTC(date.startOf('day'))),
+    fin: formaterDatePourServeur(convertLocalToUTC(date.endOf('day'))),
+  }
+}
 
 /**
  * Query params for GET /evenements and /evenements/amis covering [debut, fin].
@@ -104,11 +111,14 @@ export default function Home() {
   const { fonts } = useFont()
   const { api } = useAPI()
   const colorScheme = useColorScheme()
-  const { initialiserOffset, afficherRetourMaintenant, onPan, offset: offsetX, LEFT_GO_TO_BEFORE, LEFT_GO_TO_AFTER } = useGestionScroll()
+  const { initialiserOffset, afficherRetourMaintenant, onPan, offset: offsetX, LEFT_GO_TO_BEFORE, LEFT_GO_TO_AFTER, clampOffset, maxOffset } = useGestionScroll()
   const { pxHeures, pxHeuresShared, L_HEURES } = useTimeline();
   const { membre } = useMembre()
-
-  const MAX_OFFSET_X = (24.78 * (pxHeures + L_HEURES)) - WIN_W
+  
+  useNavFab({
+    href: '/home/create',
+    icon: null,    
+  })
 
   const icones = {
     arrowR:colorScheme === 'dark'?require('@/assets/icones/fleche-d-dark-icon.png'):require('@/assets/icones/fleche-d-light-icon.png'),
@@ -124,7 +134,6 @@ export default function Home() {
   
   //Refs
   const chargerEvenementsEvent = useRef(false)
-  const offsetMaintenant = useRef(0)
   const friendsList = useAnimatedRef<Animated.ScrollView>()
   const friendsEventsRefresh = useRef<AutoRefresh>(null)
   const userEventsRefresh = useRef<AutoRefresh>(null)
@@ -253,7 +262,7 @@ export default function Home() {
    */
   const modifierEvenementsAmisFetched = (data: any) => {
     const events = data.resultat ?? []
-    //log("modifier evenements amis data: ", data)
+    log("modifier evenements amis data: ", data)
     try {
       const amisFinal = events?.map((ami: Friend) => {
           //log('ami evenements', ami.evenements)
@@ -266,7 +275,7 @@ export default function Home() {
                   const start = convertUTCToLocal(ev.debut, membre.timezone)
                   const end = convertUTCToLocal(ev.fin, membre.timezone)
                   return {
-                    id: ev.id_publique,
+                    id: ev.id_publique ?? ev.id,
                     url: ev.url,
                     type: ev.type,
                     titre: ev.prive ? undefined : ev.titre,
@@ -327,176 +336,81 @@ export default function Home() {
       afficher: diffFromNow > 0 || diffFromNow < 0
     }
   }
-  /**
-   * Shows the previous day and refetches the member's and friends' events for it.
-   *
-   * @returns {void}
-   */
-  const reculerDate = () => {
-    if (todayDateTime) {
-      const newDt = todayDateTime.minus({ day: 1 });
-      toggleBackToNow(newDt)
-      setTodayDateTime(newDt);
-      dateAujShared.value = newDt.toMillis();
-      userEventsRefresh.current?.forceRefresh({ extraParams: paramsJour(newDt) })
-      friendsEventsRefresh.current?.forceRefresh({extraParams: paramsJour(newDt)})
-    }
+
+  const buildRange = (dt: DateTime) => ({
+    start: formaterDatePourServeur(convertLocalToUTC(dt.startOf('day'))),
+    end: formaterDatePourServeur(convertLocalToUTC(dt.endOf('day'))),
+  });
+
+  const refreshAt = (dt: DateTime) => {
+    const extraParams = buildRange(dt);
+    userEventsRefresh.current?.setParams(extraParams);
+    friendsEventsRefresh.current?.setParams(extraParams);
   };
 
-  /**
-   * Shows the next day and refetches the member's and friends' events for it.
-   *
-   * @returns {void}
-   */
-  const avancerDate = () => {
-    if (todayDateTime) {
-      const newDt = todayDateTime.plus({ day: 1 });
-      setTodayDateTime(newDt);
-      dateAujShared.value = newDt.toMillis();
-      toggleBackToNow(newDt)
-      userEventsRefresh.current?.forceRefresh({ extraParams: paramsJour(newDt) })
-      friendsEventsRefresh.current?.forceRefresh({extraParams: paramsJour(newDt)})
-    }
+  const changerJour = (delta: number) => {
+    if (!todayDateTime) return;
+    const newDt = todayDateTime.plus({ days: delta });
+    setTodayDateTime(newDt);
+    dateAujShared.value = newDt.toMillis();
+    toggleBackToNow(newDt);
+    refreshAt(newDt);
   };
 
-  /**
-   * Toggles between the timeline view (day) and the calendar view (month).
-   * Switching in refetches the member's events for the whole month (to populate the
-   * day dots); switching out refetches just the currently displayed day.
-   * Part of user story 5 (conventional month calendar view).
-   *
-   * @returns {void}
-   */
-  const toggleVueCalendrier = () => {
-    const activation = !vueCalendrier
-    setVueCalendrier(activation)
+  const reculerDate = () => changerJour(-1);
+  const avancerDate = () => changerJour(1);
 
-    if (activation && todayDateTime) {
-      const mois = todayDateTime.startOf('month')
-      setMoisCalendrier(mois)
-      userEventsRefresh.current?.forceRefresh({ extraParams: paramsMois(mois) })
-    } else if (todayDateTime) {
-      userEventsRefresh.current?.forceRefresh({ extraParams: paramsJour(todayDateTime) })
-      friendsEventsRefresh.current?.forceRefresh({ extraParams: paramsJour(todayDateTime) })
-    }
-  }
-
-  /**
-   * Changes the displayed month in the calendar view and refetches the member's
-   * events for that new month.
-   * Part of user story 5 (conventional month calendar view).
-   *
-   * @param {1 | -1} direction - 1 to go to the next month, -1 for the previous month.
-   * @returns {void}
-   */
-  const changerMoisCalendrier = (direction: 1 | -1) => {
-    if (!moisCalendrier) return
-    const nouveauMois = moisCalendrier.plus({ month: direction })
-    setMoisCalendrier(nouveauMois)
-    userEventsRefresh.current?.forceRefresh({ extraParams: paramsMois(nouveauMois) })
-  }
-
-  /**
-   * Selects a day in the calendar view and switches back to the timeline view on that day,
-   * refetching both the member's and friends' events for that day.
-   * Part of user story 5 (conventional month calendar view).
-   *
-   * @param {DateTime} jour - The day that was tapped in the calendar grid.
-   * @returns {void}
-   */
-  const selectionnerJourCalendrier = (jour: DateTime) => {
-    toggleBackToNow(jour)
-    setTodayDateTime(jour)
-    dateAujShared.value = jour.toMillis()
-    setVueCalendrier(false)
-    userEventsRefresh.current?.forceRefresh({ extraParams: paramsJour(jour) })
-    friendsEventsRefresh.current?.forceRefresh({ extraParams: paramsJour(jour) })
-  }
-
-  /**
-   * Called once the user finishes a long-press-and-drag range selection in
-   * the calendar view. Closes the calendar and opens the create-event screen,
-   * pre-filled to span the whole selected range (start of the first day to
-   * the end of the last day).
-   * Part of user story 5 (conventional month calendar view).
-   *
-   * @param {DateTime} debut - First selected day.
-   * @param {DateTime} fin - Last selected day.
-   * @returns {void}
-   */
-  const selectionnerPlageCalendrier = (debut: DateTime, fin: DateTime) => {
-    setVueCalendrier(false)
-    router.push({
-      pathname: '/home/create',
-      params: {
-        start: debut.startOf('day').toISO(),
-        end: fin.endOf('day').toISO(),
-      },
-    })
-  }
-
-  /**
-   * "Back to now" button: scrolls the timeline to the current hour and, if
-   * another day was displayed, switches back to today and refetches its events.
-   *
-   * @returns {void}
-   */
   const retourMaintenant = () => {
     const now = DateTime.now();
     initialiserOffset(now.hour * (pxHeures + L_HEURES));
     if (todayDateTime?.day !== now.day) {
       setTodayDateTime(now.startOf('day'));
-      userEventsRefresh.current?.forceRefresh({ extraParams: paramsJour(now) })
-      friendsEventsRefresh.current?.forceRefresh({extraParams: paramsJour(now)})
+      refreshAt(now)
     }
     setAfficherRetour(prev => ({ ...prev, afficher: false }))
     afficherRetourMaintenant.value = {...afficherRetourMaintenant.value, afficher:false}
   };
   const lockedAxis = useSharedValue<string | null>(null)
 
+  const maxY = useSharedValue(0)
+  const zoneH = useRef(0)
+  const majMaxY = () => {
+    maxY.value = Math.max(0, friends.length * (LIST_HEIGHT + 4) - zoneH.current)
+  }
+  useEffect(majMaxY, [friends.length])
+
   const panGesture = Gesture.Pan()
     .onBegin(() => {
+      cancelAnimation(offsetX)            // stoppe l'inertie en cours
       lockedAxis.value = null
       offsetXBase.value = offsetX.value
       offsetYBase.value = offsetY.value
     })
     .onChange((e) => {
       // Lock la direction au premier mouvement significatif
-      if (!lockedAxis.value) {
-        if (Math.abs(e.translationX) > Math.abs(e.translationY)) {
-          lockedAxis.value = 'x'
-        } else {
-          lockedAxis.value = 'y'
-        }
+      if (!lockedAxis.value && (Math.abs(e.translationX) > 8 || Math.abs(e.translationY) > 8)) {
+        lockedAxis.value = Math.abs(e.translationX) > Math.abs(e.translationY) ? 'x' : 'y'
       }
-
       if (lockedAxis.value === 'x') {
-        offsetX.value = Math.min(Math.max(offsetXBase.value - e.translationX, 0), MAX_OFFSET_X)
-        scheduleOnRN(onPan, offsetX.value)
-      } else {
-        offsetY.value = Math.max(offsetYBase.value + e.translationY, 0)
+        offsetX.value = clampOffset(offsetXBase.value - e.translationX)
+      }else if(lockedAxis.value === 'y') {
+        offsetY.value = clampOffset(offsetYBase.value - e.translationY)
       }
     })
     .onEnd((e) => {
       //scheduleOnRN(log, "offsetX", offsetX.value, "base", offsetXBase.value)
       //scheduleOnRN(log, "offsetY", offsetY.value, "base", offsetYBase.value)
-      if (lockedAxis.value = 'x') {
-        offsetXBase.value = offsetX.value
+      if (lockedAxis.value === 'x') {
         offsetX.value = withDecay(
-          {
-            reduceMotion:ReduceMotion.Never,
-            velocity: -e.velocityX,
-            },
-            (endished) => {
-              if (endished) {
-                //Snap to nearest hour
-                const cellWidth = pxHeures + L_HEURES
-                const nearest = Math.round(offsetX.value / cellWidth) * cellWidth
-                offsetX.value = withSpring(nearest, withSpringConfig)            
-                offsetXBase.value = nearest
-              }
-            }
-        )
+        { velocity: -e.velocityX, clamp: [0, maxOffset] },   // la ligne clé
+        (finished) => {
+          'worklet'
+          if (!finished) return
+          const cell = pxHeures + L_HEURES
+          const snapped = clampOffset(Math.round(offsetX.value / cell) * cell)
+          offsetX.value = withSpring(snapped, withSpringConfig)
+        }
+      )
       }
       else {
         offsetYBase.value = offsetY.value      
@@ -507,7 +421,7 @@ export default function Home() {
           (endished) => {
             if (endished) {
               //Snap to nearest friend
-              offsetYBase.value = offsetY.value
+              offsetY.value = withDecay({ velocity: -e.velocityY, clamp: [0, maxY.value] })
             }
           }
         )
@@ -520,6 +434,13 @@ export default function Home() {
           scrollTo(friendsList, 0, offset, false)
   )
 
+  useAnimatedReaction(
+    () => offsetX.value,
+    (current, previous) => {
+      onPan(current)
+    }
+  )
+
   useFocusEffect(
     useCallback(() => {
       const now = DateTime.now();
@@ -528,8 +449,8 @@ export default function Home() {
       dateAujShared.value = now.toMillis();
       //chargerEvenements(now, now)
 
-      userEventsRefresh.current = new AutoRefresh(api, '/evenements/', {
-        extraParams: paramsJour(now),
+      userEventsRefresh.current = new AutoRefresh(api, '/evenements/', {        
+        extraParams: getEventDateRangeParams(now),
         onData: modifierEvenementsMembreFetched,
         onError: (error) => {
           log("impossible de charger les évènements du membre", error)
@@ -538,7 +459,7 @@ export default function Home() {
       })
 
       friendsEventsRefresh.current = new AutoRefresh(api, '/evenements/amis', {
-        extraParams: paramsJour(now),
+        extraParams: getEventDateRangeParams(now),
         onData: modifierEvenementsAmisFetched,
         onError: (error) => {
           log("impossible de charger les évènements d'amis", error)
@@ -547,8 +468,8 @@ export default function Home() {
       })      
 
       return () => {
-        userEventsRefresh.current?.stop()
-        friendsEventsRefresh.current?.stop()
+        userEventsRefresh.current?.destroy()
+        friendsEventsRefresh.current?.destroy()
       }
     }, [])
   );
@@ -596,6 +517,7 @@ export default function Home() {
     friendList: {
       flexDirection: 'row',
       height: 104,
+      marginBottom: 4
     },
     column: {
       width: WIDTH_COL,
@@ -742,6 +664,10 @@ export default function Home() {
                   <Animated.ScrollView
                     ref={friendsList}
                     showsVerticalScrollIndicator={false}
+                    onLayout={(e) => {
+                      zoneH.current = e.nativeEvent.layout.height;
+                      majMaxY();
+                    }}
                   >
                     {friends.map((friend) => {
                       const commonFreeSlots = getCommonFreeSlots(
@@ -752,12 +678,18 @@ export default function Home() {
                       return(
                         <View key={friend.id} style={[s.friendList]}>
                           {/* Photo de profil */}
-                          <BlurView style={[s.column,{ backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' }]}>
+                          <TouchableOpacity
+                            accessibilityRole="button"
+                            accessibilityLabel={t('viewFriendProfile', { name: friend.pseudo })}
+                            onPress={() => router.push({ pathname: '/(tabs)/profile/[membreId]', params: { membreId: friend.id } })}
+                          >
+                          <BlurView tint='dark' style={[s.column,{ backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' }]}>
                             <ProfilPic
                               pfp={friend.fp_url}
                               size={64}
                             />
                           </BlurView>
+                          </TouchableOpacity>
                           {/* Événements horizontaux */}
                           <EventsList
                             owner={friend}
@@ -768,7 +700,7 @@ export default function Home() {
                             textColor={colors.text}
                             offsetSnap={L_HEURES + pxHeures}
                             displayedDate={todayDateTime}
-                            getEvenements={() => friendsEventsRefresh.current?.forceRefresh({extraParams: paramsJour(todayDateTime ?? DateTime.now())})}
+                            getEvenements={() => { refreshAt(todayDateTime ?? DateTime.now()) }}
                           />
                         </View>                    
                       )})}
@@ -793,7 +725,7 @@ export default function Home() {
                 textColor={colors.text}
                 listSize={LIST_HEIGHT}
                 displayedDate={todayDateTime}
-                getEvenements={() => userEventsRefresh.current?.forceRefresh({extraParams: paramsJour(todayDateTime ?? DateTime.now())})}
+                getEvenements={() => {refreshAt(todayDateTime ?? DateTime.now())}}
                 horizontal={true}
               />
             </Animated.View>

@@ -28,6 +28,7 @@ export default function EditProfil() {
 
     const [pseudo, setPseudo] = useState<string>(membre.pseudo ?? '')
     const [bio, setBio] = useState<string>(membre.bio ?? '')
+    const [etatAme, setEtatAme] = useState<string>(membre.etatAme ?? '')
     const [fpSource, setFpSource] = useState<FPType>(membre.fp ? { uri: `${membre.fp}` } : icones.profilDef)
 
     const verifierAvantPatch = async () =>{
@@ -35,16 +36,18 @@ export default function EditProfil() {
         let pseudoNouv: string | undefined = undefined
         let bioNouv: string | undefined = undefined
         let fpNouv: FPType | undefined = undefined
+        let etatAmeNouv: string | undefined = undefined
 
         if(pseudo !== membre.pseudo) pseudoNouv = pseudo
         if(bio !== membre.bio) bioNouv = bio
+        if(etatAme !== (membre.etatAme ?? '')) etatAmeNouv = etatAme
 
         // determine if fpSource is an object with uri
         const maybeUri = (fpSource as any)?.uri
         if(maybeUri && maybeUri !== `${APIBaseURL}${membre.fp}`) fpNouv = fpSource as FPType
         else if (fpSource !== icones.profilDef && typeof fpSource === 'string') fpNouv = fpSource as FPType
         try {
-            await patchProfil(pseudoNouv, bioNouv, fpNouv)    
+            await patchProfil(pseudoNouv, bioNouv, fpNouv, etatAmeNouv)
         } catch (err) {
             catcher(err, t('errors.updateFailed'))
         }        
@@ -102,6 +105,15 @@ export default function EditProfil() {
                     onChangeText={setPseudo}
                     style={s.input}
                     placeholder={t('edit.usernamePlaceholder')}                
+                />
+
+                <Text style={s.label}>{t('edit.moodLabel')}</Text>
+                <TextInputAbs
+                    value={etatAme}
+                    onChangeText={setEtatAme}
+                    style={s.input}
+                    maxLength={160}
+                    placeholder={t('edit.moodPlaceholder')}
                 />
 
                 <Text style={s.label}>{t('edit.bioLabel')}</Text>

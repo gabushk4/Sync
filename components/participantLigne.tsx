@@ -1,3 +1,4 @@
+import Radius from '@/constants/Radius';
 import { useAPI } from '@/contextes/contexteAPI';
 import { useInvites } from '@/contextes/contexteInvites';
 import { useMembre } from '@/contextes/contexteMembre';
@@ -8,13 +9,15 @@ import log from '@/functions/log';
 import { Participant } from '@/types/invites';
 import { useEffect, useState, } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Alert, Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import ProfilPic from './pfp';
 
 type Props = {
     participant: Participant;
     participantsUrl?: string;
     height: number;
+    peutGererParticipants: boolean;
+    onParticipantSupprime: (participantId: string) => void;
 }
 
 /**
@@ -48,6 +51,7 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
     }
 
     const [p, setParticipant] = useState<Participant>()
+    const [suppressionEnCours, setSuppressionEnCours] = useState(false)
 
     /**
      * Uses the participant as given, or fetches their pseudo and picture from
@@ -56,15 +60,21 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
      * @returns {Promise<void>}
      */
     const getParticipant = async () => {
+        //log("participant", participant)
         const {fp_url, pseudo} = participant
-        if(!fp_url || !pseudo){
+        if (!participant.id) {
+            log('participant sans identifiant public, chargement ignoré', pseudo)
+            setParticipant(undefined)
+            return
+        }
+        if(!pseudo){
             try {
                 const response = await api.get(`membres/${participant.id}`)
                 const fetchedParticipant: Participant = {
                     ...participant,
-                    id: response.data.id_publique,
+                    id: response.data.id_publique ?? participant.id,
                     pseudo: response.data.pseudo,
-                    fp_url: response.data.fp_url,
+                    fp_url: response.data.fp_url ?? fp_url ?? null,
                 }
                 log("fetched participant:", fetchedParticipant)
                 setParticipant(fetchedParticipant)
@@ -83,16 +93,18 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
      * @returns {Promise<void>}
      */
     const supprimerParticipant = async () => {
-        supprimerInvite(p as Participant, participantsUrl).then(()=>{
-            setParticipant(undefined)
-        })
+        if (!p || suppressionEnCours) return
+        setSuppressionEnCours(true)
+        const succes = await supprimerInvite(p, participantsUrl)
+        setSuppressionEnCours(false)
+        if (succes) onParticipantSupprime(p.id)
     }
 
     useEffect(()=>{
         getParticipant()
     }, [])
 
-    const peutSupprimer = p ? (p.id !== membre.idPublique && p.privilege !== 'editeur') : false
+    const peutSupprimer = p ? (peutGererParticipants && p.id !== membre.idPublique) : false
 
     /**
      * Color of a participant's answer label (user story 9).
@@ -108,9 +120,7 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
             marginTop:-1,
             width:'90%',
             paddingVertical:4,
-            borderTopWidth:1,
             alignSelf: 'center',
-            borderColor: colors.border,
             height: height
         },
         photo:{
@@ -147,15 +157,15 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
             gap: 8,
         },
         leftIcon: {
-            flex: 1,
-            width:'20%',
+            flex: 0,
+            width: 32,
             height: '100%',
             alignItems: 'center',
             justifyContent: 'center',
         },
         rightAction: {
-            flex: 1,
-            width:'20%',
+            flex: 0,
+            width: 32,
             height: '100%',
             alignItems: 'flex-end',
             justifyContent: 'center',
@@ -165,10 +175,11 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
             width: '100%',
             flexDirection: 'row',
             padding: 8,
-            borderRadius: 8,
             alignItems: 'center',
-            justifyContent: 'space-between',
-            backgroundColor: colors.primary
+            justifyContent: 'space-between',     
+            borderWidth:1,
+            borderColor: colors.border,
+            borderRadius: Radius.xl,
         }
     })
 
@@ -189,7 +200,7 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
                 <View style={s.centralPanel}>
                     <View style={s.userInfo}>
                         <ProfilPic
-                            pfp={`${participant.fp_url}`}
+                            pfp={participant.fp_url}
                             size={32}
                             style={s.photo}
                         />
@@ -225,8 +236,15 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
                 <View style={s.rightAction}>
                     {peutSupprimer && (
                         <TouchableOpacity onPress={() => {
-                            supprimerParticipant()
-                        }}>
+                            Alert.alert(
+                                t('participantRemoval.confirmTitle'),
+                                t('participantRemoval.confirmMessage', { pseudo: p.pseudo }),
+                                [
+                                    { text: t('participantRemoval.cancel'), style: 'cancel' },
+                                    { text: t('participantRemoval.remove'), style: 'destructive', onPress: supprimerParticipant },
+                                ]
+                            )
+                        }} disabled={suppressionEnCours}>
                             <Image
                                 source={icone.croix}
                                 style={{transform:[{rotate:'45deg'}], height:24, width:24}}

@@ -31,7 +31,16 @@
       "expo-secure-store",
       "expo-splash-screen",
       "expo-status-bar",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Sync utilise le micro pour enregistrer tes messages vocaux."
+        "expo-calendar",
+        {
+          "calendarPermission": "Sync doit accéder à vos calendriers pour importer vos événements."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

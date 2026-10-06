@@ -1,5 +1,5 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useFocusEffect, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useColorScheme, View } from 'react-native';
 
@@ -40,6 +40,7 @@ export default function CreateEvent({ }) {
     const { colors } = usePalette()
     const colorScheme = useColorScheme()
     const { fonts } = useFont()
+    const navigation = useNavigation()
     
     const {api} = useAPI()
     const {invites, resetInvites} = useInvites()
@@ -50,27 +51,9 @@ export default function CreateEvent({ }) {
     const formRef = useRef<EventFormHandle>(null)
 
     const { start, end, friend } = useLocalSearchParams()
-
-    // Sorted defensively regardless of the order `start`/`end` arrive in —
-    // constraints.maximumStart ending up before minimumStart crashes the
-    // native date picker deep inside DateTimeSelecteur.
-    let debutDemande = DateTime.fromISO(start as string)
-    let finDemandee = end ? DateTime.fromISO(end as string) : undefined
-    if (finDemandee && debutDemande > finDemandee) {
-        [debutDemande, finDemandee] = [finDemandee, debutDemande]
-    }
-
-    // The "at least 1h from now" floor exists for the single-slot flow (e.g.
-    // tapping a near-term time in the timeline), where there's no explicit
-    // end to anchor against. When an explicit range is provided (e.g. from
-    // the calendar's drag-select, user story 5), it's an intentional, possibly-past choice
-    // — trust it directly instead of nudging it toward "now" and risking it
-    // landing after finDemandee.
-    const diffNowStart = debutDemande.diff(DateTime.now(), 'hours').hours
-    const minimumStart = finDemandee || diffNowStart > 1
-        ? debutDemande
-        : DateTime.now().plus({ hours: 1 })
-
+    
+    const diffNowStart = DateTime.fromISO(start as string).diff(DateTime.now(), 'hours').hours
+    const minimumStart = diffNowStart > 1 ? DateTime.fromISO(start as string) : DateTime.now().plus({hours:1})
     const [enChargement, setEnChargement] = useState(false)
     
     //log('setter end')
@@ -172,11 +155,13 @@ export default function CreateEvent({ }) {
         icon: <Icon name="checkmark" color={colors.text} size={28} />
     })
 
-    // Cleared on unmount rather than on blur: the conflict modal (user story 8)
-    // blurs this screen, and "adjust my schedule" must come back to the same invites.
-    useEffect(() => {
-        return () => {
+    useFocusEffect(useCallback(() => { 
+        const listener = navigation.addListener('beforeRemove', (e) => {
+            console.log('on back')
             resetInvites()
+        })
+        return () => {
+            navigation.removeListener('beforeRemove', listener)
         }
     }, [])
 
@@ -196,7 +181,7 @@ export default function CreateEvent({ }) {
     }, [event])
 
     return true
-        ?(       
+        ? (  
             <EventForm
                 ref={formRef}
                 event={event}

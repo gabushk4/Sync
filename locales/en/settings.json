@@ -4,6 +4,7 @@
     "english":"english",
     "french":"french",
     "timezone":"timezone",
+    "importCalendar":"import my system calendar",
     "local":"local timezone",
     "permissions":"OS permissions",
     "camera":"camera",

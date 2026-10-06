@@ -7,9 +7,13 @@ import { useFont } from "@/contextes/contexteFont";
 import log from "@/functions/log";
 import { router } from "expo-router";
 import { DateTime } from "luxon";
-import React, { useState } from "react";
-import { StyleSheet, TouchableOpacity } from "react-native";
-import Animated, { SharedValue, useAnimatedStyle } from "react-native-reanimated";
+import { useState } from "react";
+import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { useTranslation } from 'react-i18next';
+import Animated, { SharedValue } from "react-native-reanimated";
+import useTimelineLabelOffset from "@/hooks/useTimelineLabelOffset";
+import ToastAbs from "@/abstractions/toastAbs";
+import { toastTypes } from "@/constants/toastConfig";
 
 type Props = {
     freeSlot: any;
@@ -20,6 +24,7 @@ type Props = {
 }
 
 export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, listOffset, owner }: Props) {
+    const { t } = useTranslation('home')
     const { colors } = usePalette()
     const {fonts} = useFont()
     const { pxHeures, H_HEURES, L_HEURES } = useTimeline()
@@ -37,21 +42,40 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
                     ? findWidth(freeSlot.start, freeSlot.end, displayedDate, pxHeures + L_HEURES)
         : '100%'
     
-    const [freeSlotTextWidth, setFreeSlotTextWidth] = useState<number>(0)
-    const [freeSlotTextHeight, setFreeSlotTextHeight] = useState<number>(0)
+    const isInPast = freeSlot.start.toMillis() < DateTime.now().toMillis() && freeSlot.end.toMillis() < DateTime.now().toMillis() 
 
-    const textAnimated = useAnimatedStyle(() => ({
-            ...(horizontal
-                ? { left: Math.min(Math.max((listOffset.value - left) + pxHeures, pxHeures), width as number - (freeSlotTextWidth + pxHeures)) }
-                : { top: Math.min(Math.max((listOffset.value - top) + pxHeures, pxHeures), height as number - (freeSlotTextHeight + pxHeures)) })
-        }))
+    const LABEL_W = 96
+    const itemSize = (horizontal ? width : height) as number
+    const labelSize = Math.min(LABEL_W, itemSize)   
+    
+    const textAnimated = useTimelineLabelOffset({
+        axis: horizontal ? 'x' : 'y',
+        itemOffset: horizontal ? left : top,
+        itemSize,
+        labelSize,
+        listOffset,
+        inset: pxHeures,
+        centerThreshold: 2 * (pxHeures + (horizontal ? L_HEURES : H_HEURES)),
+        timelineLength: 24 * (pxHeures + (horizontal ? L_HEURES : H_HEURES)),
+    })
+    
     const s = StyleSheet.create({
         freeSlot:{
-            borderWidth: 1, 
+            borderWidth: 2,
             borderRadius:8,
             borderColor: colors.success,
             alignItems: 'center',
-            justifyContent: 'center',            
+            justifyContent: 'center',    
+            overflow:'hidden'
+        },
+        label: {
+            position: 'absolute',
+            left: 0, top: 0,                       // ancré, c'est transform qui déplace
+            alignItems: 'center',
+            justifyContent: 'center',
+            ...(horizontal
+                ? { width: labelSize, height: '100%' }
+                : { height: labelSize, width: '100%' }),
         },
         title: {
             fontFamily: fonts.title,
@@ -59,43 +83,55 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
             color: colors.text,
             flexWrap: 'wrap',
             textAlign: 'center',
-            position:'absolute'
+            maxWidth: horizontal ? width as number : '100%',
+            ...(horizontal
+                ? {}
+                : { maxHeight: height as number }),
         },
     })
     //log('free slot', freeSlot)
     return (
         <TouchableOpacity
             key={`fs${freeSlot.start}-${freeSlot.end}`}
+            accessibilityRole="button"
+            accessibilityLabel={`${t('commonFreeSlot')} ${freeSlot.start.toFormat('t')}–${freeSlot.end.toFormat('t')}`}
             style={[s.freeSlot, {
                 position: 'absolute',
                 left: left,
                 top: top,
                 height: height,
                 width: width,
-                
+                ...(isInPast ? {borderColor:colors.muted} : {}) 
             }]}
             onPress={() => {
-                //TODO: go to create with owner.id and start and end values passed 
-                
                 log("common free slot with", owner)
                 router.push({
                     pathname: '/(tabs)/home/create',
                     params: {
                         start: freeSlot.start,
                         end: freeSlot.end,
-                        friend:[JSON.stringify(owner)]
+                        friend: JSON.stringify({
+                            id: owner.id,
+                            pseudo: owner.pseudo,
+                            fp_url: owner.fp_url ?? null,
+                            privilege: 'lecteur',
+                        })
                     }
                 })
             }}
         >
-            <Animated.Text style={[textAnimated, s.title, { color: colors.muted }]}
-                onLayout={(e) => {
-                    setFreeSlotTextWidth(e.nativeEvent.layout.width)
-                    setFreeSlotTextHeight(e.nativeEvent.layout.height)
-                }}
+            <Animated.View
+                style={[textAnimated, s.label]}                
             >
-                Dispo commune {'\n'} +
-            </Animated.Text>
+                <Text
+                    numberOfLines={2}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.5}
+                    style={[s.title, { color: colors.muted }]}
+                >
+                    {t('commonFreeSlot')} {'\n'} +
+                </Text>
+            </Animated.View>
         </TouchableOpacity>
     )
 }

@@ -21,46 +21,50 @@ function convertirLocalVersUTC(dateLocale,){
     return dateUTC //retourne un DateTime
 } */
 
-function convertUTCToLocal(dateUTC: string | DateTime, timezone = 'local') : DateTime | undefined {
-  if (!dateUTC) {
-    log('DateUTC est undefined:', dateUTC)
-    throw Error('convertirUTCversLocale: DateUTC est undefined')
-  }
-  let dt: DateTime | null = null;
+function convertUTCToLocal(dateUTC: string | DateTime, timezone = 'local'): DateTime {
+    if (!dateUTC) {
+        throw new Error('convertUTCToLocal: dateUTC est undefined')
+    }
 
-  if (typeof dateUTC === 'string') {
-    dt = DateTime.fromISO(dateUTC, { zone:'utc' });
-    if(!dt.isValid)
-      dt = DateTime.fromSQL(dateUTC, {zone: 'utc'})
-  } else if (DateTime.isDateTime(dateUTC)) {
-    dt = dateUTC.setZone('utc');
-  } else if (dateUTC instanceof Date) {
-    dt = DateTime.fromJSDate(dateUTC, { zone: 'utc' });
-  } else {
-    console.warn("convertirUTCversLocale: type de dateUTC inattendu", typeof dateUTC);
-    throw Error('convertirUTCversLocale: type de dateUTC inattendu')
-  }
+    let dt: DateTime
 
-  const dtLocale = dt.setZone(timezone)
+    if (typeof dateUTC === 'string') {
+        dt = DateTime.fromISO(dateUTC, { zone: 'utc' })
+        if (!dt.isValid) {
+            dt = DateTime.fromSQL(dateUTC, { zone: 'utc' })
+        }
+    } else if (DateTime.isDateTime(dateUTC)) {
+        dt = dateUTC.setZone('utc')
+    } else {
+        throw new Error('convertUTCToLocal: type de dateUTC inattendu')
+    }
 
-  //log('convertirUTCversLocale: dateUTC', dt, 'timezone', timezone, 'dtLocal', dtLocale)
+    if (!dt.isValid) {
+        throw new Error(`convertUTCToLocal: date invalide (${dt.invalidReason}: ${dt.invalidExplanation})`)
+    }
 
-  return dtLocale
+    return dt.setZone(timezone)
 }
 
-function convertLocalToUTC(dateLocale: string | DateTime | undefined) {
-  let dt: DateTime | string | undefined = dateLocale;
-  if (!dateLocale) throw "convertirLocalVersUTC date locale est undefined";
+function convertLocalToUTC(dateLocale: string | DateTime | undefined): DateTime {
+    if (!dateLocale) throw new Error("convertLocalToUTC: date locale est undefined")
 
-  if(typeof dateLocale == 'string'){
-    dt = DateTime.fromSQL(dateLocale)
-    if(!DateTime.isDateTime(dt))
-      dt = DateTime.fromISO(dateLocale)
-  }
-  if(DateTime.isDateTime(dt))
-    return dt.toUTC();
-  
-  return null
+    let dt: DateTime
+
+    if (typeof dateLocale === 'string') {
+        dt = DateTime.fromSQL(dateLocale)
+        if (!dt.isValid) {
+            dt = DateTime.fromISO(dateLocale)
+        }
+    } else {
+        dt = dateLocale
+    }
+
+    if (!dt.isValid) {
+        throw new Error(`convertLocalToUTC: date invalide (${dt.invalidReason}: ${dt.invalidExplanation})`)
+    }
+
+    return dt.toUTC()
 }
 
 export { convertLocalToUTC, convertUTCToLocal };
