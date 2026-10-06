@@ -20,8 +20,19 @@ type Props = {
     onParticipantSupprime: (participantId: string) => void;
 }
 
-/** Affiche un participant et, pour un gestionnaire, permet de le retirer. */
-export default function ParticipantLigne({participant, participantsUrl = undefined, height, peutGererParticipants, onParticipantSupprime} : Props){
+/**
+ * One participant in an event's participant list: editor badge, profile
+ * picture, pseudo, their answer to the invitation (EN ATTENTE / ACCEPTÉ /
+ * REFUSÉ — user story 9) and, when allowed, a button to remove them.
+ * SUBJECT TO CHANGE: may be revised depending on how teammates implement their own user stories.
+ *
+ * @param {Props} props
+ * @param {Participant} props.participant - Participant to show (fetched if pseudo/picture are missing).
+ * @param {string} [props.participantsUrl] - Event's participants endpoint; undefined while creating the event.
+ * @param {number} props.height - Row height.
+ * @returns {JSX.Element | null}
+ */
+export default function ParticipantLigne({participant, participantsUrl = undefined, height} : Props){
     const { t } = useTranslation('events')
     const { colors } = usePalette()
     const colorScheme = useColorScheme()
@@ -42,6 +53,12 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
     const [p, setParticipant] = useState<Participant>()
     const [suppressionEnCours, setSuppressionEnCours] = useState(false)
 
+    /**
+     * Uses the participant as given, or fetches their pseudo and picture from
+     * GET /membres/:id when they're missing.
+     *
+     * @returns {Promise<void>}
+     */
     const getParticipant = async () => {
         //log("participant", participant)
         const {fp_url, pseudo} = participant
@@ -69,7 +86,12 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
             setParticipant(participant)
     }
 
-    /** Appelle la suppression API; la liste parente retire la ligne en cas de succès. */
+    /**
+     * Removes this participant (server-side too when the event already exists),
+     * then hides the row.
+     *
+     * @returns {Promise<void>}
+     */
     const supprimerParticipant = async () => {
         if (!p || suppressionEnCours) return
         setSuppressionEnCours(true)
@@ -83,6 +105,15 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
     }, [])
 
     const peutSupprimer = p ? (peutGererParticipants && p.id !== membre.idPublique) : false
+
+    /**
+     * Color of a participant's answer label (user story 9).
+     *
+     * @param {string} statut - 'en_attente' | 'acceptee' | 'refusee'
+     * @returns {string}
+     */
+    const couleurStatut = (statut: string) =>
+        statut === 'acceptee' ? colors.success : statut === 'refusee' ? colors.error : colors.warning
 
     const s = StyleSheet.create({
         conteneur:{
@@ -101,9 +132,15 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
             flexShrink: 1,
         },
         status: {
-            width: 40,
+            minWidth: 72,
             alignItems: 'center',
             justifyContent: 'center',
+            gap: 2,
+        },
+        statutTexte: {
+            fontSize: 10,
+            fontWeight: 'bold',
+            letterSpacing: 0.5,
         },
         userInfo: {
             flexDirection: 'row',
@@ -175,13 +212,23 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
                             {p.pseudo ?? 'pseudo'}
                         </Text>
                     </View>
+                    {/* User story 9: each participant's answer to the invitation, as an
+                        icon + label (PENDING / ACCEPTED / DECLINED). */}
                     <View style={s.status}>
                         {p.statut && (
-                            <Image
-                                source={p.statut === 'refusee' ? icone.refuse : p.statut === 'acceptee' ? icone.accepte : icone.en_attente}
-                                style={{height:24, width:24}}
-                                resizeMode='contain'
-                            />
+                            <>
+                                <Image
+                                    source={p.statut === 'refusee' ? icone.refuse : p.statut === 'acceptee' ? icone.accepte : icone.en_attente}
+                                    style={{height:18, width:18}}
+                                    resizeMode='contain'
+                                />
+                                <Text
+                                    style={[s.statutTexte, { color: couleurStatut(p.statut) }]}
+                                    numberOfLines={1}
+                                >
+                                    {t(`participantStatus.${p.statut}`, { defaultValue: p.statut })}
+                                </Text>
+                            </>
                         )}
                     </View>
                 </View>

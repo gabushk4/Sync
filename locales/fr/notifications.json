@@ -14,6 +14,17 @@
 		"deselect": "désélectionner",
 		"unread": "non lues"
 	},
+	"answer": {
+		"acceptee": "acceptée",
+		"refusee": "refusée"
+	},
+	"refused": {
+		"link": "refusées",
+		"linkCount": "refusées ({{count}})",
+		"emptyState": "Aucune invitation refusée",
+		"invitedBy": "invité par {{pseudo}}",
+		"loadFailed": "impossible de charger les invitations refusées"
+	},
 	"errors": {
 		"actionFailed": "erreur à l'action",
 		"deleteFailed": "impossible de supprimer une notification"

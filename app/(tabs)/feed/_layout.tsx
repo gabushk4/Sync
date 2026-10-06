@@ -13,6 +13,10 @@ export default function FeedLayout() {
             <Stack.Screen
                 name="index" options={{headerTitle:t('navigation.title')}}
             />
+            {/* User story 9: refused event invitations, opened from the notifications list. */}
+            <Stack.Screen
+                name="refusees" options={{headerTitle:t('navigation.refused')}}
+            />
         </Stack>
     )
 }

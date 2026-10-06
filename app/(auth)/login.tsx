@@ -4,7 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { Dimensions, Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native';
 
 import Haptics from '@/abstractions/haptics.js';
+import { createLinkStyles, LinkAbs } from '@/abstractions/linkAbs';
 import TextInputAbs from '@/abstractions/textInputAbs';
+import ToastAbs from '@/abstractions/toastAbs';
+
+import ServerStatus from '@/components/serverStatus';
+
+import { toastTypes } from '@/constants/toastConfig';
 
 import { useAPI } from '@/contextes/contexteAPI';
 import { useAuth } from '@/contextes/contexteAuth';
@@ -14,13 +20,6 @@ import { useRouteAbs } from '@/contextes/contexteRoute';
 
 import catcher from '@/functions/catcher';
 import log from '@/functions/log.js';
-
-import { createLinkStyles, LinkAbs } from '@/abstractions/linkAbs';
-import ToastAbs from '@/abstractions/toastAbs';
-
-import ServerStatus from '@/components/serverStatus';
-
-import { toastTypes } from '@/constants/toastConfig';
 
 export default function ConnexionEcran(){
     const { t } = useTranslation('auth')

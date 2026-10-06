@@ -3,6 +3,11 @@ import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DarkTheme, DefaultTheme } from 'expo-router/react-navigation';
 import { generateTheme, ThemeColors } from '@/themes/generateTheme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+// Same package as the ThemeProvider in app/_layout.tsx that receives this theme.
+import { DarkTheme, DefaultTheme } from 'expo-router/react-navigation';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { useColorScheme } from 'react-native';
 import { useSettings } from './contexteSettings';
 import { DEFAULT_HUE } from '@/constants/Colors';
 
@@ -35,7 +40,7 @@ function buildNavTheme(hue: number, scheme: 'light' | 'dark') {
 export function PaletteProvider({ children }: { children: ReactNode }) {
   const scheme = useColorScheme() ?? 'light';
   const { settings } = useSettings()
-  
+
   const [hue, setHueState] = useState(settings.theme || DEFAULT_HUE);
 
   // gets saved hue

@@ -56,6 +56,23 @@
       "yearly": "années"
     }
   },
+  "participantStatus": {
+    "en_attente": "EN ATTENTE",
+    "acceptee": "ACCEPTÉ",
+    "refusee": "REFUSÉ"
+  },
+  "conflict": {
+    "title": "Conflit détecté",
+    "message": "Ces deux évènements se chevauchent. Lequel veux-tu supprimer ?",
+    "existing": "Évènement existant",
+    "new": "Nouvel évènement",
+    "delete": "Supprimer",
+    "leave": "Quitter",
+    "adjust": "Modifier mon horaire",
+    "newDiscarded": "Le nouvel évènement n'a pas été créé",
+    "anotherConflict": "Un autre évènement chevauche encore ce créneau",
+    "removeFailed": "Impossible de retirer l'évènement existant"
+  },
   "errors": {
     "deleteFailed": "erreur en supprimant l'évènement",
     "leaveFailed": "impossible de quitter",
