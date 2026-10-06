@@ -34,6 +34,27 @@ export type EventsListProps = {
     owner: any
 }
 
+/**
+ * One timeline row: a horizontal (or vertical) strip 24 hours long holding the
+ * owner's events (ListItem) and, for a friend's row, the free slots shared
+ * with the member. The strip isn't scrolled directly: it follows the shared
+ * scroll offset of the home screen, so every row stays aligned on the hours.
+ * Updated for user story 9 (unique keys, skips empty entries).
+ * SUBJECT TO CHANGE: may be revised depending on how teammates implement their own user stories.
+ *
+ * @param {EventsListProps} props
+ * @param {Event[]} [props.events] - Events to place on the row (local DateTimes).
+ * @param {string} [props.eventsColor] - Block color (member's row); blurred blocks when omitted.
+ * @param {number} props.offsetSnap - Width of one hour, for snapping.
+ * @param {number | string} [props.listSize] - Row height (horizontal) or width (vertical).
+ * @param {boolean} [props.horizontal=false] - Lay hours out left to right.
+ * @param {string} [props.textColor] - Color of the events' labels.
+ * @param {(refresh?: boolean) => void} props.getEvenements - Refetches the row's events.
+ * @param {DateTime} [props.displayedDate] - Day the row shows.
+ * @param {any[] | undefined} props.commonFreeSlots - Free slots shared with the member (friends' rows).
+ * @param {any} props.owner - Member whose events these are.
+ * @returns {JSX.Element}
+ */
 export default function EventsList({
     events = [],
     eventsColor,
@@ -112,9 +133,11 @@ export default function EventsList({
                 height: horizontal ? '100%' : 24 * (pxHeures + H_HEURES),
             }}
             >
-                {events.map((item) => 
+                {events.filter(Boolean).map((item) =>
                     <ListItem
-                        key={item.id}
+                        // Occurrences of a recurring event share the parent's id: the start
+                        // makes each key unique (duplicate keys could drop/mix up blocks).
+                        key={`${item.id}-${item.debut?.toMillis?.() ?? ''}`}
                         event={item}
                         horizontal={horizontal}
                         displayedDate={displayedDate}

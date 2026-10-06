@@ -10,7 +10,7 @@ type Props = {
     'value' | 'onSubmitEditing' | 'secureTextEntry' | 'keyboardType' | 
     'returnKeyType' | 'autoComplete' | 'onBlur' | 'onFocus' | 'textContentType' |
     'multiline' | 'onLayout' | 'numberOfLines' | 'autoFocus' | 'maxLength' |
-    'onEndEditing' | 'pointerEvents'
+    'onEndEditing' | 'pointerEvents' | 'autoCorrect' | 'autoCapitalize'
 >;
 
 const TextInputAbs = forwardRef<TextInput, Props>(({
@@ -34,7 +34,11 @@ const TextInputAbs = forwardRef<TextInput, Props>(({
     autoFocus = false,
     maxLength = undefined,
     onEndEditing = () => { },
-    pointerEvents = 'auto' 
+    pointerEvents = 'auto',
+    // Same defaults as React Native's TextInput, so existing inputs are unchanged;
+    // codes/ids pass false/'none' so iOS doesn't "correct" them.
+    autoCorrect = true,
+    autoCapitalize = 'sentences',
 }, ref) => {
     const { colors } = usePalette();
     const { fonts } = useFont();
@@ -92,6 +96,8 @@ const TextInputAbs = forwardRef<TextInput, Props>(({
             maxLength={maxLength}
             onEndEditing={onEndEditing}
             pointerEvents={pointerEvents}
+            autoCorrect={autoCorrect}
+            autoCapitalize={autoCapitalize}
         />
     );
 });

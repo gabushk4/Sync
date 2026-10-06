@@ -85,12 +85,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     /**
-     * Permet de déconnecter le membre
+     * Permet de déconnecter le membre.
+     * The state flips first: that unmounts the tabs and stops the pollers
+     * (notifications, events) before the tokens disappear. In the old order,
+     * a poll firing in between went out without a token, got a 401, and
+     * showed a "conflit détecté / Un token est nécessaire" toast.
+     *
+     * @returns {Promise<void>}
      */
     const signOut = async () => {
-        await resetTokens();
-        resetMembre();
         setState('unauthenticated');
+        resetMembre();
+        await resetTokens();
     };
 
     return (

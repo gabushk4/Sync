@@ -16,7 +16,10 @@ export default function ProfileLayout() {
                 name="edit" options={{headerTitle:t('navigation.edit')}}
             />
             <Stack.Screen
-                name="settings" options={{ headerTitle: t('navigation.settings')}}
+                name="importCalendrier" options = {{headerTitle:'importer un calendrier', headerBackButtonDisplayMode:'minimal'}}              
+            />
+            <Stack.Screen
+               name="settings" options={{ headerTitle: t('navigation.settings')}}
             />
         </Stack>
     )

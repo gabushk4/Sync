@@ -82,7 +82,14 @@ export const getCommonFreeSlots = (
   const total = Math.round(dayStart.plus({ days: 1 }).diff(dayStart, 'minutes').minutes)
   const bitmap = new Uint8Array(total).fill(1)
 
-  applyBusyTimes(bitmap, userEvents, date)
+  // Today's already elapsed minutes cannot be offered as a new meeting slot.
+  const now = DateTime.now()
+  if (date?.hasSame(now, 'day')) {
+    bitmap.fill(0, 0, now.hour * 60 + now.minute)
+  }
+
+  // Events busy times
+  applyBusyTimes(bitmap, userEvents, date) 
   applyBusyTimes(bitmap, friendEvents, date)
 
   if (userDndRules) applyDndRules(bitmap, userDndRules, date)
@@ -91,10 +98,8 @@ export const getCommonFreeSlots = (
   const slots = []
   let start = null
 
-  // <= total : le dernier tour ferme un créneau encore ouvert
-  for (let i = 0; i <= total; i++) {
-    const free = i < total && bitmap[i] === 1
-    if (free) {
+  for (let i = 0; i <= bitmap.length; i++) {
+    if (i < bitmap.length && bitmap[i] === 1) {
       if (start === null) start = i
     } else if (start !== null) {
       const duration = i - start

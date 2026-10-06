@@ -1,15 +1,19 @@
 import React, { useState, useRef } from 'react'
 import { TouchableOpacity, Text, StyleSheet, View } from 'react-native'
-import Animated, {SharedValue} from 'react-native-reanimated'
+import Animated, {SharedValue, useAnimatedStyle} from 'react-native-reanimated'
 import { findWidth, findLeft } from '@/functions/calculerDimensionsEvenements'
 import { convertirTimestampDateCourte, convertirTimestampHeure } from '@/functions/convertirTimestamp'
 import { DateTime } from 'luxon'
 import { useTimeline } from '@/contextes/contexteTimeline'
 import { useFont } from '@/contextes/contexteFont'
 import { usePalette } from '@/contextes/contextePalette'
+import { useTimeline } from '@/contextes/contexteTimeline'
+import { findLeft, findWidth } from '@/functions/calculerDimensionsEvenements'
+import { convertirTimestampDateCourte, convertirTimestampHeure } from '@/functions/convertirTimestamp'
 import { Event } from '@/types/calendar'
-import EventBloc from './eventBloc'
+import Icon from '@react-native-vector-icons/ionicons'
 import { router } from 'expo-router'
+import EventBloc from './eventBloc'
 import useTimelineLabelOffset from '@/hooks/useTimelineLabelOffset'
 
 type Props = {
@@ -21,32 +25,61 @@ type Props = {
     textColor?: string;
 }
 
+/** Inner padding between the block's border and its text. */
+const PAD = 6
+
+/**
+ * One event on a timeline row, positioned from its start/end on the displayed
+ * day. Its label (start time, title, end time) sticks to the visible edge while
+ * the row scrolls, without ever leaving the block. Tapping it opens the event's
+ * details (with each participant's answer — user story 9).
+ * Layout reworked with user story 9: the label's max offset was computed as
+ * `blockWidth - (labelWidth + pxHeures)` with a label as wide as the block, so it
+ * was always negative and the label sat half outside any event shorter than ~3h.
+ * SUBJECT TO CHANGE: may be revised depending on how teammates implement their own user stories.
+ *
+ * @param {Props} props
+ * @returns {JSX.Element | null}
+ */
 export default function ListItem({ event, horizontal, displayedDate, listOffset, eventsColor, textColor }:Props) {
     const { fonts } = useFont()
     const { colors } = usePalette()
-    const { L_HEURES, H_HEURES, pxHeures } = useTimeline()  
-    
-    const maxTimelineLength = horizontal ? 24 * (pxHeures + L_HEURES)
-        : 24 * (pxHeures * H_HEURES)
-    
-    const [textWidth, setTextWidth] = useState(0)
-    const [textHeight, setTextHeight] = useState(0)
-    const [width, setWidth] = useState(0)
-    const [height, setHeight] = useState(0)
+    const { L_HEURES, H_HEURES, pxHeures } = useTimeline()
 
-    if (!event?.debut || !event?.fin) return null
+    const debut = event?.debut
+    const fin = event?.fin
+    const valide = !!debut && !!fin && !!displayedDate
 
-    const surPlusieursJours =
-        event.fin.startOf('day').diff(event.debut.startOf('day'), 'days').toObject().days! > 0
-    
-    let startText = convertirTimestampHeure(event.debut)
-    let endText = convertirTimestampHeure(event.fin)
+    const heureOffset = horizontal ? pxHeures + L_HEURES : pxHeures + H_HEURES
+    const left = valide && horizontal ? findLeft(debut, fin, displayedDate, heureOffset) : 0
+    const top = valide && !horizontal ? findLeft(debut, fin, displayedDate, heureOffset) : 0
+    // Never thinner than one hour's width, so short events stay tappable/readable.
+    const taille = valide ? Math.max(findWidth(debut, fin, displayedDate, heureOffset), pxHeures) : 0
+    const longueurTimeline = 24 * heureOffset
 
+    // Label size along the scroll axis: at most 3 hours wide, never wider than the block.
+    const tailleTexte = Math.max(Math.min(taille - 2 * PAD, pxHeures * 3), 0)
+    const depart = horizontal ? left : top
+
+    // Hooks must run on every render, so this sits before the early return below.
+    const texteAnime = useAnimatedStyle(() => {
+        // Furthest the label can go: the block's end, or the end of the timeline.
+        const max = Math.max(PAD, Math.min(taille - tailleTexte - PAD, longueurTimeline - depart - tailleTexte - PAD))
+        const position = Math.min(Math.max(listOffset.value - depart + PAD, PAD), max)
+        return horizontal ? { left: position } : { top: position }
+    })
+
+    if (!valide) return null
+
+    const surPlusieursJours = fin.startOf('day').diff(debut.startOf('day'), 'days').toObject().days! > 0
+
+    let startText = convertirTimestampHeure(debut)
+    let endText = convertirTimestampHeure(fin)
     if (surPlusieursJours) {
-        if (displayedDate && displayedDate.day !== event.debut.day)
-            startText = `${convertirTimestampDateCourte(event.debut)} ${convertirTimestampHeure(event.debut)}`
-        if (displayedDate && displayedDate.day !== event.fin.day)
-            endText = `${convertirTimestampDateCourte(event.fin)} ${convertirTimestampHeure(event.fin)}`
+        if (displayedDate.day !== debut.day)
+            startText = `${convertirTimestampDateCourte(debut)} ${convertirTimestampHeure(debut)}`
+        if (displayedDate.day !== fin.day)
+            endText = `${convertirTimestampDateCourte(fin)} ${convertirTimestampHeure(fin)}`
     }
 
     const left = horizontal
@@ -72,72 +105,51 @@ export default function ListItem({ event, horizontal, displayedDate, listOffset,
     })
 
     const s = StyleSheet.create({
-        title: {
-            fontFamily: fonts.title,
-            fontSize: 16,
-            color: colors.text,
-            flexWrap: 'wrap',
-            textAlign: 'center',            
+        bloc: {
+            position: 'absolute',
+            left,
+            top,
+            ...(horizontal ? { width: taille, height: '100%' } : { height: taille, width: '100%' }),
         },
-        hour: {           
+        texte: {
+            position: 'absolute',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            ...(horizontal
+                ? { width: tailleTexte, top: PAD, bottom: PAD }
+                : { height: tailleTexte, left: PAD, right: PAD }),
+        },
+        heure: {
             fontFamily: fonts.number,
-            color: textColor ?? colors.text,
-            fontSize: 14,
-            textAlign:'center'
-        }
+            color: couleurTexte,
+            fontSize: 12,
+            opacity: 0.8,
+        },
+        titre: {
+            fontFamily: fonts.title,
+            fontSize: 15,
+            color: couleurTexte,
+            textAlign: 'center',
+        },
     })
-
-    //3console.log('DEBUG event', event.titre, { left, top, blocWidth, blocHeight, width, height, listeOffsetValue: listOffset.value })
 
     return (
         <TouchableOpacity
-            key={event.id}
-            style={{
-                position: 'absolute',
-                left,
-                top,
-                width: blocWidth,
-                height: blocHeight,
-                minWidth: pxHeures,
-            }}
+            style={s.bloc}
+            activeOpacity={0.7}
             onPress={() => {
-                        if (event.debut && event.fin)
-                            router.navigate({ pathname: '/(tabs)/home/details/[eventId]', params: { eventId: event.id as string, start: event.debut.toISO(), end: event.fin.toISO() } })
-                    }}
-            onLayout={(e) => {
-                if (horizontal) setWidth(e.nativeEvent.layout.width)
-                else setHeight(e.nativeEvent.layout.height)
+                router.navigate({ pathname: '/(tabs)/home/details/[eventId]', params: { eventId: event.id as string, start: debut.toISO(), end: fin.toISO() } })
             }}
         >
-            <View style={{ position: 'relative', width: blocWidth, height: blocHeight }}>
-                <EventBloc
-                    event={event}
-                    blockColor={eventsColor}
-                    horizontal={horizontal}
-                    displayDate={displayedDate as DateTime}
-                />
-                <Animated.View
-                    style={[
-                        textAnimated,
-                        {
-                            position: 'absolute',
-                            flexDirection: 'column',
-                            justifyContent: 'space-between',
-                            ...(horizontal
-                                ? { minWidth: pxHeures, width:'100%', maxWidth: pxHeures * 3, alignItems: 'center', height: '100%' }
-                                : { minHeight: pxHeures, height:'100%', maxHeight: pxHeures * 3, width: '100%', alignItems: 'center' }),
-                        },
-                    ]}
-                    onLayout={(e) => {
-                        setTextWidth(e.nativeEvent.layout.width)
-                        setTextHeight(e.nativeEvent.layout.height)
-                    }}
-                >
-                    <Text style={s.hour}>{startText}</Text>
-                    <Text numberOfLines={2} ellipsizeMode='tail' style={s.title}>{event.titre}</Text>
-                    <Text style={s.hour}>{endText}</Text>
-                </Animated.View>
-            </View>
+            <EventBloc event={event} blockColor={eventsColor} horizontal={horizontal} displayDate={displayedDate} />
+            <Animated.View style={[s.texte, texteAnime]}>
+                <Text style={s.heure} numberOfLines={1}>{startText}</Text>
+                {event.titre
+                    ? <Text style={s.titre} numberOfLines={2} ellipsizeMode="tail">{event.titre}</Text>
+                    // Private friend event: the API hides its title.
+                    : <Icon name="lock-closed" color={couleurTexte} size={14} />}
+                <Text style={s.heure} numberOfLines={1}>{endText}</Text>
+            </Animated.View>
         </TouchableOpacity>
     )
 }

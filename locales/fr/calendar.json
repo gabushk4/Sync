@@ -3,5 +3,24 @@
 		"allDay": "jour entier",
 		"starts": "débute",
 		"ends": "finit"
+	},
+	"import": {
+		"title": "Importer le calendrier système",
+		"chooseCalendars": "Calendriers à importer",
+		"description": "Choisissez les calendriers à importer. Sync enregistrera les titres, horaires, notes et lieux des événements à venir (jusqu’à 5 ans) dans votre compte.",
+		"permissionTitle": "Autoriser l’accès au calendrier",
+		"permissionDescription": "Sync a besoin d’un accès en lecture pour trouver les événements à importer.",
+		"grantPermission": "Autoriser l’accès",
+		"openSettings": "Ouvrir les réglages",
+		"noCalendars": "Aucun calendrier système n’est disponible.",
+		"selectAll": "Tout sélectionner",
+		"selectNone": "Tout désélectionner",
+		"importButton": "Importer les événements",
+		"importing": "Importation en cours…",
+		"selectCalendar": "Sélectionnez au moins un calendrier.",
+		"success": "{{imported}} événement(s) importé(s), {{duplicates}} déjà présent(s).",
+		"nothingToImport": "Aucun événement à venir trouvé dans cette période.",
+		"failed": "Impossible d’importer les événements. Réessayez.",
+		"untitled": "Événement sans titre"
 	}
 }

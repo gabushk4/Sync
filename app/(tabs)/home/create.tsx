@@ -24,8 +24,17 @@ import { toastTypes } from "@/constants/toastConfig";
 import { convertLocalToUTC } from "@/functions/convertirUTCenLocal";
 import formaterDatePourServeur from "@/functions/formaterDatePourServeur";
 import { Participant } from "@/types/invites";
+import { EvenementEnConflit, NouvelEvenement } from "@/types/conflit";
 import { DateTime } from "luxon";
 
+/**
+ * Event creation screen. Reads `start`/`end` route params (an ISO date each)
+ * to pre-fill and constrain the event's date range — used both when tapping
+ * a time slot in the day timeline (`start` only) and when dragging a range
+ * in the month calendar (`start` and `end` both set — user story 5).
+ *
+ * @returns {JSX.Element}
+ */
 export default function CreateEvent({ }) {
     const { t } = useTranslation('events')
     const { colors } = usePalette()
@@ -51,7 +60,38 @@ export default function CreateEvent({ }) {
 
     const [event, setEvent] = useState<Event>(defaultEvent)
 
+    /**
+     * Opens the conflict modal, which compares the existing event with the
+     * new one and lets the member pick which one to delete.
+     * Part of user story 8 (conflict screen when creating an overlapping event).
+     *
+     * @param {EvenementEnConflit} existant - Conflicting event, as sent in the API's 409 response.
+     * @param {NouvelEvenement} nouveau - The POST body of the event being created, so the
+     *   modal can create it itself if the member deletes the existing one.
+     * @returns {void}
+     */
+    const afficherConflit = (existant: EvenementEnConflit, nouveau: NouvelEvenement) => {
+        // Cast: expo-router's typed routes only pick up this new
+        // screen once the dev server regenerates .expo/types/router.d.ts.
+        router.push({
+            pathname: '/(modals)/conflitEvenement' as unknown as '/(modals)/ajouterAmi',
+            params: {
+                existant: JSON.stringify(existant),
+                nouveau: JSON.stringify(nouveau),
+            },
+        })
+    }
+
+    /**
+     * Validates the form and submits the new event to the API, then
+     * navigates back to the home screen on success. If the API answers 409
+     * (overlap with an existing event, user story 8), opens the conflict screen.
+     *
+     * @returns {Promise<void>}
+     */
     const postEvenement = async () => {
+        // Kept outside the try so the 409 handler can hand it to the conflict screen.
+        let nouveau: NouvelEvenement | undefined
         try {
             const values = formRef.current?.getValues()
             if (!values) {
@@ -72,19 +112,18 @@ export default function CreateEvent({ }) {
             if (valid) {
                 setEnChargement(true)
 
-                const response = await api.post(
-                    '/evenements/',
-                    {
-                        ...event, 
-                        titre: values.titre,
-                        description: values.description,
-                        prive: values.prive,
-                        debut: formaterDatePourServeur(convertLocalToUTC(values.start)), 
-                        fin: formaterDatePourServeur(convertLocalToUTC(values.end)),
-                        regle_recurrence: values.regleRecurrence,
-                        participants: invites.map((i) => ({ id: i.id, privilege: i.privilege }))
-                    }
-                )
+                nouveau = {
+                    ...event,
+                    titre: values.titre,
+                    description: values.description,
+                    prive: values.prive,
+                    debut: formaterDatePourServeur(convertLocalToUTC(values.start)),
+                    fin: formaterDatePourServeur(convertLocalToUTC(values.end)),
+                    regle_recurrence: values.regleRecurrence,
+                    participants: invites.map((i) => ({ id: i.id, privilege: i.privilege }))
+                }
+
+                const response = await api.post('/evenements/', nouveau)
 
                 if (response.status == 201) {
                     ToastAbs.show({
@@ -99,10 +138,12 @@ export default function CreateEvent({ }) {
                 ToastAbs.show({ type: toastTypes.error, text2: errorMessage })
             }
         } catch (error: any) {
-            catcher(error, t('errors.createFailed'))
-            if (error.response?.status == 409) {
-                const evenementEnConflit = error.response.data.evenement
-                log('evenement en conflit', evenementEnConflit)
+            // User story 8: the server's verifierDisponibilite found an overlap
+            // (including later occurrences of recurring events), show the conflict screen.
+            if (error.response?.status == 409 && nouveau) {
+                afficherConflit(error.response.data.evenement, nouveau)
+            } else {
+                catcher(error, t('errors.createFailed'))
             }
         } finally {
             setEnChargement(false)
@@ -122,7 +163,7 @@ export default function CreateEvent({ }) {
         return () => {
             navigation.removeListener('beforeRemove', listener)
         }
-    },[]))
+    }, [])
 
     useEffect(() => {
         log("email confirme", membre.emailConfirme)
@@ -147,11 +188,11 @@ export default function CreateEvent({ }) {
                 mode={'create'}
                 prefills={{
                     start: minimumStart ?? undefined,
-                    end: end ? DateTime.fromISO(end as string) : undefined,
+                    end: finDemandee,
                     participants: friend ? [JSON.parse(friend as string)] as Array<Participant> : undefined
                 }}
                 constraints={{
-                    maximumStart: end ? DateTime.fromISO(end as string) : undefined,
+                    maximumStart: finDemandee,
                     minimumStart: minimumStart ?? undefined
                 }}
             />

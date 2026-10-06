@@ -41,7 +41,8 @@ export function CustomTabBar(props: BottomTabBarProps) {
 
     return (
         <View style={s.container}>
-            {NavConfig && (
+            {/* `visible` lets the month calendar hide the FAB (user story 5). */}
+            {NavConfig && NavConfig.visible !== false && (
                 <TouchableOpacity
                     onPress={() => router.push(
                         NavConfig.params
