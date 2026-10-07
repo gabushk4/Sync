@@ -11,6 +11,7 @@
 	},
 	"add": {
 		"codeLabel": "Code d'ami",
+		"send": "Envoyer la demande",
 		"scanLabel": "Scanner un code QR"
 	},
 	"tabs": {

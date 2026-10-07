@@ -35,7 +35,7 @@ function buildNavTheme(hue: number, scheme: 'light' | 'dark') {
 export function PaletteProvider({ children }: { children: ReactNode }) {
   const scheme = useColorScheme() ?? 'light';
   const { settings } = useSettings()
-  
+
   const [hue, setHueState] = useState(settings.theme || DEFAULT_HUE);
 
   // gets saved hue

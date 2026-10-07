@@ -15,6 +15,21 @@ import catcher from '@/functions/catcher';
 import log from '@/functions/log';
 import { router } from 'expo-router';
 
+/**
+ * Cleans up a typed or pasted friend code: profiles display it as "#Mxxxx"
+ * (MemberCode), so a leading "#" and any whitespace are dropped.
+ *
+ * @param {string} code - Raw input.
+ * @returns {string} The member's public id.
+ */
+const nettoyerCodeAmi = (code: string) => code.replace(/\s+/g, '').replace(/^#/, '')
+
+/**
+ * Add-a-friend form: send a friend request by typing/pasting a friend code,
+ * or open the QR scanner.
+ *
+ * @returns {JSX.Element}
+ */
 export default function AddFriendForm() {
     const { t } = useTranslation('friends')
     const { colors } = usePalette()
@@ -24,15 +39,28 @@ export default function AddFriendForm() {
     const { getToken } = useAccessToken()
     const {api} = useAPI()
 
-    const [codeAmi, setCodeAmi] = useState<string>("M");
+    // Starts empty: it used to be pre-filled with "M", so pasting a copied code
+    // (which already starts with "M") sent "MM..." and the server answered
+    // "Destinataire non trouvé".
+    const [codeAmi, setCodeAmi] = useState<string>("");
+    const [envoiEnCours, setEnvoiEnCours] = useState(false)
 
+    /**
+     * Sends a friend request to the member whose code was entered.
+     *
+     * @returns {Promise<void>}
+     */
     const postDemande = async () => {
+        const code = nettoyerCodeAmi(codeAmi)
+        if (!code || envoiEnCours) return
+
+        setEnvoiEnCours(true)
         const token = await getToken();
 
         try {
             const response = await api.post(
                 '/amis/demandes',
-                { id_destinataire: codeAmi },
+                { id_destinataire: code },
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -47,10 +75,13 @@ export default function AddFriendForm() {
                     text2: t('common:friendRequestSentMessage'),
                     autoHide: true,
                 });
+                setCodeAmi('')
             }
         } catch (error: any) {
             log('la demande na pas passée', error?.message);
             catcher(error, t('errors.requestFailed'));
+        } finally {
+            setEnvoiEnCours(false)
         }
     };
 
@@ -71,8 +102,20 @@ export default function AddFriendForm() {
             borderRadius: 12,
             padding: 4,
         },
-        
-    })    
+        boutonEnvoyer: {
+            height: 44,
+            width: '100%',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: colors.secondary,
+            borderRadius: 8,
+        },
+        texteEnvoyer: {
+            color: colors.text,
+            fontFamily: fonts.body,
+            fontSize: 18,
+        },
+    })
 
     return (
         <View style={{ height: '100%', width: '100%', alignItems:'center', justifyContent:'center', gap:'25%'}}>
@@ -84,7 +127,17 @@ export default function AddFriendForm() {
                     onChangeText={setCodeAmi}
                     returnKeyType="send"
                     onSubmitEditing={postDemande}
+                    autoCorrect={false}
+                    autoCapitalize="none"
                 />
+                {/* Visible button: the keyboard's "send" key used to be the only way to submit. */}
+                <TouchableOpacity
+                    style={[s.boutonEnvoyer, { opacity: nettoyerCodeAmi(codeAmi) && !envoiEnCours ? 1 : 0.4 }]}
+                    onPress={postDemande}
+                    disabled={!nettoyerCodeAmi(codeAmi) || envoiEnCours}
+                >
+                    <Text style={s.texteEnvoyer}>{t('add.send')}</Text>
+                </TouchableOpacity>
             </View>
 
             <View style={{ width: '100%', gap: 6 }}>

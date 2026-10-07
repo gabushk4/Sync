@@ -50,6 +50,23 @@
       "yearly": "years"
     }
   },
+  "participantStatus": {
+    "en_attente": "PENDING",
+    "acceptee": "ACCEPTED",
+    "refusee": "DECLINED"
+  },
+  "conflict": {
+    "title": "Conflict detected",
+    "message": "These two events overlap. Which one do you want to delete?",
+    "existing": "Existing event",
+    "new": "New event",
+    "delete": "Delete",
+    "leave": "Leave",
+    "adjust": "Adjust my schedule",
+    "newDiscarded": "The new event was not created",
+    "anotherConflict": "Another event still overlaps this time slot",
+    "removeFailed": "Unable to remove the existing event"
+  },
   "errors": {
     "deleteFailed": "Error deleting the event",
     "leaveFailed": "Unable to leave the event",

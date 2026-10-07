@@ -68,8 +68,20 @@ type Props = {
 
 const dtNow = DateTime.now()
 
+/**
+ * Form for creating, editing, or viewing an event: title, description,
+ * start/end date-time, recurrence, visibility, and participants.
+ *
+ * @param {Props} props
+ * @param {Event} props.event - The event being edited/viewed (ignored in 'create' mode beyond defaults).
+ * @param {'create' | 'edit' | 'details'} props.mode - Controls which fields are editable vs read-only.
+ * @param {Props['prefills']} [props.prefills] - Initial start/end/participants to pre-fill in 'create' mode.
+ * @param {Props['constraints']} [props.constraints] - Min/max bounds for the date-time pickers.
+ * @param {React.Ref<EventFormHandle>} ref - Exposes `getValues()` to the parent screen.
+ * @returns {JSX.Element}
+ */
 const EventForm = forwardRef<EventFormHandle, Props>(
-    
+
 function EventForm({ event, prefills, constraints, mode }, ref) {
     const { t } = useTranslation('events')
     const { colors } = usePalette()
@@ -79,7 +91,12 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
     const { ajouterInvite, invites } = useInvites()    
     const {start, end, setStart, setEnd, setRequestsEnabled} = useEventDraft()
         
-    const minimumStart = constraints?.minimumStart || mode === 'create' ? dtNow : undefined
+    // Parenthesized explicitly: `? :` binds looser than `||`, so without the
+    // parens this would evaluate as `(constraints?.minimumStart || mode ===
+    // 'create') ? dtNow : undefined` — always `dtNow` in create mode,
+    // silently ignoring any constraint the caller passed in (e.g. the month
+    // calendar's range, user story 5).
+    const minimumStart = constraints?.minimumStart || (mode === 'create' ? dtNow : undefined)
     const maximumStart = constraints?.maximumStart || undefined
 
     const refDescription = useRef<TextInput>(null)

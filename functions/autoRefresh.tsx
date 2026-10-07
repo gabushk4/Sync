@@ -15,6 +15,13 @@ interface AutoRefreshOptions {
     extraParams?: Record<string, any>
 }
 
+/**
+ * Polls a GET endpoint at a fixed interval and hands new data to `onData`.
+ * Sends `last_checked` (the version from the previous answer) so the API only
+ * returns the full payload when something changed (`has_changed`). Backs off
+ * exponentially on temporary errors and stops on 401/403/404.
+ * Starts polling as soon as it's constructed.
+ */
 class AutoRefresh {
     private api: AxiosInstance
     private url: string
@@ -52,13 +59,27 @@ class AutoRefresh {
         this.timer = setInterval(() => this.refresh(), this.intervalMsInit)
     }
 
+    /**
+     * Applies options, keeping the current value of any option left out.
+     * It used to reset every missing option: forceRefresh({ extraParams }) — called
+     * on every date change in the home screen — wiped onData/onError, so new data
+     * was fetched but never applied (events didn't show up after changing day/month).
+     *
+     * @param {AutoRefreshOptions} options
+     * @returns {void}
+     */
     private setOptions(options: AutoRefreshOptions) {
-        this.intervalMs = options.intervalMs ?? 5000
-        this.maxBackoffMs = options.maxBackoffMs ?? 30000
-        this.onData = options.onData
-        this.onPostRequest = options.onPostRequest
-        this.onError = options.onError
-        this.extraParams = options.extraParams ?? {}
+        this.intervalMs = options.intervalMs ?? this.intervalMs ?? 5000
+        this.maxBackoffMs = options.maxBackoffMs ?? this.maxBackoffMs ?? 30000
+        if (options.onData !== undefined) this.onData = options.onData
+        if (options.onPostRequest !== undefined) this.onPostRequest = options.onPostRequest
+        if (options.onError !== undefined) this.onError = options.onError
+        if (options.extraParams !== undefined) {
+            // New query (e.g. another day): the last version seen was for the old
+            // range, so drop it and let the next poll get a full answer.
+            this.extraParams = options.extraParams
+            this.lastChecked = undefined
+        }
     }
 
     private getBackoffDelay(): number {
@@ -103,6 +124,13 @@ class AutoRefresh {
         return this.refresh(true)
     }
 
+    /**
+     * Runs one request (skipped if one is already in flight). Calls `onData`
+     * when the API reports a change, `onError` on failure.
+     *
+     * @param {boolean} [forceRefresh=false] - Ask for the full payload even if unchanged.
+     * @returns {Promise<void>}
+     */
     async refresh(forceRefresh = false): Promise<void> {
         if (this.inFlight && !forceRefresh) return
             this.inFlight = true
@@ -149,6 +177,11 @@ class AutoRefresh {
         }
     }
 
+    /**
+     * Resumes polling (no-op if already running).
+     *
+     * @returns {void}
+     */
     start(): void {
         if (!this.stopped) return // déjà en cours
         log("auto refreshed", this.url, 'started')
@@ -162,6 +195,11 @@ class AutoRefresh {
         this.stop()
     }
 
+    /**
+     * Stops polling. A request already in flight still completes.
+     *
+     * @returns {void}
+     */
     stop(): void {
         log("auto refreshed", this.url, 'stopped')
         this.stopped = true
@@ -170,6 +208,11 @@ class AutoRefresh {
         this.timer = null
     }
 
+    /**
+     * Stops then starts polling, picking up the current interval (e.g. after a backoff).
+     *
+     * @returns {void}
+     */
     restart(): void{
         this.stop()
         this.start()
@@ -183,6 +226,13 @@ class AutoRefresh {
         this.stop()
     }
 
+    /**
+     * Fetches the full payload right away, optionally with new options (e.g.
+     * another day's `extraParams` — the other options are kept), then resumes polling.
+     *
+     * @param {AutoRefreshOptions} [options] - Options to change; omitted ones are kept.
+     * @returns {Promise<void>}
+     */
     async forceRefresh(options?:AutoRefreshOptions): Promise<void> {
         this.stop()
         if(options)
@@ -191,14 +241,26 @@ class AutoRefresh {
         this.start()
     }
 
+    /**
+     * @returns {boolean} Whether polling is stopped.
+     */
     isPaused(): boolean {
         return this.stopped
     }
 
+    /**
+     * @returns {string | undefined} Version from the last answer that had changes.
+     */
     getLastChecked(): string | undefined {
         return this.lastChecked
     }
 
+    /**
+     * Sets (or clears) a callback run after every successful request, changed or not.
+     *
+     * @param {PostRequestCallback | undefined} callback
+     * @returns {void}
+     */
     setPostRequest(callback: PostRequestCallback | undefined): void{
         this.onPostRequest = callback
     }
