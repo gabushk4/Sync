@@ -13,6 +13,25 @@ function getLocalIp() {
     if (routeIp) return routeIp[1];
   } catch {}
 
+  // Windows has no `ip` command: ask for the adapter that has a default gateway
+  // (the real connection). Without this, the fallback below picked virtual
+  // adapters such as VirtualBox's "Ethernet 3" (192.168.56.1) over "Wi-Fi".
+  if (process.platform === "win32") {
+    try {
+      const out = execFileSync(
+        "powershell",
+        [
+          "-NoProfile",
+          "-Command",
+          "(Get-NetIPConfiguration | Where-Object { $_.IPv4DefaultGateway } | Select-Object -First 1).IPv4Address.IPAddress",
+        ],
+        { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }
+      );
+      const gatewayIp = out.match(/\d{1,3}(?:\.\d{1,3}){3}/);
+      if (gatewayIp) return gatewayIp[0];
+    } catch {}
+  }
+
   const addresses = Object.entries(os.networkInterfaces()).flatMap(
     ([name, interfaces]) =>
       (interfaces || [])
@@ -25,10 +44,15 @@ function getLocalIp() {
         .map((network) => ({ name, address: network.address }))
   );
 
-  addresses.sort((a, b) => {
-    const preferred = /^(en|eth|wl)/i;
-    return Number(preferred.test(b.name)) - Number(preferred.test(a.name));
-  });
+  // Prefers real adapters (Linux/macOS names, and Windows' "Wi-Fi"/"Ethernet"),
+  // and puts known virtual ones last (Hyper-V/WSL vEthernet, VirtualBox host-only
+  // network 192.168.56.x), which a phone on the same Wi-Fi can't reach.
+  const score = ({ name, address }) => {
+    if (/^vEthernet|virtual|vmware|vbox/i.test(name) || address.startsWith("192.168.56.")) return 0;
+    if (/^(en|eth|wl|wi-?fi)/i.test(name)) return 2;
+    return 1;
+  };
+  addresses.sort((a, b) => score(b) - score(a));
 
   if (addresses[0]) return addresses[0].address;
   throw new Error("Aucune adresse IPv4 locale n'a été trouvée.");

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, Image, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 
 import EventFriendList from "@/components/eventListAmi";
+import FriendLine from "@/components/friendLine";
 import ModalBase from "@/components/modalBase";
 import { useAPI } from "@/contextes/contexteAPI";
 import { useFont } from "@/contextes/contexteFont";
@@ -15,13 +16,13 @@ import { convertirTimestampDateLongue } from "@/functions/convertirTimestamp";
 import { convertUTCToLocal } from "@/functions/convertirUTCenLocal";
 import { useFriendList } from "@/hooks/useFriendList";
 import { Participant } from "@/types/invites";
-import FriendLine from "@/components/friendLine";
 
 type Friend = {
     temps_amitie: string,
     id_publique: string,
     pseudo: string,
-    pfp_url: string
+    // GET /amis sends the photo as `fp_url` (see sync_api routes/amis.js), not `pfp_url`.
+    fp_url: string | null
 }
 
 export type ListType = 'event' | 'select' | 'consult' | 'message'
@@ -48,7 +49,7 @@ function DefaultFriendList({ openProfiles, type}: { openProfiles: boolean, type:
             const data = response.data.map((ami: Friend) => ({
                 ...ami,
                 id: ami.id_publique,
-                fp_url: ami.pfp_url,
+                fp_url: ami.fp_url,
                 temps_amitie: convertUTCToLocal(ami.temps_amitie)
             }))
             setAmis(data)

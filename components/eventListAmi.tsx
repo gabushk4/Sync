@@ -31,7 +31,8 @@ export type FriendAPIRes = {
     temps_amitie: string,
     id_publique: string,
     pseudo: string,
-    pfp_url: string
+    // GET /amis sends the photo as `fp_url` (see sync_api routes/amis.js), not `pfp_url`.
+    fp_url: string | null
 }
 
 function EventListAmiContent() {
@@ -80,7 +81,7 @@ function EventListAmiContent() {
                 return {
                     ...ami,
                     id: ami.id_publique,
-                    fp_url: ami.pfp_url,
+                    fp_url: ami.fp_url,
                     temps_amitie: amitie
                 }
             })

@@ -265,7 +265,9 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
 
     let expired = false
     if (item.expiration === "expired") expired = true
-    const expiration = item.expiration ? convertUTCToLocal(item.expiration) : undefined
+    // The API sends "expired" instead of a date once the invitation has expired
+    // (sync_api validateExpiration.js); convertUTCToLocal throws on it and crashed the list.
+    const expiration = item.expiration && !expired ? convertUTCToLocal(item.expiration) : undefined
     let expirationLabel
 
     if (expired)
