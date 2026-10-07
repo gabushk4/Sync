@@ -82,6 +82,13 @@ export const getCommonFreeSlots = (
   const total = Math.round(dayStart.plus({ days: 1 }).diff(dayStart, 'minutes').minutes)
   const bitmap = new Uint8Array(total).fill(1)
 
+  // Nathan (common availabilities): today's already elapsed minutes can't be
+  // offered as a new meeting slot.
+  const now = DateTime.now()
+  if (date?.hasSame(now, 'day')) {
+    bitmap.fill(0, 0, Math.min(total, minutesSinceStartOfDay(now, dayStart)))
+  }
+
   applyBusyTimes(bitmap, userEvents, date)
   applyBusyTimes(bitmap, friendEvents, date)
 

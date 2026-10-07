@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import { Alert } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useAPI } from "./contexteAPI";
-import { useAccessToken } from "./contexteToken";
 import log from "@/functions/log";
 import catcher from "@/functions/catcher";
 import { useAuth } from "./contexteAuth";
 import AutoRefresh from "@/functions/autoRefresh";
-import { AxiosInstance } from "axios";
 
 /** Accept/refuse button of a notification (see the API's constants/*Actions.js). */
 export type NotificationAction = {
@@ -63,10 +63,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     //log("notification provider render")
     const { api } = useAPI()
     const { state } = useAuth()
+    const { t } = useTranslation('friends')
 
     const [notifRefresh, setNotifRefresh] = useState<AutoRefresh | undefined>()
     const [nonLues, setNonLues] = useState<number>(0)
     const [notifications, setNotifications] = useState<Notification[]>([])
+    const [popupQueueVersion, setPopupQueueVersion] = useState(0)
+    const demandesPopupAffichees = useRef(new Set<string>())
+    const popupOuvert = useRef(false)
 
     const onData = (data: any) => {
         //log('notifs onData', data)
@@ -153,6 +157,68 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             notifRefresh?.stop()
         }
     }, [state])
+
+    // Nathan (friend request notification): pops up each pending friend request once,
+    // one at a time, so the member can accept or decline it right away.
+    useEffect(() => {
+        if (state !== 'authenticated' || popupOuvert.current) return
+
+        const demande = notifications.find((notification) => {
+            return notification.type === 'demande_ami'
+                && notification.statut_metier === 'en_attente'
+                && !demandesPopupAffichees.current.has(notification.id)
+        })
+
+        if (!demande) return
+
+        demandesPopupAffichees.current.add(demande.id)
+        popupOuvert.current = true
+
+        let popupTermine = false
+        const terminerPopup = () => {
+            if (popupTermine) return
+            popupTermine = true
+            popupOuvert.current = false
+            setPopupQueueVersion((version) => version + 1)
+        }
+
+        /**
+         * Answers the request with the matching action the API resolved for it
+         * ('accepter' / 'refuser': method, url and body), like the notifications list does.
+         *
+         * @param {'accepter' | 'refuser'} label
+         * @returns {Promise<void>}
+         */
+        const repondre = async (label: 'accepter' | 'refuser') => {
+            const action = demande.actions?.find((a) => a.label === label)
+            if (!action) {
+                terminerPopup()
+                return
+            }
+
+            try {
+                await api.request({ method: action.method, url: action.url, data: action.body })
+                notifRefresh?.forceRefresh()
+            } catch (error) {
+                catcher(error, t('requests.errors.responseFailed'))
+            } finally {
+                terminerPopup()
+            }
+        }
+
+        Alert.alert(
+            t('requests.popupTitle'),
+            t('requests.popupMessage', {
+                pseudo: demande.details?.pseudo_demandeur ?? demande.message,
+            }),
+            [
+                { text: t('requests.later'), style: 'cancel', onPress: terminerPopup },
+                { text: t('requests.decline'), style: 'destructive', onPress: () => { void repondre('refuser') } },
+                { text: t('requests.accept'), onPress: () => { void repondre('accepter') } },
+            ],
+            { cancelable: true, onDismiss: terminerPopup }
+        )
+    }, [api, notifications, notifRefresh, popupQueueVersion, state, t])
 
     const value: NotificationsContextType = { notifRefresh, nonLues, notifications }
 

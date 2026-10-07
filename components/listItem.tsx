@@ -9,7 +9,8 @@ import { router } from 'expo-router'
 import { DateTime } from 'luxon'
 import React from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import Animated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated'
+import Animated, { SharedValue } from 'react-native-reanimated'
+import useTimelineLabelOffset from '@/hooks/useTimelineLabelOffset'
 import EventBloc from './eventBloc'
 
 type Props = {
@@ -58,11 +59,17 @@ export default function ListItem({ event, horizontal, displayedDate, listOffset,
     const depart = horizontal ? left : top
 
     // Hooks must run on every render, so this sits before the early return below.
-    const texteAnime = useAnimatedStyle(() => {
-        // Furthest the label can go: the block's end, or the end of the timeline.
-        const max = Math.max(PAD, Math.min(taille - tailleTexte - PAD, longueurTimeline - depart - tailleTexte - PAD))
-        const position = Math.min(Math.max(listOffset.value - depart + PAD, PAD), max)
-        return horizontal ? { left: position } : { top: position }
+    // Label position while the row scrolls: Gabriel's shared timeline logic
+    // (useTimelineLabelOffset, also used by FreeSlotItem) — sticks to the visible
+    // edge, stays inside the block, and centers the label on short events.
+    const texteAnime = useTimelineLabelOffset({
+        axis: horizontal ? 'x' : 'y',
+        itemOffset: depart,
+        itemSize: taille,
+        labelSize: tailleTexte,
+        listOffset,
+        inset: pxHeures,
+        timelineLength: longueurTimeline,
     })
 
     if (!valide) return null

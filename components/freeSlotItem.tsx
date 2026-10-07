@@ -9,6 +9,7 @@ import { router } from "expo-router";
 import { DateTime } from "luxon";
 import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { useTranslation } from 'react-i18next';
 import Animated, { SharedValue } from "react-native-reanimated";
 import useTimelineLabelOffset from "@/hooks/useTimelineLabelOffset";
 import ToastAbs from "@/abstractions/toastAbs";
@@ -23,6 +24,7 @@ type Props = {
 }
 
 export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, listOffset, owner }: Props) {
+    const { t } = useTranslation('home')
     const { colors } = usePalette()
     const {fonts} = useFont()
     const { pxHeures, H_HEURES, L_HEURES } = useTimeline()
@@ -59,7 +61,7 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
     
     const s = StyleSheet.create({
         freeSlot:{
-            borderWidth: 1, 
+            borderWidth: 1,
             borderRadius:8,
             borderColor: colors.success,
             alignItems: 'center',
@@ -91,6 +93,8 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
     return (
         <TouchableOpacity
             key={`fs${freeSlot.start}-${freeSlot.end}`}
+            accessibilityRole="button"
+            accessibilityLabel={`${t('commonFreeSlot')} ${freeSlot.start.toFormat('t')}–${freeSlot.end.toFormat('t')}`}
             style={[s.freeSlot, {
                 position: 'absolute',
                 left: left,
@@ -115,7 +119,12 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
                     params: {
                         start: freeSlot.start,
                         end: freeSlot.end,
-                        friend:[JSON.stringify(owner)]
+                        friend: JSON.stringify({
+                            id: owner.id,
+                            pseudo: owner.pseudo,
+                            fp_url: owner.fp_url ?? null,
+                            privilege: 'lecteur',
+                        })
                     }
                 })
             }}
@@ -129,7 +138,7 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
                     minimumFontScale={0.5}
                     style={[s.title, { color: colors.muted }]}
                 >
-                    Dispo commune {'\n'} +
+                    {t('commonFreeSlot')} {'\n'} +
                 </Text>
             </Animated.View>
         </TouchableOpacity>

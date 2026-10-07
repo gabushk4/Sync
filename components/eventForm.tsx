@@ -464,7 +464,11 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
 
             <View style={[s.champ, {height:'auto', paddingBottom:0}]}>
                 <Text style={s.label}>{t('form.participants')} - {invites.length}</Text>
-                <ParticipantsListe participantsUrl={eventParticipantsControlUrl} listType='event' />                
+                <ParticipantsListe
+                    participantsUrl={eventParticipantsControlUrl}
+                    listType='event'
+                    peutGererParticipants={mode === 'details' && event.privilege_membre === 'editeur'}
+                />                
             </View>
 
             <Modal visible={showTextModal} transparent={true} backdropColor="transparent">

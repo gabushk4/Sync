@@ -29,6 +29,8 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 type Props = {
     participantsUrl: string | undefined;
     listType: ListType
+    /** Shows each participant's remove button (event details, member is an editor). */
+    peutGererParticipants?: boolean
 }
 
 const LINE_HEIGHT = 56
@@ -64,7 +66,7 @@ const s = StyleSheet.create({
     },
 })
 
-export default function ParticipantsListe({ participantsUrl, listType } : Props){
+export default function ParticipantsListe({ participantsUrl, listType, peutGererParticipants = false } : Props){
     const { t } = useTranslation()
     const { colors } = usePalette();
     const { api } = useAPI()
@@ -80,7 +82,6 @@ export default function ParticipantsListe({ participantsUrl, listType } : Props)
         [friendsSuggestions]
     )
 
-    const showMore = invites.length > MAX_COUNT
 
     log("friend ids:", availableFriendIds.length, availableFriendIds)
 
@@ -92,13 +93,16 @@ export default function ParticipantsListe({ participantsUrl, listType } : Props)
     // (ex: statut 'acceptee' ne se fait plus écraser par 'en_attente' local).
     const {participants, participantsTruncated} = useMemo(() => {
         const map = new Map<string, Participant>()
-        const mapTruncated = new Map<String, Participant>()
-        invites.slice(0, MAX_COUNT).forEach((i) => mapTruncated.set(i.id, i))
         invites.forEach((i) => map.set(i.id, i))
-        participantsServeur.forEach((p) => map.set(p.id, p))        
+        participantsServeur.forEach((p) => map.set(p.id, p))
+        const tous = [...map.values()]
 
-        return { participants: [...map.values()], participantsTruncated: [...mapTruncated.values()] }
+        // The truncated list used to be built from the local invites only, so an existing
+        // event's participants (from the server) never showed up in its details.
+        return { participants: tous, participantsTruncated: tous.slice(0, MAX_COUNT) }
     }, [participantsServeur, invites])
+
+    const showMore = participants.length > MAX_COUNT
 
     
     const computeHeight = (count: number, includeShowMore: boolean) =>
@@ -133,11 +137,21 @@ export default function ParticipantsListe({ participantsUrl, listType } : Props)
         }
     }, [participantsUrl])
 
+    // Nathan (remove a participant): an editor can remove a participant; once the API
+    // confirms it (ParticipantLigne -> supprimerInvite), the row leaves the list.
     const Line = useCallback(({ participant } : { participant: Participant}) => (
         <View key={participant.id} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-            <ParticipantLigne participantsUrl={participantsUrl} participant={participant} height={LINE_HEIGHT} />
+            <ParticipantLigne
+                participantsUrl={participantsUrl}
+                participant={participant}
+                height={LINE_HEIGHT}
+                peutGererParticipants={peutGererParticipants}
+                onParticipantSupprime={(participantId) => {
+                    setParticipantsServeur((prev) => prev.filter((p) => p.id !== participantId))
+                }}
+            />
         </View>
-    ), [participantsUrl])
+    ), [participantsUrl, peutGererParticipants])
 
     const showMoreModal = useMemo(() => (
         <FlatList

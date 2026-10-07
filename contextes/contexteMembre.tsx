@@ -15,6 +15,7 @@ type Membre = {
     idPublique: string | undefined;
     pseudo: string | undefined;
     bio: string | undefined;
+    etatAme: string | undefined;
     fp: FPType;
     tempsCreation: DateTime | undefined;
     admin: boolean | false;
@@ -25,7 +26,7 @@ type Membre = {
 
 type MembreContextType = {
     membre: Membre;
-    patchProfil: (pseudo?: string | undefined, bio?: string | undefined, fp?: FPType) => Promise<void>;
+    patchProfil: (pseudo?: string | undefined, bio?: string | undefined, fp?: FPType, etatAme?: string) => Promise<void>;
     getMembre: () => Promise<void>;
     resetMembre: () => void;
     setMockMembre: () => void;
@@ -41,6 +42,7 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
         idPublique: undefined,
         pseudo: undefined,
         bio: undefined,
+        etatAme: undefined,
         fp: undefined,
         tempsCreation: undefined,
         admin: false,
@@ -61,6 +63,7 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
                 idPublique: data.id_publique ?? null,
                 pseudo: data.pseudo ?? null,
                 bio: data.bio ? data.bio : "cette personne n'a rien à dire",
+                etatAme: data.etat_ame ?? '',
                 fp: data.fp_url ?? null,
                 admin: data.role === 'admin',
                 emailConfirme: data.email_confirme ?? false,
@@ -78,6 +81,7 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
             pseudo: 'mocker',
             idPublique: "Mmoc1234",
             bio: "Je ne suis qu'un mock de donnée",
+            etatAme: '',
             fp: undefined,
             tempsCreation: DateTime.now(),
             admin: true,
@@ -87,7 +91,7 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
         })
     }
 
-    const patchProfil = async (pseudo : string | undefined, bio : string | undefined, fp: FPType = undefined ) => {
+    const patchProfil = async (pseudo : string | undefined, bio : string | undefined, fp: FPType = undefined, etatAme?: string ) => {
         const token = await getToken()
         const url = `/membres/profil`
 
@@ -103,6 +107,11 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
             setMembre((prev) => ({ ...prev, bio }));
         }
 
+        if (etatAme !== undefined) {
+            formData.append("etat_ame", etatAme);
+            setMembre((prev) => ({ ...prev, etatAme }));
+        }
+
         if (fp) {
             formData.append("image", {
                 uri: (fp as any).uri,
@@ -116,6 +125,7 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
         if (pseudo) modifiedFields.push('pseudo');
         if (bio) modifiedFields.push('bio');
         if (fp) modifiedFields.push('image');
+        if (etatAme !== undefined) modifiedFields.push('etat_ame');
 
         if (modifiedFields.length > 0) {
             try {           

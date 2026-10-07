@@ -22,7 +22,7 @@ import log from '@/functions/log';
 
 
 import CalendarMonthView from '@/components/calendarMonthView';
-import EventsList from '@/components/eventsList';
+import EventsList, { RETRAIT_RANGEE } from '@/components/eventsList';
 import ProfilPic from '@/components/pfp';
 import Timeline from '@/components/timeline';
 import { useFont } from '@/contextes/contexteFont';
@@ -35,7 +35,6 @@ import { useTimeline } from '@/contextes/contexteTimeline';
 import { withSpringConfig } from '@/constants/ReanimatedConfs';
 import AutoRefresh from '@/functions/autoRefresh';
 import { Friend } from '@/types/calendar';
-import { BlurView } from 'expo-blur';
 
 //Constants
 const WIDTH_COL = 80;
@@ -44,9 +43,19 @@ const HEIGHT_DATE = 56;
 const HEIGHT_TIMELINE = 32;
 const AnimatedStyleMinVal = 0.1
 const LIST_HEIGHT = 104
+// Height of the floating back-to-now button.
+const HAUTEUR_RETOUR = 34
 const { width: WIN_W, height: WIN_H } = Dimensions.get('window')
 // Max events per request in the month view (the API defaults to 20, too few for a month).
 const LIMITE_MOIS = 300
+
+/** Formats the displayed local day as the UTC date range expected by the events API. */
+function getEventDateRangeParams(date: DateTime) {
+  return {
+    debut: formaterDatePourServeur(convertLocalToUTC(date.startOf('day'))),
+    fin: formaterDatePourServeur(convertLocalToUTC(date.endOf('day'))),
+  }
+}
 
 /**
  * Query params for GET /evenements and /evenements/amis covering [debut, fin].
@@ -132,6 +141,20 @@ export default function Home() {
   const [todayDateTime, setTodayDateTime] = useState<DateTime>()
   const [chargementEchec, setChargementEchec] = useState(false)
   const [chargementEvenements, setChargementEvenements] = useState(false)
+  // Vertical center of the member's row (where their photo sits), measured from
+  // the layout: the back-to-now button is centered on that line.
+  const yZoneCalendrier = useRef(0)
+  const rangeeMembre = useRef<{ y: number, height: number } | null>(null)
+  const [centreRangeeMembre, setCentreRangeeMembre] = useState<number>()
+  /**
+   * Recomputes the member row's center once both layouts are known.
+   *
+   * @returns {void}
+   */
+  const majCentreRangeeMembre = () => {
+    if (!rangeeMembre.current) return
+    setCentreRangeeMembre(yZoneCalendrier.current + rangeeMembre.current.y + rangeeMembre.current.height / 2)
+  }
   const [afficherRetour, setAfficherRetour] = useState({afficher:afficherRetourMaintenant.value.afficher, left:afficherRetourMaintenant.value.left})
   // User story 5: whether the month calendar replaces the timeline, and which month it shows.
   const [vueCalendrier, setVueCalendrier] = useState(false)
@@ -170,6 +193,15 @@ export default function Home() {
       ? withRepeat(withTiming(AnimatedStyleMinVal, { duration: 500, easing: Easing.inOut(Easing.ease) }), -1, true)
       : withTiming(1, { duration: 500 }),
   }));
+
+  // Back-to-now button: its side tells where now is (right side = now is later,
+  // left side = now is earlier), so it shows the matching arrow.
+  const flecheDroiteAnime = useAnimatedStyle(() => ({
+    opacity: afficherRetourMaintenant.value.left === LEFT_GO_TO_AFTER ? 1 : 0,
+  }))
+  const flecheGaucheAnime = useAnimatedStyle(() => ({
+    opacity: afficherRetourMaintenant.value.left === LEFT_GO_TO_AFTER ? 0 : 1,
+  }))
 
   const retourMaintenantAnime = useAnimatedStyle(() => {
     "worklet"
@@ -583,13 +615,26 @@ export default function Home() {
       width: '100%',
       flexDirection: 'row',
       borderTopWidth: 1,
-      borderColor: colors.border, // was unset, so the separator line rendered black
       alignItems:'center'
     },
     friendList: {
       flexDirection: 'row',
       height: 104,
       marginBottom: 4
+    },
+    // Friend's photo column: as tall as the row, inset like its blocks.
+    colonneAmi: {
+      width: WIDTH_COL,
+      height: '100%',
+      paddingVertical: RETRAIT_RANGEE,
+    },
+    // Transparent: blends with the timeline behind it (the screen's background).
+    photoAmi: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 12,
+      overflow: 'hidden',
     },
     column: {
       width: WIDTH_COL,
@@ -653,12 +698,27 @@ export default function Home() {
     backToNow: {
       position: 'absolute',
       bottom: HEIGHT_BOT_BAR + 16,
-      height: 34,
+      height: HAUTEUR_RETOUR,
       width: 56,
       borderRadius: 100,
       borderWidth: 1,
       zIndex: 20,
       overflow: 'hidden',
+    },
+    // Both arrows are stacked in layers filling the button (so each one is centered);
+    // only the one pointing to now is visible.
+    calqueFleche: {
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    flecheRetour: {
+      height: 16,
+      width: 16,
     },
     backToNowInner: {
       flex: 1,
@@ -714,7 +774,13 @@ export default function Home() {
         ) : (
         /* ── Zone principale (3/4) — horaire amis ── */
         <GestureDetector gesture={panGesture}>
-          <View style={s.calendarContainer}>
+          <View
+            style={s.calendarContainer}
+            onLayout={(e) => {
+              yZoneCalendrier.current = e.nativeEvent.layout.y
+              majCentreRangeeMembre()
+            }}
+          >
           <Animated.View style={[loadingAnimated, s.friendsZone]}>
             {/* TODO: ScrollView verticale des amis */}
             {friends.length === 0 ? (
@@ -750,12 +816,21 @@ export default function Home() {
                       return(
                         <View key={friend.id} style={[s.friendList]}>
                           {/* Photo de profil */}
-                          <BlurView tint='dark' style={[s.column,{ backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' }]}>
+                          {/* Same band as the row's events/free slots (RETRAIT_RANGEE above and
+                              below, rounded like the blocks) so the photo lines up with them. */}
+                          <TouchableOpacity
+                            style={s.colonneAmi}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('viewFriendProfile', { name: friend.pseudo })}
+                            onPress={() => router.push({ pathname: '/(tabs)/profile/[membreId]', params: { membreId: friend.id } })}
+                          >
+                          <View style={s.photoAmi}>
                             <ProfilPic
                               pfp={friend.fp_url}
                               size={64}
                             />
-                          </BlurView>
+                          </View>
+                          </TouchableOpacity>
                           {/* Événements horizontaux */}
                           <EventsList
                             owner={friend}
@@ -775,7 +850,14 @@ export default function Home() {
           </Animated.View>        
 
         {/* ── Zone membre (1/4) ── */}
-          <Animated.View style={[loadingAnimated, s.memberZone, { backgroundColor: colors.card }]}>
+          <Animated.View
+            style={[loadingAnimated, s.memberZone, { backgroundColor: colors.card }]}
+            onLayout={(e) => {
+              const { y, height } = e.nativeEvent.layout
+              rangeeMembre.current = { y, height }
+              majCentreRangeeMembre()
+            }}
+          >
               <View style={[s.column, { backgroundColor: colors.card }]}>
                 <ProfilPic
                   size={64}
@@ -835,15 +917,25 @@ export default function Home() {
           style={[
             retourMaintenantAnime,
             s.backToNow,
+            // Centered on the member's photo line once measured (bottom offset until then).
+            centreRangeeMembre !== undefined
+              ? { top: centreRangeeMembre - HAUTEUR_RETOUR / 2, bottom: undefined }
+              : null,
             { borderColor: colors.border, backgroundColor: colors.card },
           ]}
         >
-          <TouchableOpacity onPress={retourMaintenant} style={s.backToNowInner}>
-            <Text style={{ color: colors.text, fontSize: 12 }}>
-              {currentTime?.day !== todayDateTime?.day
-                ? currentTime?.toFormat('d MMM')
-                : currentTime?.toFormat('HH:mm')}
-            </Text>
+          <TouchableOpacity
+            onPress={retourMaintenant}
+            style={s.backToNowInner}
+            accessibilityRole="button"
+            accessibilityLabel={t('backToNow')}
+          >
+            <Animated.View style={[s.calqueFleche, flecheDroiteAnime]}>
+              <Image source={icones.arrowR} style={s.flecheRetour} resizeMode="contain" />
+            </Animated.View>
+            <Animated.View style={[s.calqueFleche, flecheGaucheAnime]}>
+              <Image source={icones.arrowL} style={s.flecheRetour} resizeMode="contain" />
+            </Animated.View>
           </TouchableOpacity>
         </Animated.View>
         )}

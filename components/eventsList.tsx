@@ -21,6 +21,9 @@ import log from '@/functions/log'
 import { useEffect, useState } from 'react'
 import FreeSlotItem from './freeSlotItem'
 
+/** Inset of a horizontal row's blocks (top and bottom); the home screen's profile column uses it too. */
+export const RETRAIT_RANGEE = 8
+
 export type EventsListProps = {
     events?: Event[];
     eventsColor?: string;
@@ -88,7 +91,7 @@ export default function EventsList({
     const s = StyleSheet.create({
         styleListe: {
             ...(horizontal
-                ? { height: typeof listSize === 'number' ? listSize : undefined, width: '100%', paddingVertical:8 }
+                ? { height: typeof listSize === 'number' ? listSize : undefined, width: '100%', paddingVertical: RETRAIT_RANGEE }
                 : { width: '100%', paddingHorizontal:8 }
             ) 
         },

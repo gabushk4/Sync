@@ -9,13 +9,15 @@ import log from '@/functions/log';
 import { Participant } from '@/types/invites';
 import { useEffect, useState, } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Alert, Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import ProfilPic from './pfp';
 
 type Props = {
     participant: Participant;
     participantsUrl?: string;
     height: number;
+    peutGererParticipants?: boolean;
+    onParticipantSupprime?: (participantId: string) => void;
 }
 
 /**
@@ -28,9 +30,11 @@ type Props = {
  * @param {Participant} props.participant - Participant to show (fetched if pseudo/picture are missing).
  * @param {string} [props.participantsUrl] - Event's participants endpoint; undefined while creating the event.
  * @param {number} props.height - Row height.
+ * @param {boolean} [props.peutGererParticipants=false] - Shows the remove button (Nathan: remove a participant).
+ * @param {(participantId: string) => void} [props.onParticipantSupprime] - Called once the participant was removed.
  * @returns {JSX.Element | null}
  */
-export default function ParticipantLigne({participant, participantsUrl = undefined, height} : Props){
+export default function ParticipantLigne({participant, participantsUrl = undefined, height, peutGererParticipants = false, onParticipantSupprime} : Props){
     const { t } = useTranslation('events')
     const { colors } = usePalette()
     const colorScheme = useColorScheme()
@@ -49,6 +53,7 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
     }
 
     const [p, setParticipant] = useState<Participant>()
+    const [suppressionEnCours, setSuppressionEnCours] = useState(false)
 
     /**
      * Uses the participant as given, or fetches their pseudo and picture from
@@ -59,14 +64,19 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
     const getParticipant = async () => {
         //log("participant", participant)
         const {fp_url, pseudo} = participant
-        if(!fp_url || !pseudo){
+        if (!participant.id) {
+            log('participant sans identifiant public, chargement ignoré', pseudo)
+            setParticipant(undefined)
+            return
+        }
+        if(!pseudo){
             try {
                 const response = await api.get(`membres/${participant.id}`)
                 const fetchedParticipant: Participant = {
                     ...participant,
-                    id: response.data.id_publique,
+                    id: response.data.id_publique ?? participant.id,
                     pseudo: response.data.pseudo,
-                    fp_url: response.data.fp_url,
+                    fp_url: response.data.fp_url ?? fp_url ?? null,
                 }
                 log("fetched participant:", fetchedParticipant)
                 setParticipant(fetchedParticipant)
@@ -85,16 +95,18 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
      * @returns {Promise<void>}
      */
     const supprimerParticipant = async () => {
-        supprimerInvite(p as Participant, participantsUrl).then(()=>{
-            setParticipant(undefined)
-        })
+        if (!p || suppressionEnCours) return
+        setSuppressionEnCours(true)
+        const succes = await supprimerInvite(p, participantsUrl)
+        setSuppressionEnCours(false)
+        if (succes) onParticipantSupprime?.(p.id)
     }
 
     useEffect(()=>{
         getParticipant()
     }, [])
 
-    const peutSupprimer = p ? (p.id !== membre.idPublique && p.privilege !== 'editeur') : false
+    const peutSupprimer = p ? (peutGererParticipants && p.id !== membre.idPublique) : false
 
     /**
      * Color of a participant's answer label (user story 9).
@@ -190,7 +202,7 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
                 <View style={s.centralPanel}>
                     <View style={s.userInfo}>
                         <ProfilPic
-                            pfp={`${participant.fp_url}`}
+                            pfp={participant.fp_url}
                             size={32}
                             style={s.photo}
                         />
@@ -226,8 +238,15 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
                 <View style={s.rightAction}>
                     {peutSupprimer && (
                         <TouchableOpacity onPress={() => {
-                            supprimerParticipant()
-                        }}>
+                            Alert.alert(
+                                t('participantRemoval.confirmTitle'),
+                                t('participantRemoval.confirmMessage', { pseudo: p.pseudo }),
+                                [
+                                    { text: t('participantRemoval.cancel'), style: 'cancel' },
+                                    { text: t('participantRemoval.remove'), style: 'destructive', onPress: supprimerParticipant },
+                                ]
+                            )
+                        }} disabled={suppressionEnCours}>
                             <Image
                                 source={icone.croix}
                                 style={{transform:[{rotate:'45deg'}], height:24, width:24}}

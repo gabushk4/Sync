@@ -33,5 +33,15 @@
 		"deleteFailed": "suppression impossible",
 		"requestFailed": "la demande n'a pas abouti",
 		"emailFailed": "erreur lors de l'envoi"
+	},
+	"requests": {
+		"popupTitle": "Nouvelle demande d'ami",
+		"popupMessage": "{{pseudo}} veut devenir ton ami. Acceptes-tu sa demande ?",
+		"accept": "Accepter",
+		"decline": "Refuser",
+		"later": "Plus tard",
+		"errors": {
+			"responseFailed": "Impossible de répondre à cette demande d'ami"
+		}
 	}
 }

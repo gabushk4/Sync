@@ -1,5 +1,8 @@
 {
   "friendsListEmptyState": "Ajoutes des amis ici :",
+  "commonFreeSlot": "Disponibilité commune",
+  "viewFriendProfile": "Voir le profil de {{name}}",
+  "backToNow": "Revenir à maintenant",
   "errors": {
     "formatMemberEvents": "erreur en formatant les évènements du membre",
     "formatFriendEvents": "erreur en formatant les évènements d'amis",

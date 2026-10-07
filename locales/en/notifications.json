@@ -1,6 +1,7 @@
 {
 	"types": {
 		"amis": "friends",
+		"demande_ami": "friend request",
 		"sync": "sync",
 		"evenements": "events"
 	},

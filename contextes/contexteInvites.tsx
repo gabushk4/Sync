@@ -8,7 +8,7 @@ import React, { createContext, useContext, useState } from 'react';
 type InvitesContextValue = {
     invites: Participant[]
     ajouterInvite: (invite: Participant | Participant[], inviterUrl?: string) => Promise<void>
-    supprimerInvite: (inviteSupp: Participant, supprimerUrl?: string | undefined) => Promise<void>
+    supprimerInvite: (inviteSupp: Participant, supprimerUrl?: string | undefined) => Promise<boolean>
     resetInvites: () => void
 }
 
@@ -78,7 +78,8 @@ export const InvitesProvider: React.FC<React.PropsWithChildren<{}>> = ({ childre
         }
     }
 
-    const supprimerInvite = async (inviteSupp: Participant, supprimerUrl?: string) => {
+    /** Retire un participant côté API puis du contexte local si la suppression réussit. */
+    const supprimerInvite = async (inviteSupp: Participant, supprimerUrl?: string): Promise<boolean> => {
         log('supprimer invite', inviteSupp)       
 
         let valid = true
@@ -102,6 +103,7 @@ export const InvitesProvider: React.FC<React.PropsWithChildren<{}>> = ({ childre
         if (valid) {
             setInvites((prev) => prev.filter((invite) => invite.id !== inviteSupp.id))
         }
+        return valid
     }
 
     const resetInvites = ()=>{
