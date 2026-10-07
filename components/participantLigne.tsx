@@ -134,7 +134,7 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
             flexShrink: 1,
         },
         status: {
-            minWidth: 72,
+            minWidth:"10%",
             alignItems: 'center',
             justifyContent: 'center',
             gap: 2,
@@ -217,20 +217,12 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
                     {/* User story 9: each participant's answer to the invitation, as an
                         icon + label (PENDING / ACCEPTED / DECLINED). */}
                     <View style={s.status}>
-                        {p.statut && (
-                            <>
-                                <Image
-                                    source={p.statut === 'refusee' ? icone.refuse : p.statut === 'acceptee' ? icone.accepte : icone.en_attente}
-                                    style={{height:18, width:18}}
-                                    resizeMode='contain'
-                                />
-                                <Text
-                                    style={[s.statutTexte, { color: couleurStatut(p.statut) }]}
-                                    numberOfLines={1}
-                                >
-                                    {t(`participantStatus.${p.statut}`, { defaultValue: p.statut })}
-                                </Text>
-                            </>
+                        {p.statut && (                            
+                            <Image
+                                source={p.statut === 'refusee' ? icone.refuse : p.statut === 'acceptee' ? icone.accepte : icone.en_attente}
+                                style={{height:18, width:18}}
+                                resizeMode='contain'
+                            />
                         )}
                     </View>
                 </View>

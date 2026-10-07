@@ -28,7 +28,7 @@ export default function ProfilPic({ size, pfp, style}: Props) {
         setSource(icones.pfpDefault)
     }
     else if (typeof pfp === 'string') {
-        setSource({ uri: `${APIBaseURL}/${pfp}` })
+        setSource({ uri: `${APIBaseURL}${pfp}` })
     }
     else {
         setSource({ uri: pfp?.uri })

@@ -169,7 +169,7 @@ export default function Details(){
         [event]
     )
 
-    useNavFab({
+    useNavFab("details", {
             icon: <Icon name="pencil" size={24} color={colors.text} />,
             href: '/(tabs)/home/edit/[event]' as const,
             params: FABParams

@@ -166,10 +166,6 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
         }
     }
         
-    const fetchDispoCommune = async () => {
-        //mock for now
-    }
-
     useFocusEffect(
         useCallback(() => {
             if (!dateTimesCalculated.current) {
@@ -463,11 +459,10 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
             </View>
 
             <View style={[s.champ, {height:'auto', paddingBottom:0}]}>
-                <Text style={s.label}>{t('form.participants')} - {invites.length}</Text>
                 <ParticipantsListe
                     participantsUrl={eventParticipantsControlUrl}
                     listType='event'
-                    peutGererParticipants={mode === 'details' && event.privilege_membre === 'editeur'}
+                    peutGererParticipants={mode === 'details' && event.privilege_membre === 'editeur' || mode === 'create'}
                 />                
             </View>
 

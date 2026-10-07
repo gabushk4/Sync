@@ -1,15 +1,13 @@
 import { authEvents } from "@/events/authEvents";
 import catcher from "@/functions/catcher";
-import axios, { AxiosHeaders, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from "axios";
+import { emptyTokens, getToken, setToken } from "@/functions/tokenStore";
+import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
-import { createContext, useContext, useEffect, useMemo, useRef } from "react";
-import { emptyToken, getToken, setToken } from "@/functions/tokenStore";
+import { createContext, useContext, useMemo } from "react";
 
 import { requestListener } from "@/events/requestEvents";
-import { useMockMode } from "./contexteMockMode";
 
-import { resolveMock } from "@/functions/resolveMock";
 
 interface APIContextType {
   api: AxiosInstance;
@@ -138,7 +136,7 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
           } catch (refreshError) { // si une erreur a lieu au moment du refresh
             await SecureStore.deleteItemAsync('refresh_token'); // c'est souvent parce que le refresh token est invalide
             // TODO: avoir une erreur spécifique pour un refresh token invalide pour ne pas l'invalider par une erreur qui n'a pas rapport
-            emptyToken()
+            await emptyTokens()
             authEvents.emitUnauthorized()
             // The member is being sent to the login screen: flag the error so
             // catcher() doesn't also show a toast for it (see catcher.js).

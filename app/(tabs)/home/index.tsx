@@ -168,7 +168,7 @@ export default function Home() {
     ?.startOf('day')
     .plus({ hours: maintenantFab.hour + 1 })
 
-  useNavFab({
+  useNavFab("home", {
     href: '/home/create',
     params: debutCreation ? { start: debutCreation.toISO() } : undefined,
     icon: null,

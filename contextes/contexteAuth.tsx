@@ -1,11 +1,11 @@
 // contexts/AuthContext.tsx
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import * as SecureStore from 'expo-secure-store';
-import { useAccessToken } from './contexteToken';
-import { useMembre } from './contexteMembre';
-import log from '@/functions/log'; 
-import catcher from '@/functions/catcher';
 import { authEvents } from '@/events/authEvents';
+import catcher from '@/functions/catcher';
+import log from '@/functions/log';
+import { emptyTokens, setToken } from '@/functions/tokenStore';
+import * as SecureStore from 'expo-secure-store';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { useMembre } from './contexteMembre';
 import { useMockMode } from './contexteMockMode';
 
 type AuthState = 'loading' | 'authenticated' | 'unauthenticated';
@@ -25,7 +25,6 @@ const AuthContexte = createContext<AuthContextType | undefined>(undefined);
  * @returns
  */
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const { setToken, resetTokens } = useAccessToken();
     const { getMembre, resetMembre, setMockMembre } = useMembre();
     const { isMockMode } = useMockMode()    
 
@@ -46,7 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setState('authenticated');
         } catch (error: any) {
             log('AuthContext: échec de la vérification, déconnexion', error?.message);
-            await resetTokens(); // invalide tous les tokens
+            await emptyTokens(); // invalide tous les tokens            
             resetMembre(); // invalide les infos du membre
             setState('unauthenticated');
         }
@@ -74,7 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const signIn = async (accessToken: string, refreshToken: string) => {
         console.log("sign in")
         try {
-            await setToken(accessToken);
+            setToken(accessToken);
             await SecureStore.setItemAsync('refresh_token', refreshToken);
             await getMembre();
             setState('authenticated');
@@ -96,7 +95,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const signOut = async () => {
         setState('unauthenticated');
         resetMembre();
-        await resetTokens();
+        await emptyTokens();
+
     };
 
     return (

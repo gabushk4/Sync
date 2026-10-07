@@ -56,7 +56,7 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
     const getMembre = async () => {
         try {
             const response = await api.get('/membres')
-            //log('get membre', response.data)
+            log('get membre', response.data)
             const data = response.data
             setMembre((prev) => ({
                 ...prev,
@@ -155,6 +155,7 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const resetMembre = () => {
+        log("membre reset")
         setMembre(membreInitial);
     };
 

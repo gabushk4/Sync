@@ -1,27 +1,25 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useFocusEffect } from 'expo-router/react-navigation'
 import { NavFabConfig, useNavFabContext } from '@/contextes/contexteNavFAB';
 
 import { useEffect, useRef } from 'react'
+import log from '@/functions/log';
 
-export function useNavFab(config: NavFabConfig) {
-    const { setNavConfig } = useNavFabContext()
-    const lastSerialized = useRef<string | null>(null)
+export function useNavFab(owner: string, config: NavFabConfig) {
+    const { setNavConfig, release } = useNavFabContext()
 
-    const serialized = config
-        ? JSON.stringify({ href: config.href, params: config.params, visible: config.visible })
-        : null
+    const configRef = useRef(config)
+    configRef.current = config
+
+    const key = useMemo(() => JSON.stringify({owner:owner, href: config?.href, params: config?.params, visible: config?.visible }), [config])
     
     useFocusEffect(React.useCallback(() => { 
-        if (serialized !== lastSerialized.current) {
-            lastSerialized.current = serialized
-            setNavConfig(config)
-        }
+            log("nav fab by ", owner)
+            setNavConfig(owner, configRef.current)
 
         return () => {
-            // ne nettoie que si on quitte vraiment le focus ou l'écran démonte
-            setNavConfig(null)
-            lastSerialized.current = null
+            log("nav fab cleansed by ", owner)
+            release(owner)
         }
-    },[serialized]))
+    },[key]))
 }

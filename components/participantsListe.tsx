@@ -17,10 +17,12 @@ import { ListType } from '@/app/(modals)/listeAmis';
 import { checkMark } from '@/constants/dismissButtons';
 import { withTimingConfig } from '@/constants/ReanimatedConfs';
 import { useEventDraft } from '@/contextes/contexteEventDraft';
+import { useFont } from '@/contextes/contexteFont';
 import { useModal } from '@/contextes/contexteModals';
 import { Participant } from '@/types/invites';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { router } from 'expo-router';
+import { Text } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 // Garde tes imports actuels et ajoute simplement `useMemo` à l'import de 'react'
@@ -35,6 +37,7 @@ type Props = {
 
 const LINE_HEIGHT = 56
 const INVITER_HEIGHT = 40
+const TITLE_HEIGHT = 32
 const MAX_COUNT = 3
 const DATA_RENDERER_KEY = "ParticipantsListe"
 
@@ -69,7 +72,9 @@ const s = StyleSheet.create({
 export default function ParticipantsListe({ participantsUrl, listType, peutGererParticipants = false } : Props){
     const { t } = useTranslation()
     const { colors } = usePalette();
+    const {fonts} = useFont()
     const { api } = useAPI()
+    const {ajouterInvite} = useInvites()
     const { setDataRendererContent, setDismissButton, removeDataRenderContent, resetDismissButton } = useModal()
 
     const colorScheme = useColorScheme()
@@ -83,6 +88,8 @@ export default function ParticipantsListe({ participantsUrl, listType, peutGerer
     )
 
 
+
+
     log("friend ids:", availableFriendIds.length, availableFriendIds)
 
     // Ce que le SERVEUR dit. Vide en mode création (pas d'URL).
@@ -94,7 +101,9 @@ export default function ParticipantsListe({ participantsUrl, listType, peutGerer
     const {participants, participantsTruncated} = useMemo(() => {
         const map = new Map<string, Participant>()
         invites.forEach((i) => map.set(i.id, i))
-        participantsServeur.forEach((p) => map.set(p.id, p))
+        participantsServeur.forEach((p) => {            
+            return map.set(p.id, p)
+        })
         const tous = [...map.values()]
 
         // The truncated list used to be built from the local invites only, so an existing
@@ -107,8 +116,8 @@ export default function ParticipantsListe({ participantsUrl, listType, peutGerer
     
     const computeHeight = (count: number, includeShowMore: boolean) =>
         Math.min(
-            LINE_HEIGHT * (MAX_COUNT + (includeShowMore ? 2 : 1)),
-            Math.max(LINE_HEIGHT, LINE_HEIGHT * (count + 1 + Number(includeShowMore)))
+            LINE_HEIGHT * (MAX_COUNT + (includeShowMore ? 2 : 1) + TITLE_HEIGHT),
+            Math.max(LINE_HEIGHT, LINE_HEIGHT * (count + 1 + Number(includeShowMore)) + TITLE_HEIGHT)
         )
 
     const containerHeight = useSharedValue(computeHeight(participantsTruncated.length, showMore))
@@ -188,6 +197,7 @@ export default function ParticipantsListe({ participantsUrl, listType, peutGerer
 
     return(
         <Animated.View style={[s.container, { backgroundColor: colors.card }, animatedContainer]}>
+            <Text style={{ fontFamily: fonts.body, color: colors.muted, marginBottom:8, fontSize:20 }}>{t('events:form.participants')} - {participants.length}</Text>
             {participantsTruncated.map(p => (
                <Line key={`${p.id}`} participant={p}/>
             ))}   

@@ -28,6 +28,7 @@ import Haptics from '@/abstractions/haptics';
 import MemberCode from '@/components/memberCode';
 import { withSpringConfig, withTimingConfig } from '@/constants/ReanimatedConfs';
 import { convertirTimestampDateCourte, convertirTimestampDateLongue } from "@/functions/convertirTimestamp";
+import ProfilPic from "@/components/pfp";
 
 const MENU_OPTIONS_GAP = 8
 const FLOATING_BTN_HEIGHT = 64
@@ -397,17 +398,10 @@ export default function ProfilEcran(){
                     <View style={[{height:'48%', flexDirection:'column', gap:16, paddingBottom:4, borderTopLeftRadius: 16, borderTopRightRadius:16, backgroundColor:colors.card, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.7, shadowRadius: 8, elevation:5, borderBottomColor:colors.border, borderBottomWidth:1}]}>                
                         {/* Pfp */}
                         <Animated.View style={[{ height: 120, width: 120, zIndex: 2, marginLeft: 16, marginTop: -56, justifyContent: 'center', overflow: 'hidden', }]}>                     
-                            <Image                                                                                            
-                                source={fpSource}                                                   
-                                style={{
-                                    height:'100%',
-                                    width:'100%',
-                                    borderRadius:100,
-                                    borderWidth:4,
-                                    borderColor:colors.card,
-                                    backgroundColor:colors.primary,
-                                }}
-                            />                 
+                            <ProfilPic
+                                size={120}
+                                pfp={membre.fp}
+                            />
                         </Animated.View>
                         {/* Pseudo and Code */}
                         <Animated.View style={[{ justifyContent: 'center', paddingHorizontal: 16}, infosMembreAnime]}>
@@ -417,11 +411,7 @@ export default function ProfilEcran(){
                             </View>                            
                             <Text style={[{color:colors.muted, fontSize:14, paddingLeft:4, fontFamily:fonts.body}]}>{t('memberSince', { date: convertirTimestampDateCourte(membre.tempsCreation) })}</Text>                
                         </Animated.View>
-                        <Animated.View>
-                            <TouchableOpacity
-                                onPress={()=> router.push("/(modals)/listeAmis")}
-                            ><Text>Amis</Text></TouchableOpacity>
-                        </Animated.View>
+                        {/* TODO: avoir un bouton avec le compte des amis qui affiche la liste des amis */}
                         {/* Bio */}
                         <Animated.View style={{ width:'100%', height:'auto', borderRadius:8, paddingLeft:16}}>                            
                             <View style={{width:'90%', paddingVertical:8, flexWrap:'wrap'}}>

@@ -48,7 +48,7 @@ export default function Inbox(){
     }, []))
 
     // le bouton "+" au centre de la barre d'onglets ouvre la liste d'amis pour écrire à quelqu'un
-    useNavFab({
+    useNavFab("inbox", {
         href: '/(modals)/listeAmis',
         params: { type: 'message' },
         icon: null,

@@ -1,26 +1,38 @@
 import { Href } from 'expo-router';
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 export type NavFabConfig = {
   icon: React.ReactNode | null;
   href: Href;           // route Expo Router à ouvrir
   params?: any;
   visible?: boolean | null;
-} | null;
+} | undefined;
+
+type NavFabState = {
+  owner: string;
+  config: NavFabConfig;
+} | null
 
 const NavFabContext = createContext<{
   config: NavFabConfig;
-  setNavConfig: (config: NavFabConfig) => void;
-}>({ config: null, setNavConfig: () => { } });
-
-
+  setNavConfig: (owner: string, config: NavFabConfig) => void;
+  release: (owner: string) => void;
+}>({ config: undefined, setNavConfig: () => { }, release: () => { } });
 
 export function FabProvider({ children }: { children: React.ReactNode }) {
-  const [config, setNavConfig] = useState<NavFabConfig>(null);
+  const [state, setState] = useState<NavFabState>(null)
+
+  const setNavConfig = useCallback((owner:string, config: NavFabConfig) => {
+    setState({owner, config})
+  }, [])  
+
+  const release = useCallback((owner: string) => {
+    setState(prev => (prev?.owner === owner ? null : prev)) //only unmount IF owner is unmounting
+  }, [])
 
   const value = useMemo(
-    () => ({ config, setNavConfig }) ,
-    [config]
+    () => ({ config: state?.config, setNavConfig, release }) ,
+    [state, setState, release]
   )
   
   return (

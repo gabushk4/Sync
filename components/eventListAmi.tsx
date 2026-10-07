@@ -102,6 +102,7 @@ function EventListAmiContent() {
                 ? [...new Set([...current, ...page.friendIds])]
                 : page.friendIds
             )
+            log("hasMore", page.hasMore)
             setHasMoreFriends(page.hasMore)
         }
 
