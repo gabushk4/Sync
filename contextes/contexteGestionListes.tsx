@@ -4,6 +4,7 @@ import { createContext, ReactNode, useContext, useRef, useState } from "react";
 import { Dimensions, ScrollView } from "react-native";
 import { Easing, SharedValue, useSharedValue, withTiming } from "react-native-reanimated";
 import { useTimeline } from "./contexteTimeline";
+import { scheduleOnRN } from 'react-native-worklets';
 
 // Types
 type GestionScrollContextType = {
@@ -16,6 +17,8 @@ type GestionScrollContextType = {
 
   // Offset
   offset: SharedValue<number>;
+  maxOffset: number;
+  clampOffset: (value: number, sharedValue?: SharedValue<number>) => number;
   afficherRetourMaintenant: SharedValue<{ afficher: boolean; left: number }>;
 
   // Constants
@@ -40,10 +43,17 @@ export const GestionScrollProvider = ({ children }: { children: ReactNode }) => 
 
   // Refs des listes à synchroniser
   const listeRefs = useRef<(ScrollView | null)[]>([]);
-  const offsetMaintenant = useRef(0);
+  const offsetMaintenant = useSharedValue(0);
 
   // Shared values
   const offset = useSharedValue(0);
+  const maxOffset = Math.max(0, 24 * (pxHeures + L_HEURES) - (WIN_W - 80));
+  const clampOffset = (value: number, sharedValue?: SharedValue<number>) => {
+    'worklet'
+    const newOffset = Math.min(Math.max(value, 0), maxOffset)
+    if (sharedValue) sharedValue.value = newOffset
+    return newOffset
+  }
   const afficherRetourMaintenant = useSharedValue<{ afficher: boolean; left: number }>({
     afficher: false,
     left: 0,
@@ -54,26 +64,29 @@ export const GestionScrollProvider = ({ children }: { children: ReactNode }) => 
 
   // Initialise toutes les listes à un offset donné
   const initialiserOffset = (offsetDefault: number) => {
-    log("offset init", offsetDefault)
-    offsetMaintenant.current = offsetDefault;
-    offset.value = withTiming(offsetDefault, {duration:300, easing:Easing.inOut(Easing.linear)});
+    const boundedOffset = clampOffset(offsetDefault);
+    log("offset init", boundedOffset)
+    offsetMaintenant.value = boundedOffset;
+    offset.value = withTiming(boundedOffset, {duration:300, easing:Easing.inOut(Easing.linear)});
   };
 
-  const derniereHapticsOffset = useRef(0);
+  const derniereHapticsOffset = useSharedValue(0);
 
   const onPan = (offset: number) => {
+    'worklet'
+    const boundedOffset = clampOffset(offset);
     // Haptics fired for a snap effect
-    if (Math.abs(offset - derniereHapticsOffset.current) >= pxHeures + L_HEURES) {
-      derniereHapticsOffset.current = offset;
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
+    if (Math.abs(boundedOffset - derniereHapticsOffset.value) >= pxHeures + L_HEURES) {
+      derniereHapticsOffset.value = boundedOffset;
+      scheduleOnRN(Haptics.impactAsync, Haptics.ImpactFeedbackStyle.Soft);
     }
 
     const distanceRatio = pxHeures * 6;
     const afficher =
-      offset > offsetMaintenant.current + distanceRatio ||
-      offset < offsetMaintenant.current - distanceRatio;
+      boundedOffset > offsetMaintenant.value + distanceRatio ||
+      boundedOffset < offsetMaintenant.value - distanceRatio;
     const left =
-      offset < offsetMaintenant.current - distanceRatio
+      boundedOffset < offsetMaintenant.value - distanceRatio
         ? LEFT_GO_TO_AFTER
         : LEFT_GO_TO_BEFORE;
 
@@ -102,6 +115,8 @@ export const GestionScrollProvider = ({ children }: { children: ReactNode }) => 
         enZoom,
         setEnZoom,
         offset,
+        maxOffset,
+        clampOffset,
         afficherRetourMaintenant,
         LEFT_GO_TO_BEFORE,
         LEFT_GO_TO_AFTER,

@@ -2,13 +2,16 @@
 	"navigation": {
 		"profile": "profil",
 		"edit": "éditer le profil",
-		"settings": "paramètres"
+		"settings": "paramètres",
+		"importCalendar": "importer le calendrier"
 	},
 	"edit": {
 		"usernameLabel": "pseudo",
 		"usernamePlaceholder": "pseudo",
 		"bioLabel": "bio",
-		"bioPlaceholder": "quelques mots sur toi"
+		"bioPlaceholder": "quelques mots sur toi",
+		"moodLabel": "état d'âme",
+		"moodPlaceholder": "comment te sens-tu en ce moment?"
 	},
 	"qrCode": {
 		"brightnessTitle": "Sync souhaite ajuster la luminosité de votre écran",
@@ -21,8 +24,13 @@
 	},
 	"memberSince": "membre depuis le {{date}}",
 	"memberIdLabel": "identifiant du membre",
+	"friendMood": "État d'âme",
+	"moodEmpty": "Aucun état d'âme partagé pour le moment.",
+	"bioEmpty": "Aucune bio pour le moment.",
 	"errors": {
 		"widgetsLoadFailed": "erreur lors du chargement des widgets",
-		"updateFailed": "impossible de modifier le profil"
+		"updateFailed": "impossible de modifier le profil",
+		"loadFriendProfileFailed": "impossible de charger le profil de cet ami",
+		"friendProfileUnavailable": "ce profil est indisponible"
 	}
 }

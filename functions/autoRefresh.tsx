@@ -1,6 +1,7 @@
 import { AxiosInstance, AxiosResponse } from 'axios'
 import { DateTime } from 'luxon'
 import log from './log'
+import { AppState, AppStateStatus, NativeEventSubscription } from 'react-native'
 
 type PostRequestCallback = (response: AxiosResponse) => void
 
@@ -40,6 +41,9 @@ class AutoRefresh {
     private timer: ReturnType<typeof setTimeout> | null = null
     private stopped = true
     private inFlight = false
+    private appStateSub: NativeEventSubscription | null = null
+    private pausedByApp = false
+    private dead = false            // arrêt définitif : 401/403/404 ou destroy()
 
     private onData?: (data: any) => void
     private onPostRequest?: PostRequestCallback
@@ -55,6 +59,8 @@ class AutoRefresh {
         this.intervalMsInit = options.intervalMs ?? 5000
         this.extraParams = {}
         this.setOptions(options)
+
+        this.appStateSub = AppState.addEventListener('change', this.handleAppState)
 
         this.stopped = false
 
@@ -100,6 +106,41 @@ class AutoRefresh {
     }
 
     /**
+     * Pauses polling while the app is in the background and catches up when it comes back.
+     *
+     * @param {AppStateStatus} status - New app state.
+     * @returns {void}
+     */
+    private handleAppState = (status: AppStateStatus) => {
+        if (this.dead) return
+
+        if (status !== 'active') {
+            // Passe en arrière-plan : on met en pause (sans toucher à `dead`)
+            if (!this.stopped) {
+                this.pausedByApp = true
+                this.stop()
+            }
+        } else if (this.pausedByApp) {
+            // Retour au premier plan : on rattrape tout de suite, puis on reprend le rythme
+            this.pausedByApp = false
+            this.refresh()        // pas de force : last_checked laisse le serveur dire s'il y a du neuf
+            this.start()
+        }
+    }
+
+    private requestId = 0
+    private abortController: AbortController | null = null
+
+    /** Change la plage et recharge immédiatement, sans cache de last_checked */
+    setParams(extraParams: Record<string, any>) {
+        this.extraParams = extraParams
+        this.lastChecked = undefined          // la fenêtre a changé : on repart de zéro
+        this.abortController?.abort()    // annule la requête en cours
+        this.inFlight = false
+        return this.refresh(true)
+    }
+
+    /**
      * Runs one request (skipped if one is already in flight). Calls `onData`
      * when the API reports a change, `onError` on failure. A forced request also
      * calls `onChargement` before and after, and shows the global loading indicator.
@@ -108,52 +149,53 @@ class AutoRefresh {
      * @returns {Promise<void>}
      */
     async refresh(forceRefresh = false): Promise<void> {
-        //log('autoRefreshed', this.url, 'force refresh', forceRefresh, 'last_checked', this.lastChecked, 'with', this.extraParams)
-        if (this.inFlight) return
-        this.inFlight = true
+        if (this.inFlight && !forceRefresh) return
+            this.inFlight = true
+
+        const myId = ++this.requestId
+        this.abortController = new AbortController()
+        // User story 12: matched by the onChargement(false) in `finally`, which
+        // always runs (even for a canceled or stale request) so the screen's
+        // loading count always goes back down.
         if (forceRefresh) this.onChargement?.(true)
 
         try {
-            let params: Record<string, any> = { ...this.extraParams }
-
+            const params: Record<string, any> = { ...this.extraParams }
             if (this.lastChecked) params.last_checked = this.lastChecked
-            
             params.force_refresh = forceRefresh
-            
+
             const response = await this.api.get(this.url, {
                 params,
-                silencieux: !forceRefresh
+                signal: this.abortController.signal,
+                silencieux: !forceRefresh,
             })
-            
-            this.onPostRequest?.(response)            
-            
+
+            // Réponse périmée : une requête plus récente a été lancée entre-temps
+            if (myId !== this.requestId) return
+
+            this.onPostRequest?.(response)
+
             if (response.data?.has_changed === true) {
-                log("res", this.url, ":", response.data)
                 this.intervalMs = this.intervalMsInit
                 this.errorCount = 0
-                
                 this.lastChecked = this.extractLastChecked(response.data)
-
                 this.onData?.(response.data)
             }
-
         } catch (error: any) {
+            if (error?.code === 'ERR_CANCELED') return   // annulation volontaire, pas une erreur
+            if (myId !== this.requestId) return
+
             const status = error?.response?.status
-
-            this.onError?.(error)
-
-            // Erreurs permanentes : on arrête complètement, pas de retry
+            if (this.errorCount === 0) this.onError?.(error)
             if (status === 401 || status === 403 || status === 404) {
-                this.stop()
-                return
+            this.kill()
+            return
             }
-
-            // Erreurs temporaires : backoff exponentiel avant de retenter
             this.errorCount++
             this.intervalMs = this.getBackoffDelay()
             this.restart()
         } finally {
-            this.inFlight = false
+            if (myId === this.requestId) this.inFlight = false
             if (forceRefresh) this.onChargement?.(false)
         }
     }
@@ -176,9 +218,15 @@ class AutoRefresh {
      *
      * @returns {void}
      */
+    private kill(): void {
+        this.dead = true
+        this.stop()
+    }
+
     stop(): void {
         log("auto refreshed", this.url, 'stopped')
         this.stopped = true
+        
         if (this.timer) clearInterval(this.timer)
         this.timer = null
     }
@@ -193,6 +241,15 @@ class AutoRefresh {
         this.start()
     }
 
+    
+    destroy(): void {
+        this.dead = true
+        this.appStateSub?.remove()
+        this.appStateSub = null
+        this.lastChecked = undefined
+        this.stop()
+    }
+    
     /**
      * Fetches the full payload right away, optionally with new options (e.g.
      * another day's `extraParams` — the other options are kept), then resumes polling.

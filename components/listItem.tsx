@@ -1,3 +1,10 @@
+import React, { useState, useRef } from 'react'
+import { TouchableOpacity, Text, StyleSheet, View } from 'react-native'
+import Animated, {SharedValue, useAnimatedStyle} from 'react-native-reanimated'
+import { findWidth, findLeft } from '@/functions/calculerDimensionsEvenements'
+import { convertirTimestampDateCourte, convertirTimestampHeure } from '@/functions/convertirTimestamp'
+import { DateTime } from 'luxon'
+import { useTimeline } from '@/contextes/contexteTimeline'
 import { useFont } from '@/contextes/contexteFont'
 import { usePalette } from '@/contextes/contextePalette'
 import { useTimeline } from '@/contextes/contexteTimeline'
@@ -6,11 +13,8 @@ import { convertirTimestampDateCourte, convertirTimestampHeure } from '@/functio
 import { Event } from '@/types/calendar'
 import Icon from '@react-native-vector-icons/ionicons'
 import { router } from 'expo-router'
-import { DateTime } from 'luxon'
-import React from 'react'
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import Animated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated'
 import EventBloc from './eventBloc'
+import useTimelineLabelOffset from '@/hooks/useTimelineLabelOffset'
 
 type Props = {
     event: Event;
@@ -78,7 +82,27 @@ export default function ListItem({ event, horizontal, displayedDate, listOffset,
             endText = `${convertirTimestampDateCourte(fin)} ${convertirTimestampHeure(fin)}`
     }
 
-    const couleurTexte = textColor ?? colors.text
+    const left = horizontal
+                    ? findLeft(event.debut, event.fin, displayedDate as DateTime, pxHeures + L_HEURES)
+        : 0
+    const top = horizontal
+                    ? 0
+        : findLeft(event.debut, event.fin, displayedDate as DateTime, pxHeures + H_HEURES)
+    
+    const eventWidth = findWidth(event.debut, event.fin, displayedDate, pxHeures + L_HEURES)
+    
+    const blocHeight = horizontal ? '100%' : findWidth(event.debut, event.fin, displayedDate, pxHeures + H_HEURES)
+    const blocWidth = horizontal ? eventWidth > pxHeures ? eventWidth : pxHeures : '100%'
+
+    const textAnimated = useTimelineLabelOffset({
+        axis: horizontal ? 'x' : 'y',
+        itemOffset: horizontal ? left : top,
+        itemSize: (horizontal ? blocWidth : blocHeight) as number,
+        labelSize: horizontal ? textWidth : textHeight,
+        listOffset,
+        inset: pxHeures,
+        timelineLength: maxTimelineLength,
+    })
 
     const s = StyleSheet.create({
         bloc: {

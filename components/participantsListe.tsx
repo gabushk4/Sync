@@ -1,7 +1,7 @@
 import { useFocusEffect } from 'expo-router/react-navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image, ScrollView, StyleSheet, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, useColorScheme, View } from 'react-native';
 
 import { useAPI } from '@/contextes/contexteAPI';
 import { useInvites } from '@/contextes/contexteInvites';
@@ -13,33 +13,105 @@ import Spinner from '@/components/spinner';
 import catcher from '@/functions/catcher';
 import log from '@/functions/log';
 
+import { LinkAbs } from '@/abstractions/linkAbs';
+import { ListType } from '@/app/(modals)/listeAmis';
+import { checkMark } from '@/constants/dismissButtons';
 import { withTimingConfig } from '@/constants/ReanimatedConfs';
+import { useEventDraft } from '@/contextes/contexteEventDraft';
+import { useModal } from '@/contextes/contexteModals';
 import { Participant } from '@/types/invites';
+import Ionicons from '@react-native-vector-icons/ionicons';
 import { router } from 'expo-router';
+import { FlatList } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+// Garde tes imports actuels et ajoute simplement `useMemo` à l'import de 'react'
+// import { useState, useEffect, useCallback, useMemo } from 'react'
 
 type Props = {
     participantsUrl: string | undefined;
+    listType: ListType
 }
 
 const LINE_HEIGHT = 56
+const INVITER_HEIGHT = 40
+const MAX_COUNT = 3
+const DATA_RENDERER_KEY = "ParticipantsListe"
 
-export default function ParticipantsListe({ participantsUrl } : Props){
-    const { t } = useTranslation('events')
+// Styles statiques : créés UNE fois, pas à chaque render
+const s = StyleSheet.create({
+    container: {
+        width: '100%',
+        overflow: 'hidden',
+        justifyContent: 'center',
+        paddingHorizontal: 8,
+    },
+    separator: {
+        height: 2,
+        marginTop: 2,
+        marginBottom: 2
+    },
+    photo: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 100,
+        height: 64,
+        width: 64,
+        overflow: 'hidden'
+    },
+    inviter: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',          
+    },
+})
+
+export default function ParticipantsListe({ participantsUrl, listType } : Props){
+    const { t } = useTranslation()
     const { colors } = usePalette();
     const { api } = useAPI()
-    
+    const { setDataRendererContent, setDismissButton, removeDataRenderContent, resetDismissButton } = useModal()
+
     const colorScheme = useColorScheme()
 
-    const inviterIcone = colorScheme === 'dark' ?require('@/assets/icones/croix-dark-icon.png'):require('@/assets/icones/croix-light-icon.png')    
+    const inviterIcone = colorScheme === 'dark' ? require('@/assets/icones/croix-dark-icon.png') : require('@/assets/icones/croix-light-icon.png')
     const { invites } = useInvites()
+    const { friendsSuggestions, friendsHasMore } = useEventDraft()
+    const availableFriendIds = useMemo(
+        () => friendsSuggestions.map(suggestion => suggestion.id),
+        [friendsSuggestions]
+    )
 
-    const [participants, setParticipants] = useState<Array<Participant>>()
+    const showMore = invites.length > MAX_COUNT
+
+    log("friend ids:", availableFriendIds.length, availableFriendIds)
+
+    // Ce que le SERVEUR dit. Vide en mode création (pas d'URL).
+    const [participantsServeur, setParticipantsServeur] = useState<Array<Participant>>([])
     // User story 12: shows a spinner during the first load of an existing
     // event's participants (a new event has no URL and nothing to load).
     const [chargement, setChargement] = useState(!!participantsUrl)
 
-    const containerHeight = useSharedValue(LINE_HEIGHT * (participants?.length ?? 1))
+    // Liste affichée = DÉRIVÉE (serveur + invites locales). Pas de state, pas d'effet.
+    // On met les invites en premier et le serveur en dernier : le serveur gagne
+    // (ex: statut 'acceptee' ne se fait plus écraser par 'en_attente' local).
+    const {participants, participantsTruncated} = useMemo(() => {
+        const map = new Map<string, Participant>()
+        const mapTruncated = new Map<String, Participant>()
+        invites.slice(0, MAX_COUNT).forEach((i) => mapTruncated.set(i.id, i))
+        invites.forEach((i) => map.set(i.id, i))
+        participantsServeur.forEach((p) => map.set(p.id, p))        
+
+        return { participants: [...map.values()], participantsTruncated: [...mapTruncated.values()] }
+    }, [participantsServeur, invites])
+
+    
+    const computeHeight = (count: number, includeShowMore: boolean) =>
+        Math.min(
+            LINE_HEIGHT * (MAX_COUNT + (includeShowMore ? 2 : 1)),
+            Math.max(LINE_HEIGHT, LINE_HEIGHT * (count + 1 + Number(includeShowMore)))
+        )
+
+    const containerHeight = useSharedValue(computeHeight(participantsTruncated.length, showMore))
 
     const animatedContainer = useAnimatedStyle(() => {
         return {
@@ -47,119 +119,96 @@ export default function ParticipantsListe({ participantsUrl } : Props){
         }
     })
 
-    const getParticipants = async ()=>{
-        log('getParticipants', participantsUrl, 'invites', invites)
-        if(participantsUrl){
-            let participants = []
-            try {
-                const response = await api.get(participantsUrl)
-
-                log('participants', response.data)
-                participants = response.data.participants
-                //participants = participants.filter((p)=> p.id != )
-                setParticipants(participants)
-            } catch (error) {
-                log('getParticipants', error)
-                catcher(error, t('errors.participantsLoadFailed'))
-            } finally {
-                setChargement(false)
-            }
-            if (invites.length > 0) {
-                log("getParticipants invites", invites)
-                let nouvInvites = [...participants, ...invites]
-                nouvInvites = [...new Map(nouvInvites.map((i) => [i.id, i])).values()]
-                setParticipants(nouvInvites)
-            }
+    // Ne s'occupe QUE du serveur. La fusion avec les invites se fait dans le useMemo.
+    const getParticipants = useCallback(async () => {
+        //log("participantsURL: ", participantsUrl)
+        if (!participantsUrl) {
+            setParticipantsServeur([])
+            setChargement(false)
+            return
         }
-        else
-            setParticipants(invites)
-    }
-
-    useFocusEffect(useCallback(()=>{
-        //log('participantsListe focused')
-        getParticipants()
-    }, [participantsUrl]))
-
-    useEffect(()=> {        
-        getParticipants()
-    }, [invites])
-    
-    useEffect(()=>{
-        containerHeight.value = withTiming(Math.max(LINE_HEIGHT * (participants?.length ?? 1) + s.inviterPhoto.height, 120), withTimingConfig)
-    }, [invites, participants])
-
-    const s = StyleSheet.create({
-        container: {
-            width: '100%',
-            overflow:'hidden',
-            justifyContent:'center',
-            paddingHorizontal: 8,
-            backgroundColor:colors.card
-        },
-        separator:{
-            height:2,
-            marginTop:2,
-            marginBottom:2
-        },
-        photo:{
-            alignItems:'center',
-            justifyContent:'center',
-            borderRadius: 100,
-            height:64,
-            width:64,
-            overflow:'hidden'
-        },
-        inviter:{
-            alignItems:'center',
-            justifyContent:'center',
-            height:'100%',
-            width:'100%',
-            padding:4
-        },
-        inviterPhoto:{
-            height:40,
-            width:40
+        try {
+            const response = await api.get(participantsUrl)
+            //log('participants', response.data)
+            
+            setParticipantsServeur(response.data.participants)
+        } catch (error) {
+            log('getParticipants', error)
+            catcher(error, t('events.errors.participantsLoadFailed'))
+        } finally {
+            setChargement(false)
         }
-    })
+    }, [participantsUrl])
+
+    const Line = useCallback(({ participant } : { participant: Participant}) => (
+        <View key={participant.id} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+            <ParticipantLigne participantsUrl={participantsUrl} participant={participant} height={LINE_HEIGHT} />
+        </View>
+    ), [participantsUrl])
+
+    const showMoreModal = useMemo(() => (
+        <FlatList
+            data={participants}
+            keyExtractor={(item, index) => `FL-${item.id}-${index}`}
+            renderItem={({ item }) => 
+                <Line participant={item}/>
+            }
+        />
+    ), [participants, Line])
+
+    useEffect(() => {
+            setDataRendererContent(DATA_RENDERER_KEY, showMoreModal)
+            setDismissButton(checkMark(colors))   
+        }, [showMoreModal, setDataRendererContent, setDismissButton, colors])
+
+    useEffect(() => () => {
+        removeDataRenderContent(DATA_RENDERER_KEY)
+        resetDismissButton()
+    }, [])
+
+    // useFocusEffect s'exécute aussi au montage : plus besoin d'un useEffect en plus.
+    useFocusEffect(useCallback(() => {
+        getParticipants()
+    }, [getParticipants]))
+
+    useEffect(() => {        
+        containerHeight.value = withTiming(
+            computeHeight(participantsTruncated.length, showMore),
+            withTimingConfig
+        )
+    }, [participantsTruncated, participants])
+
 
     return(
-        <Animated.View style={[s.container, animatedContainer]}>
-            <ScrollView
-                nestedScrollEnabled={true}
-                persistentScrollbar={true}
-                /* ItemSeparatorComponent={() => (<View style={[s.separator, { backgroundColor:theme.colors.secondary }]} />)} */                    
+        <Animated.View style={[s.container, { backgroundColor: colors.card }, animatedContainer]}>
+            {chargement && participantsTruncated.length === 0 &&
+                <View style={{ height: LINE_HEIGHT, justifyContent: 'center', alignItems: 'center' }}>
+                    <Spinner accessibilityLabel={t('common:loading')} />
+                </View>
+            }
+            {participantsTruncated.map(p => (
+               <Line key={`${p.id}`} participant={p}/>
+            ))}   
+            {showMore &&
+                <LinkAbs href={{ pathname: "/(modals)/dataRenderer", params: { key: DATA_RENDERER_KEY, title:t('events:form.participants') } }} style={{ alignSelf: 'center', marginBottom:8, marginTop:4 }}>
+                    {t('common:showMore')}
+                </LinkAbs>
+            }
+            <TouchableOpacity style={[s.inviter]}
+                onPress={() => {
+                    router.push({
+                        pathname: '/(modals)/listeAmis',
+                        params: {
+                            type: listType,
+                            inviterUrl: participantsUrl,
+                            availableFriendIds: JSON.stringify(availableFriendIds),
+                            hasMoreFriends: String(friendsHasMore),
+                        },
+                    })
+                }}
             >
-                {chargement && !participants &&
-                    <View style={{height:LINE_HEIGHT, justifyContent:'center', alignItems:'center'}}>
-                        <Spinner accessibilityLabel={t('common:loading')} />
-                    </View>
-                }
-                {participants?.map((item, index) => 
-                    <View key={item.id} style={{flexDirection:'row', justifyContent:'center', alignItems:'center'}}>
-                        <ParticipantLigne participantsUrl={participantsUrl} participant={item} height={LINE_HEIGHT}/>                                
-                    </View>    
-                )}
-                <View style={{
-                        flex:1,
-                        width:'100%',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        
-                    }}>
-                        <TouchableOpacity style={[s.inviter]} 
-                            onPress={() => { 
-                                router.push({pathname: '/(modals)/listeAmis', params:{type: 'select', inviterUrl: participantsUrl}})
-                            }}
-                        >
-                        <View>
-                            <Image
-                            style={s.inviterPhoto}
-                                source={inviterIcone}
-                            />
-                        </View>
-                        </TouchableOpacity>
-                    </View>
-            </ScrollView>
+                <Ionicons name='add' color={colors.text} size={56}/>
+            </TouchableOpacity>
         </Animated.View>
     )
 }

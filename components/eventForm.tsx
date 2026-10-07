@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next'
 import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native'
 
 import SwitchAbs from '@/abstractions/switchAbs'
+import { useEventDraft } from '@/contextes/contexteEventDraft'
 import { useInvites } from '@/contextes/contexteInvites'
 import { Participant } from '@/types/invites'
 import Icon from "@react-native-vector-icons/ionicons"
@@ -87,22 +88,8 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
     const { fonts } = useFont()
     const { membre } = useMembre()
     const colorScheme = useColorScheme()
-    const {ajouterInvite, invites} = useInvites()     
-
-    const icones = {
-        check:
-            colorScheme === 'dark'
-                ? require('@/assets/icones/checkmark-dark-icon.png')
-                : require('@/assets/icones/checkmark-light-icon.png'),
-        public:
-            colorScheme === 'dark'
-                ? require('@/assets/icones/cadenas-ouvert-dark-icon.png')
-                : require('@/assets/icones/cadenas-ouvert-light-icon.png'),
-        private:
-            colorScheme === 'dark'
-                ? require('@/assets/icones/cadenas-ferme-dark-icon.png')
-                : require('@/assets/icones/cadenas-ferme-light-icon.png'),
-    }
+    const { ajouterInvite, invites } = useInvites()    
+    const {start, end, setStart, setEnd, setRequestsEnabled} = useEventDraft()
         
     // Parenthesized explicitly: `? :` binds looser than `||`, so without the
     // parens this would evaluate as `(constraints?.minimumStart || mode ===
@@ -114,6 +101,7 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
 
     const refDescription = useRef<TextInput>(null)
     const dateTimesCalculated = useRef(false)
+    const prefilledParticipantsApplied = useRef(false)
 
     const [dateTimeDisabled, setDateTimeDisabled] = useState<boolean>(false)
     const [titleLen, setTitleLen] = useState<number>(0)
@@ -122,9 +110,6 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
     const [title, setTitle] = useState<string>(event.titre ?? '')
     const [description, setDescription] = useState<string>(event.description ?? '')
     const [eventPrivate, setPrivate] = useState<boolean>(event.prive == 1)
-
-    const [start, setStart] = useState<DateTime>(dtNow.plus({hours:1}))
-    const [end, setEnd] = useState<DateTime>(dtNow.plus({ hours: 2 }))
 
     const [montrerRecPicker, setMontrerRecPicker] = useState(Platform.OS === 'ios')
     const [recurrence, setRecurrence] = useState<Recurrence>({
@@ -160,8 +145,8 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
             return {start, end}
         }
 
-        let start = convertUTCToLocal(event.debut ?? dtNow) ?? dtNow
-        let end = convertUTCToLocal(event.fin ?? dtNow) ?? dtNow        
+        let start = ceilBy5(convertUTCToLocal(event.debut ?? dtNow) ?? dtNow)
+        let end = ceilBy5(convertUTCToLocal(event.fin ?? dtNow) ?? dtNow)        
 
         return {start, end}
     }
@@ -192,10 +177,17 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
                 setStart(start)
                 setEnd(end)
             }
-            if (mode === 'create' && prefills?.participants)
+            if (mode === 'create' && prefills?.participants && !prefilledParticipantsApplied.current) {
+                prefilledParticipantsApplied.current = true
                 appliquerInvites(prefills.participants)
-        }, [event])
+            }
+        }, [event, mode, prefills, setEnd, setStart])
     )    
+
+    useEffect(() => {
+        setRequestsEnabled(mode !== 'details')
+        return () => setRequestsEnabled(false)
+    }, [mode, setRequestsEnabled])
 
     useEffect(() => {
         setFinRecurrence(start.startOf('day'))
@@ -220,11 +212,11 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
     }))
 
     const s = StyleSheet.create({
-        container: { flex: 1, height: '100%', flexDirection: 'column', paddingTop: 16, paddingHorizontal: 8 },
-        contentContainer: { gap: 16 },
+        container: { flex: 1, height: 'auto', flexDirection: 'column', paddingHorizontal: 20 },
+        contentContainer: { gap: 28, paddingVertical:20 },
         label: { color: colors.muted, fontSize: 20, fontFamily: fonts.body, width: 'auto' },
         dateText:{color: colors.text, fontSize: 28, fontFamily: fonts.body, width: 'auto'},
-        champ: { width: '100%', paddingHorizontal: 8, paddingVertical: 4, backgroundColor: colors.card, borderRadius: 16 },
+        champ: { width: '100%', paddingHorizontal: 12, paddingVertical: 8, backgroundColor: colors.card, borderRadius: 16 },
         input: {
             height: 56,
             borderWidth: 0,
@@ -367,7 +359,7 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
                     )}
                 </View>
             ) : (
-                <View style={{height:'auto'}}>
+                <View style={[s.champ, {height:'auto'}]}>
                     <DateTimeSelecteur
                         minimumStart={minimumStart}
                         maximum={maximumStart}    
@@ -380,7 +372,7 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
                     />
                 </View>
             )}
-
+            {/* Reccurence */}
             <View style={{ gap: 8 }}>
                 <View style={[s.champ, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 4 }]}>
                     <Text style={s.label}>{t('form.recurrenceLabel')}</Text>
@@ -404,6 +396,7 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
                                     break
                                 case 'YEARLY':
                                     setFinRecurrence(start.plus({ year: 1 }))
+                                    break;
                                 default:
                                     setFinRecurrence(null)
                                     break
@@ -423,7 +416,7 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
                                 disabled={dateTimeDisabled}
                                 style={s.androidRecCard}
                             >
-                                <Text style={s.inputTemps}>{finRecurrence ? convertirTimestampDateCourte(finRecurrence) : 0}</Text>
+                                <Text style={s.inputTemps}>{finRecurrence ? convertirTimestampDateCourte(finRecurrence) : ''}</Text>
                             </TouchableOpacity>
                         )}
                         {montrerRecPicker && (
@@ -447,7 +440,7 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
                     </View>
                 )}
             </View>
-
+            {/* Visibility */}
             <View style={[s.champ, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', alignSelf: 'flex-end' }]}>
                 <Animated.Text style={s.label}>{eventPrivate ? t('form.private') : t('form.public')}</Animated.Text>
                 {mode != 'details'
@@ -455,7 +448,10 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
                             <Icon name='lock-open' color={eventPrivate ? colors.muted : colors.text} size={24}/>
                             <SwitchAbs
                                 value={eventPrivate}
-                                onChange={() => { setPrivate((prev) => !prev) }}
+                            onValueChange={() => {
+                                
+                                setPrivate((prev) => !prev )
+                            }}
                                 trackColor={{false:colors.muted, true:colors.muted}}
                             />
                             <Icon name='lock-closed' color={eventPrivate ? colors.text : colors.muted} size={24}/>
@@ -466,11 +462,9 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
                 
             </View>
 
-            <View style={s.champ}>
-                <Text style={s.label}>{t('form.participants')}</Text>
-                <View style={{width: '100%', borderRadius: 8, minHeight:32, maxHeight:192 }}>
-                    <ParticipantsListe participantsUrl={eventParticipantsControlUrl} />
-                </View>
+            <View style={[s.champ, {height:'auto', paddingBottom:0}]}>
+                <Text style={s.label}>{t('form.participants')} - {invites.length}</Text>
+                <ParticipantsListe participantsUrl={eventParticipantsControlUrl} listType='event' />                
             </View>
 
             <Modal visible={showTextModal} transparent={true} backdropColor="transparent">

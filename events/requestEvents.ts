@@ -1,17 +1,13 @@
 type Listener = (isFetching: boolean) => void
 
 /**
- * Tracks whether the app is waiting on the API, for global loading indicators
- * (see components/requestStatus.tsx). Fed by the axios interceptors in
- * contextes/contexteAPI.tsx.
- *
- * User story 12: this used to hold a single boolean, so with two requests in
- * flight the first one to finish reported "not fetching" while the second was
- * still running. It now counts the requests in flight.
+ * Tells global loading indicators (components/requestStatus.tsx) whether the
+ * app is waiting on the API. The requests in flight are counted by `track()` in
+ * contextes/contexteAPI.tsx, which sets the state here.
  */
 class RequestListener{
     private listeners = new Set<Listener>()
-    private enCours = 0
+    private _isFetching = false
 
     /**
      * Registers a listener called with the new state every time it changes.
@@ -25,26 +21,24 @@ class RequestListener{
     }
 
     /**
-     * Records that a request started (`true`) or finished (`false`).
-     * Every `true` must be matched by exactly one `false`.
+     * Sets whether at least one request is in flight.
+     * User story 12: listeners are only notified when the state actually
+     * changes, since track() calls this on every request.
      *
      * @param {boolean} fetching
      * @returns {void}
      */
     setFetching(fetching: boolean) {
-        const avant = this.isFetching
-        // Clamped at 0 so an unmatched `false` can't leave the counter negative
-        // and hide the next real request.
-        this.enCours = Math.max(0, this.enCours + (fetching ? 1 : -1))
-        if (this.isFetching !== avant)
-            this.listeners.forEach(l => l(this.isFetching));
+        if (fetching === this._isFetching) return
+        this._isFetching = fetching
+        this.listeners.forEach(l => l(fetching));
     }
 
     /**
      * @returns {boolean} Whether at least one request is in flight.
      */
     get isFetching() {
-        return this.enCours > 0
+        return this._isFetching
     }
 };
 

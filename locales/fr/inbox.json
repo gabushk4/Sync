@@ -1,1 +1,6 @@
-{}
+{
+	"requests": {
+		"title": "Demandes d'ami",
+		"empty": "Aucune demande d'ami en attente."
+	}
+}

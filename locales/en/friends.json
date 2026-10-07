@@ -1,9 +1,13 @@
 {
 	"list": {
-		"title": "Friends",
-		"invite": "Invite",
+		"title": "friends",
+		"invite": "invite",
+		"availableForSlot": "available between {{start}} and {{end}}",
+		"noAvailableFriends": "no friends available during this time",
+		"otherFriends": "other friends",
+		"loadMore": "load more available friends",
 		"friendSince": "friend since {{date}}",
-		"emptyState": "Add friends using the option:"
+		"emptyState": "add friends using the option:"
 	},
 	"add": {
 		"codeLabel": "Friend code",
@@ -11,8 +15,8 @@
 		"scanLabel": "Scan a QR code"
 	},
 	"tabs": {
-		"addFriend": "Add a friend",
-		"qrCode": "My QR code"
+		"addFriend": "add a friend",
+		"qrCode": "my QR code"
 	},
 	"emailConfirmation": {
 		"friendRequestsIntro": "before sending friend requests",
@@ -29,5 +33,15 @@
 		"deleteFailed": "unable to delete friend",
 		"requestFailed": "The request could not be sent",
 		"emailFailed": "Error sending email"
+	},
+	"requests": {
+		"popupTitle": "New friend request",
+		"popupMessage": "{{pseudo}} wants to be your friend. Do you accept?",
+		"accept": "Accept",
+		"decline": "Decline",
+		"later": "Later",
+		"errors": {
+			"responseFailed": "Unable to respond to this friend request"
+		}
 	}
 }

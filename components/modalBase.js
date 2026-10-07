@@ -18,10 +18,13 @@ import { useRouteAbs } from "@/contextes/contexteRoute"
 import { withSpringConfig, withTimingConfig } from "@/constants/ReanimatedConfs"
 
 import { modalEvents } from "@/events/modalEvents"
+import Ionicons from "@react-native-vector-icons/ionicons"
+import { useModal } from "@/contextes/contexteModals"
 
 export default function ModalBase({children}){
     const { colors } = usePalette()
     const colorScheme = useColorScheme()
+    const {dismissButton, resetDismissButton} = useModal()
 
     const { fonts } = useFont()
     const { ajouterEcran, getRoute } = useRouteAbs()
@@ -64,6 +67,7 @@ export default function ModalBase({children}){
             backgroundColor: colors.card,
             paddingHorizontal: 16,
             paddingVertical: 4,
+            paddingBottom:32,
             gap: 4,
             borderTopLeftRadius: 32,
             borderTopRightRadius: 32,
@@ -266,7 +270,7 @@ export default function ModalBase({children}){
         
         return () => {
             Keyboard.removeAllListeners("keyboardDidShow")    
-            Keyboard.removeAllListeners("keyboardWillShow")    
+            Keyboard.removeAllListeners("keyboardWillShow") 
             unsubscribe()
         }
     }, [isFocused]))   
@@ -321,13 +325,9 @@ export default function ModalBase({children}){
             <Animated.View style={[optionsAgrandirAnime, s.optionsRow]}>
                 <TouchableOpacity 
                     onPress={() => fermerModalBase()}
-                    style={[s.circleButtonBase, s.closeButton]}
+                    style={[s.circleButtonBase, s.closeButton, {backgroundColor:dismissButton.bgColor}, dismissButton.style]}
                 >
-                    <Image
-                        source={icones.croix}
-                        style={s.closeIcon}
-                        resizeMode="contain"
-                    />
+                        <Ionicons name={dismissButton.icon} size={40} color={colors.text} />
                 </TouchableOpacity>
             </Animated.View>
             </View>

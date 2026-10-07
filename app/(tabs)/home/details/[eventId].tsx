@@ -206,7 +206,7 @@ export default function Details(){
         <View style={{flex:1}}>
             <EventForm
                 event={event}
-                mode={'details'}
+                mode={'details'}                
             />
             {/* quit (non-creators) / delete (creator) button */}
             <TouchableOpacity style={s.floatingBtn} onPress={() => {

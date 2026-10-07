@@ -2,7 +2,8 @@ import Haptics from "@/abstractions/haptics";
 import { useFont } from "@/contextes/contexteFont";
 import { usePalette } from "@/contextes/contextePalette";
 import { useTranslation } from 'react-i18next';
-import { Image, Text, useColorScheme, View } from 'react-native';
+import { Image, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { router } from 'expo-router';
 
 export default function ToastErreur({text1, text2, ...rest}){
     const { t } = useTranslation()
@@ -32,14 +33,18 @@ export default function ToastErreur({text1, text2, ...rest}){
                     <Text style={{color:colors.text, fontFamily: fonts.body, fontSize:16,}}>{text2?text2:t('common:toast.errorWithoutMessage')}</Text>
                 </View>                
             </View>
-            <View style={{height:'20%', width:'100%', backgroundColor:  colors.primary, alignItems:'center', flexDirection:'row', justifyContent:'center'}}>
+            <TouchableOpacity
+                accessibilityRole="button"
+                onPress={() => router.push('/(modals)/reportBug')}
+                style={{height:'20%', width:'100%', backgroundColor: colors.primary, alignItems:'center', flexDirection:'row', justifyContent:'center'}}
+            >
                 <Image
                     source={icones.shake}
                     style={{height:'90%', width:24}}
                     resizeMode="contain"
                 />
                 <Text style={{color:colors.muted, fontFamily:fonts.body, fontSize:14}}>{t('common:toast.reportBug')}</Text>
-            </View>
+            </TouchableOpacity>
         </View>
     )
 }

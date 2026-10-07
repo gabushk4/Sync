@@ -1,3 +1,7 @@
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useColorScheme } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DarkTheme, DefaultTheme } from 'expo-router/react-navigation';
 import { generateTheme, ThemeColors } from '@/themes/generateTheme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // Same package as the ThemeProvider in app/_layout.tsx that receives this theme.
@@ -7,7 +11,7 @@ import { useColorScheme } from 'react-native';
 import { useSettings } from './contexteSettings';
 import { DEFAULT_HUE } from '@/constants/Colors';
 
-type PaletteContextType = {
+export type PaletteContextType = {
   colors: ThemeColors;
   hue: number;
   setHue: (h: number) => void;

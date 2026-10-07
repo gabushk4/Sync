@@ -1,7 +1,8 @@
 {
 	"friendRequestSentTitle": "demande d'ami envoyée",
 	"friendRequestSentMessage": "je sens que c'est le début d'un lien unique, presque magique!",
-	"copiedToClipboard": "ajouté au presse-papier"
+	"copiedToClipboard": "ajouté au presse-papier",
+	"showMore": "voir plus"
 	,"signOut": {
 		"title": "déconnexion",
 		"confirmation": "voulez-vous vraiment vous déconnecter?",
@@ -35,6 +36,17 @@
 		"reportBug": "pour signaler un bug!",
 		"warning": "avertissement",
 		"warningWithoutMessage": "un avertissement sans message est survenu"
+	},
+	"bugReport": {
+		"title": "Signaler un bug",
+		"instructions": "Décris ce qui s'est passé et les étapes pour reproduire le problème.",
+		"descriptionLabel": "Description du bug",
+		"descriptionPlaceholder": "Que s'est-il passé?",
+		"send": "Envoyer le signalement",
+		"close": "Fermer",
+		"successTitle": "Merci pour le signalement",
+		"successMessage": "Les développeurs pourront examiner ce problème.",
+		"submitFailed": "impossible d'envoyer le signalement"
 	},
 	"tabs": {
 		"home": "sync",
