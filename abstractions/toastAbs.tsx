@@ -1,4 +1,7 @@
-import Toast, {ToastShowParams} from 'react-native-toast-message';
+import Toast, {ToastShowParams as ToastShowParamsBase} from 'react-native-toast-message';
+
+// `text3` is an extra muted line shown by the custom warning toast (components/toastAvertissement.js).
+type ToastShowParams = ToastShowParamsBase & { text3?: string };
 
 const queue: ToastShowParams[] = [];
 let isShowing = false;

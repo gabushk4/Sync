@@ -18,6 +18,9 @@ export default function ProfileLayout() {
             <Stack.Screen
                 name="settings" options={{ headerTitle: t('navigation.settings')}}
             />
+            <Stack.Screen
+                name="importCalendrier" options = {{headerTitle:'importer un calendrier', headerBackButtonDisplayMode:'minimal'}}
+            />
         </Stack>
     )
 }

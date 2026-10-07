@@ -53,7 +53,58 @@ const mockRegistry = {
     'GET /amis': () => ([
         {id:1, pseudo: 'marilou', fp_url: 'undefined', temps_amitie: now.minus({ years: 3 }) },
         {id:2, pseudo: 'ali', fp_url:'undefined', temps_amitie: now.minus({years:4})}
-    ])
+    ]),
+
+    // --- Story #1 (Isma): messagerie — rafraichissement partiel périodique ---
+    'GET /conversations': () => ({
+        has_changed: true,
+        conversations: [
+            {
+                id: 'conv-1',
+                ami: { id: 'ami-1', pseudo: 'marilou', fp_url: undefined },
+                dernierMessage: { type: 'texte', contenu: 'on se rejoint à 18h?', envoyeLe: now.minus({ minutes: 12 }).toISO(), auteurId: 'ami-1' },
+                nonLus: 1,
+            },
+            {
+                id: 'conv-2',
+                ami: { id: 'ami-2', pseudo: 'ali', fp_url: undefined },
+                dernierMessage: { type: 'vocal', envoyeLe: now.minus({ hours: 3 }).toISO(), auteurId: 'Mmoc1234' },
+                nonLus: 0,
+            },
+        ],
+    }),
+
+    'POST /conversations': (body) => ({
+        id: `conv-${body?.ami_id ?? 'nouv'}`,
+        existante: false,
+    }),
+
+    // --- Story #16 (Isma): messages vocaux (type 'vocal' géré ci-dessous) ---
+    'GET /conversations/:id/messages': (params) => ({
+        has_changed: true,
+        messages: [
+            { id: 'msg-1', conversationId: params.id, auteurId: 'ami-1', type: 'texte', contenu: 'allo!', envoyeLe: now.minus({ hours: 1 }).toISO(), lu: true },
+            { id: 'msg-2', conversationId: params.id, auteurId: 'Mmoc1234', type: 'texte', contenu: 'salut ça va?', envoyeLe: now.minus({ minutes: 40 }).toISO(), lu: true },
+            { id: 'msg-3', conversationId: params.id, auteurId: 'ami-1', type: 'vocal', audioUrl: undefined, dureeSecondes: 7, envoyeLe: now.minus({ minutes: 12 }).toISO(), lu: false },
+        ],
+    }),
+
+    'POST /conversations/:id/messages': (params, body) => ({
+        message: {
+            id: `msg-${Date.now()}`,
+            conversationId: params.id,
+            auteurId: 'Mmoc1234',
+            type: body?.type ?? 'texte',
+            contenu: body?.contenu,
+            envoyeLe: DateTime.now().toUTC().toISO({ includeOffset: false }),
+            lu: false,
+        },
+    }),
+
+    // --- Story #7 (Isma): import .ics ---
+    'POST /evenements/import': (body) => ({
+        importes: body?.evenements?.length ?? 0,
+    }),
 };
 
 export function resolveMock(method, url, body) {

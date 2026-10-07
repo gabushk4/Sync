@@ -14,6 +14,7 @@ import { usePalette } from "@/contextes/contextePalette";
 import catcher from "@/functions/catcher";
 import { convertirTimestampDateLongue } from "@/functions/convertirTimestamp";
 import { convertUTCToLocal } from "@/functions/convertirUTCenLocal";
+import { modalEvents } from "@/events/modalEvents";
 import { useFriendList } from "@/hooks/useFriendList";
 import { Participant } from "@/types/invites";
 
@@ -35,6 +36,23 @@ function DefaultFriendList({ openProfiles, type}: { openProfiles: boolean, type:
     const colorScheme = useColorScheme()
     const [amis, setAmis] = useState<Participant[]>([])
     const onPressConsult = useFriendList('consult')
+    const onPressMessage = useFriendList('message')
+
+    /**
+     * Opens the friend's profile ('consult'/'profile' lists), or closes the modal and
+     * starts a conversation with them ('message' list, Ismail's messaging).
+     *
+     * @param {Participant} ami - The friend tapped in the list.
+     * @returns {void}
+     */
+    const onPressAmi = (ami: Participant) => {
+        if (type === 'message') {
+            modalEvents.emitClosing()
+            onPressMessage(ami)
+        } else if (openProfiles) {
+            onPressConsult(ami)
+        }
+    }
 
     const icones = {
         profilDef: colorScheme === 'dark'
@@ -81,7 +99,7 @@ function DefaultFriendList({ openProfiles, type}: { openProfiles: boolean, type:
                     renderItem={({ item, index }) => {
                         const dateAmitie = convertirTimestampDateLongue(item.temps_amitie)
                         return (
-                            <FriendLine friend={item} listType={type} selected={false} onPress={() => openProfiles && onPressConsult(item)} />
+                            <FriendLine friend={item} listType={type} selected={false} onPress={() => onPressAmi(item)} />
                             
                         )
                     }}

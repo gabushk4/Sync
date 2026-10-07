@@ -19,6 +19,7 @@ import { ThemeProvider } from "expo-router/react-navigation";
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 //Components
 import Toast from 'react-native-toast-message';
@@ -28,6 +29,7 @@ import ChargementEcran from '@/components/chargementEcran';
 import { AuthProvider, useAuth } from '@/contextes/contexteAuth';
 import { GestionScrollProvider } from '@/contextes/contexteGestionListes';
 import { InvitesProvider } from '@/contextes/contexteInvites';
+import { ConversationsProvider } from '@/contextes/contexteConversations';
 import { MockModeProvider } from '@/contextes/contexteMockMode';
 import { NotificationProvider } from '@/contextes/contexteNotifications';
 import { SettingsProvider, useSettings } from '@/contextes/contexteSettings';
@@ -54,6 +56,7 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   return (
     
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <FontProvider>
         <AccessTokenProvider>
           <MockModeProvider>
@@ -64,6 +67,7 @@ export default function RootLayout() {
                     <MembreProvider>
                       <AuthProvider> 
                         <NotificationProvider>
+                          <ConversationsProvider>
                           <RouteAbsProvider>
                             <ModalProvider>                  
                               <NavFABProvider>
@@ -80,7 +84,8 @@ export default function RootLayout() {
                                 </ActionFABProvider>
                               </NavFABProvider>                  
                             </ModalProvider>
-                          </RouteAbsProvider>   
+                          </RouteAbsProvider>
+                          </ConversationsProvider>   
                         </NotificationProvider>  
                       </AuthProvider>
                     </MembreProvider>
@@ -91,12 +96,13 @@ export default function RootLayout() {
           </MockModeProvider>
         </AccessTokenProvider>            
       </FontProvider>
+    </GestureHandlerRootView>
     
   );
 }
 
 function AppLoader() {
-  const { fontsLoaded } = useFont();  
+  const { fontsLoaded } = useFont();
   const { settings, hydrated: settingsLoaded } = useSettings();
   const [localeLoaded, setLocaleLoaded] = useState(false);
 
@@ -120,7 +126,7 @@ function AppLoader() {
 
 function RootLayoutNav() {
   const { navTheme } = usePalette();
-  const { state } = useAuth()  
+  const { state } = useAuth()
 
   /* const enregistrerPushToken = async (accessToken: string)=>{
     
@@ -164,7 +170,7 @@ function RootLayoutNav() {
   } */
 
   if (state === 'loading') {
-    return <ChargementEcran/>;
+    return <ChargementEcran />;
   }
 
   return (
