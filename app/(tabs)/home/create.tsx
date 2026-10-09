@@ -168,9 +168,12 @@ export default function CreateEvent({ }) {
         }
     }
 
-    useActionFab({
+    useActionFab("eventCreate", {
         action: postEvenement,
-        icon: <Icon name="checkmark" color={colors.text} size={28} />
+        config: {
+            visible:true,
+            icon: <Icon name="checkmark" color={colors.text} size={28} />
+        }
     })
 
     useFocusEffect(useCallback(() => { 

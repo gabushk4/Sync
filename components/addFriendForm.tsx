@@ -118,7 +118,7 @@ export default function AddFriendForm() {
     })
 
     return (
-        <View style={{ height: '100%', width: '100%', alignItems:'center', justifyContent:'center', gap:'25%'}}>
+        <View style={{ height: '100%', width: '100%', alignItems:'center', justifyContent:'center', gap:'15%'}}>
             <View style={{ width: '100%', gap: 6 }}>
                 <Text style={s.label}>{t('add.codeLabel')}</Text>
                 <TextInputAbs

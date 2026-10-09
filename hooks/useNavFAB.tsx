@@ -1,25 +1,28 @@
 import React, { useMemo } from 'react'
-import { useFocusEffect } from 'expo-router/react-navigation'
-import { NavFabConfig, useNavFabContext } from '@/contextes/contexteNavFAB';
+import { useFocusEffect } from 'expo-router'
+import { useRef } from 'react'
 
-import { useEffect, useRef } from 'react'
-import log from '@/functions/log';
+import { useFabActions, FabConfig } from '@/contextes/contexteFAB';
 
-export function useNavFab(owner: string, config: NavFabConfig) {
-    const { setNavConfig, release } = useNavFabContext()
+export function useNavFab(owner: string, config: FabConfig) {
+    //Centralization of FAB context 
+    const { setFabConfig, release } = useFabActions()
 
-    const configRef = useRef(config)
-    configRef.current = config
+    const configRef = useRef(config)    
 
-    const key = useMemo(() => JSON.stringify({owner:owner, href: config?.href, params: config?.params, visible: config?.visible }), [config])
-    
-    useFocusEffect(React.useCallback(() => { 
-            log("nav fab by ", owner)
-            setNavConfig(owner, configRef.current)
+    console.log('useNavFab render', owner);
 
-        return () => {
-            log("nav fab cleansed by ", owner)
-            release(owner)
-        }
-    },[key]))
+    const href = config?.href
+    const visible = config?.href
+    const paramsKey = JSON.stringify(config?.params ?? null)
+
+    useFocusEffect(React.useCallback(() => {      
+        console.log('useFocusEffect fired', owner, configRef.current?.href);
+        if(configRef.current?.href)
+            setFabConfig(owner, configRef.current)
+        else
+            console.error("Nav FAB must have a href")            
+
+        return () => release(owner)
+    },[owner, href, visible, paramsKey]))
 }

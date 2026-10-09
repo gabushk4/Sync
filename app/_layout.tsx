@@ -2,16 +2,15 @@ import { useEffect, useState } from 'react';
 import '../i18n';
 
 //Providers
-import { FabProvider as ActionFABProvider } from '@/contextes/contextActionFAB';
 import { APIProvider } from '@/contextes/contexteAPI';
 import { FontProvider, useFont } from '@/contextes/contexteFont';
 import { MembreProvider } from '@/contextes/contexteMembre';
 import { ModalProvider } from '@/contextes/contexteModals';
-import { FabProvider as NavFABProvider } from '@/contextes/contexteNavFAB';
 import { PaletteProvider, usePalette } from '@/contextes/contextePalette';
 import { RouteAbsProvider } from '@/contextes/contexteRoute';
 import { AccessTokenProvider } from '@/contextes/contexteToken';
 import { ThemeProvider } from "expo-router/react-navigation";
+import { FabProvider } from '@/contextes/contexteFAB';
 
 //Contexts
 
@@ -68,10 +67,9 @@ export default function RootLayout() {
                       <AuthProvider> 
                         <NotificationProvider>
                           <ConversationsProvider>
-                          <RouteAbsProvider>
-                            <ModalProvider>                  
-                              <NavFABProvider>
-                                <ActionFABProvider>
+                            <RouteAbsProvider>
+                              <ModalProvider>                  
+                                <FabProvider>
                                   <TimelineProvider>
                                     <GestionScrollProvider> 
                                       <InvitesProvider>
@@ -81,17 +79,15 @@ export default function RootLayout() {
                                       </InvitesProvider>  
                                     </GestionScrollProvider>
                                   </TimelineProvider>
-                                </ActionFABProvider>
-                              </NavFABProvider>                  
-                            </ModalProvider>
-                          </RouteAbsProvider>
+                                </FabProvider>                  
+                              </ModalProvider>
+                            </RouteAbsProvider>
                           </ConversationsProvider>   
                         </NotificationProvider>  
                       </AuthProvider>
                     </MembreProvider>
                   </PaletteProvider>
-                </SettingsProvider>        
-              
+                </SettingsProvider>  
             </APIProvider>
           </MockModeProvider>
         </AccessTokenProvider>            
