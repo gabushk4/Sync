@@ -38,18 +38,32 @@ Les clés de traduction suivent une structure hiérarchique :
 - **Clés simples** : `'timezone'`, `'french'`, `'english'`
 - **Clés avec paramètres** : `'appVersion', { version: '1.0.0' }`
 
-### Namespaces disponibles
+### Namespaces disponibles (14, voir `i18n.js`) :
 
+- `common` - Clés partagées entre tous les écrans
+- `home` - Écran d'accueil
+- `events` - Événements
+- `friends` - Amis
+- `calendar` - Calendrier
 - `settings` - Écran des paramètres (timezone, language, permissions, etc.)
 - `auth` - Écran d'authentification
-- `home` - Écran d'accueil
-- `common` - Clés partagées entre tous les écrans
+- `feed` - Flux
+- `profile` - Profil
+- `inbox` - Boîte de réception
+- `notifications` - Notifications
+- `scanQR` - Scan QR
+- `formats` - Formats de dates localisés
+- `errors` - Erreurs localisées (utilisées par `catcher.js`)
+
+Langue par défaut et fallback : `fr` (`locales/config.js`, `i18n.js`).
 
 ## Configuration
 
-La configuration d'i18next se trouve dans `app.json` et `src/config/i18n.ts`.
+La configuration d'i18next se trouve dans `i18n.js` (racine du projet),
+pas dans `app.json` ni `src/config/i18n.ts` (ce dossier n'existe pas).
 
-Les langues disponibles sont définies dans `src/locales/` avec des fichiers JSON pour chaque langue.
+Les langues disponibles (`fr`, `en`) sont définies dans `locales/` avec un
+fichier JSON par namespace et par langue (`locales/fr/*.json`, `locales/en/*.json`).
 
 ## Best practices
 

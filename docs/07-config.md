@@ -18,31 +18,34 @@
 6. **dismissButtons.ts** - Boutons de fermeture standardisés
 7. **settingsStorage.ts** - Configuration du stockage
 
-## Endpoints API principaux :
-- `GET /evenements/` - Liste des événements
+## Endpoints API observés dans le code :
+- `POST /membres/inscription` - Inscription (pseudo, mot_de_passe, courriel, fuseau_horaire)
+- `POST /membres/connexion` - Connexion (pseudo, mot_de_passe → `access_token` + `refresh_token`)
+- `POST /token` - Rafraîchissement de l'access token (`refresh_token`)
+- `GET /evenements/` - Événements de l'utilisateur (via `AutoRefresh`)
 - `POST /evenements/` - Créer un événement
 - `GET /evenements/{id}` - Détails d'un événement
-- `DELETE /evenements/{id}` - Supprimer un événement
+- `PATCH /evenements/{id}` - Modifier un événement
 - `POST /evenements/{id}/quitter` - Quitter un événement
-- `POST /evenements/exceptions/` - Exception (annulation)
-- `GET /evenements/amis` - Événements des amis
+- `POST /evenements/exceptions` + `PATCH /evenements/exceptions/{id}` - Exceptions de récurrence
+- `GET /evenements/amis` - Événements des amis (via `AutoRefresh`)
 - `POST /notifications/push_token` - Enregistrement du token push
+- `DELETE /notifications/{id}` - Supprimer une notification
 
 ## Configuration des couleurs :
-- Primaire : bleu (#007AFF)
-- Secondaire : vert (#34C759)
-- Neutre : gris (#8E8E93)
-- Fond : blanc (#FFFFFF) / noir (#1C1C1E)
+Thème dynamique HSL : `generateTheme(hue, scheme)` (`themes/generateTheme.ts`).
+Teinte par défaut `DEFAULT_HUE = 274` (`constants/Colors.ts`), modifiable par
+l'utilisateur dans les paramètres (`setHue`). `Colors.ts` ne contient que des
+teintes legacy (`tintColorLight: #2f95dc`).
 
-## Configuration des rayons :
-- Petit : 8px
-- Moyen : 12px
-- Grand : 16px
-- Très grand : 24px
+## Configuration des rayons (`constants/Radius.ts`) :
+- Petit (`sm`) : 8px
+- Moyen (`md`) : 12px
+- Grand (`lg`) : 16px
+- Très grand (`xl`) : 20px
 
-## Configuration Reanimated :
-- Gestures : enabled
-- Animations : smooth
-- Performance : optimized
+## Configuration Reanimated (`constants/ReanimatedConfs.tsx`) :
+- `withSpringConfig = { mass: 5, damping: 100, reduceMotion: ReduceMotion.Never }`
+- `withTimingConfig = { duration: 300, reduceMotion: ReduceMotion.Never }`
 
 [Status: Command completed]

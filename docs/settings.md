@@ -11,53 +11,30 @@ Cette section contient tout ce qui concerne les paramètres utilisateur : stocka
 ### Implémentation dans `settingsStorage.ts`
 
 ```typescript
-// Stockage sécurisé des paramètres
-const storage = settingsStorage({
-  key: 'theme',
-  value: 'dark',
-  secure: true
-});
+import { asyncStorageSettingsRepository } from '@/functions/settingsStorage';
 
-// Récupération des paramètres
-const theme = await settingsStorage.get('theme');
-const language = await settingsStorage.get('language');
+// Stockage AsyncStorage sous la clé 'settings' (pas de secure store ici)
+await asyncStorageSettingsRepository.save({ theme: 210 });
+
+// Récupération (objet partiel fusionné avec DEFAULT_SETTINGS)
+const saved = await asyncStorageSettingsRepository.load();
 ```
 
 ### Contexte `SettingsProvider`
 
 ```typescript
 // contexteSettings.tsx
-export const SettingsProvider = ({ children }: any) => {
-  const [settings, setSettings] = useState<Settings>({
-    theme: 'light',
-    language: 'fr',
-    notifications: {
-      push: true,
-      email: false,
-      sound: true
-    }
-  });
-  
-  const hydrated = useRef(false);
-  
-  useEffect(() => {
-    // Récupération depuis secure store
-    loadSettings().then((saved) => {
-      setSettings(saved);
-      hydrated.current = true;
-    });
-  }, []);
-  
-  const setSetting = useCallback((key: string, value: any) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
-    // Sauvegarde dans secure store
-  }, []);
-  
-  return <SettingsProviderContext.Provider value={{ settings, hydrated, setSetting }}>
-    {children}
-  </SettingsProviderContext.Provider>;
+type SettingsContextValue = {
+  settings: AppSettings; // { language: 'en' | 'fr', timezone: string, theme: number }
+  hydrated: boolean;     // useState, pas une ref
+  setSetting: <K extends SettingKey>(key: K, value: AppSettings[K]) => Promise<void>;
 };
 ```
+
+`theme` est une **teinte HSL (number)**, pas `'light' | 'dark'`.
+`setSetting` met à jour l'état, persiste en AsyncStorage, et change la locale
+si `key === 'language'`. Au démarrage, la timezone `local` est résolue vers
+celle de l'appareil (`getDeviceTimezone()`).
 
 ---
 
@@ -72,53 +49,45 @@ if (!hydrated) {
   return <ActivityIndicator />
 }
 
-// Liste des paramètres
-<SettingsRow 
-  label="Thème" 
-  value={values.theme} 
-  onPress={() => setSetting('theme', toggleTheme())}
-/>
-
-<SettingsRow 
-  label="Langue" 
-  value={values.language} 
-  onPress={() => setSetting('language', toggleLanguage())}
-/>
+// Exemples réels (settings/index.tsx) : dropdown timezone / langue,
+// input numérique pour la teinte du thème, toggles de permissions OS,
+// liens vers /(modals)/confirm (exportData, deleteAccount)
+<SettingRow setting={{
+  id: 'language',
+  titleKey: 'language',
+  type: 'dropdown',
+  value: values.language,
+  options: [
+    { value: 'fr', titleKey: 'french' },
+    { value: 'en', titleKey: 'english' },
+  ],
+  onValueChange: value => setSetting('language', value as 'en' | 'fr'),
+}} />
 ```
 
 ### Composant `settingsRow.tsx`
 
 ```typescript
-interface SettingsRowProps {
-  label: string;
-  value: string | boolean;
-  onPress?: () => void;
-}
-
-export const SettingsRow = ({ label, value, onPress }: SettingsRowProps) => {
-  return (
-    <TouchableOpacity onPress={onPress}>
-      <Text>{label}: {value}</Text>
-    </TouchableOpacity>
-  );
+// Prend un objet Setting (union : toggle | dropdown | link | section | input),
+// pas des props label/value/onPress.
+type SettingRowProps = {
+  setting: Setting
 };
+
+export default function SettingRow({ setting }: SettingRowProps) { ... }
 ```
 
 ---
 
 ## Types de Paramètres
 
-### Paramètres de base
+### Paramètres réels (`types/settings.ts`)
 
-- **theme** : 'light' | 'dark'
-- **language** : 'en' | 'fr'
-- **notifications** : objet avec push, email, sound
+- **theme** : `number` (teinte HSL 0-360, défaut 260 ; `DEFAULT_HUE = 274` côté palette)
+- **language** : `'en' | 'fr'`
+- **timezone** : `string` (ex. `'Etc/UTC'`, `'local'` résolu au démarrage)
 
-### Paramètres avancés
-
-- **privacy** : paramètres de confidentialité
-- **display** : paramètres d'affichage
-- **accessibility** : paramètres d'accessibilité
+Types d'entrées de l'écran paramètres : `toggle` | `dropdown` | `link` | `section` | `input`.
 
 ---
 
@@ -136,19 +105,18 @@ const language = settings.language;
 
 ---
 
-## Stockage Sécurisé
+## Stockage
 
 ### `expo-secure-store`
 
-- Stockage chiffré pour les tokens et secrets
-- Persistance entre les redémarrages
-- Accès asynchrone
+- Stockage chiffré pour les **tokens** (`access_token`, `refresh_token`)
+- Utilisé par `contexteToken.tsx` et `contexteAuth.tsx`
 
 ### `AsyncStorage`
 
-- Stockage pour les paramètres non sensibles
-- Plus rapide que secure store
-- Persistance standard
+- Stockage pour les **paramètres** (`settingsStorage.ts`, clé `'settings'`)
+- Stockage pour la **teinte** (`'hue'`, via `contextePalette.tsx`)
+- Persistance standard non chiffrée
 
 ---
 

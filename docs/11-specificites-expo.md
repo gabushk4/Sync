@@ -1,12 +1,14 @@
-# 11. Spécificités Expo v57
+# 11. Spécificités Expo SDK 57
 
 ## Vue d'ensemble
 
-Cette section contient les spécificités techniques liées à Expo v57, Expo Router v3+, et les bonnes pratiques spécifiques à cette version.
+Cette section contient les spécificités techniques liées au SDK Expo 57
+(`expo ~57.0.23`, `expo-router ~57.0.21` — voir `package.json`), et les bonnes
+pratiques spécifiques à cette version.
 
 ---
 
-## Expo Router v3+
+## Expo Router
 
 ### Configuration dans `app.json`
 
@@ -27,17 +29,14 @@ Cette section contient les spécificités techniques liées à Expo v57, Expo Ro
 
 ### Typed Routes
 
-```typescript
-// Importation des routes typées
-import { useLocalSearchParams, useRouter } from "expo-router";
+`typedRoutes: true` est activé (`app.json`). Exemple de navigation typée
+utilisée dans le code (`details/[eventId].tsx`) :
 
-export default function ProfileScreen({
-  params
-}: {
-  params: { id: string };
-}) {
-  // params.id est typé automatiquement
-}
+```typescript
+useNavFab({
+  href: '/(tabs)/home/edit/[event]' as const,
+  params: FABParams, // { event: string }
+});
 ```
 
 ---
@@ -149,7 +148,6 @@ const { t } = useTranslation('settings')
 
 ## Notes
 
-- Expo v57 apporte des améliorations de performance
-- Expo Router v3+ simplifie la gestion des routes
+- Versions installées : voir `package.json` (`expo`, `expo-router`, `react-native`)
 - Les permissions du système doivent être demandées explicitement
 - La localisation est gérée via i18next avec support FR/EN

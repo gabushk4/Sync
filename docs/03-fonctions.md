@@ -19,24 +19,22 @@
 - `tokenStore.ts` - Stockage et gestion des tokens JWT
 - `traduireRecurrence.js` - Traduction des règles de récurrence
 
-## Fonctions principales :
-1. **convertUTCToLocal(utc, timezone)** - Convertir une date UTC en local
-2. **convertLocalToUTC(local)** - Convertir une date locale en UTC
-3. **formaterDatePourServeur(date)** - Formater pour l'API (ISO 8601)
-4. **catcher(error, message)** - Gestion centralisée des erreurs
-5. **getCommonFreeSlots(userEvents, friendEvents, todayDateTime)** - Calcul de disponibilités communes
-6. **autoRefresh(data, interval)** - Rafraîchissement automatique des données
-7. **ceilBy5(value)** - Arrondi au multiple de 5 supérieur
-8. **choisirImage(type, url, placeholder)** - Sélection d'image appropriée
-9. **convertirTimestamp(timestamp)** - Conversion timestamp → date lisible
-10. **getNow(timezone)** - Récupération du temps actuel
-11. **log(message, level)** - Logging unifié
-12. **ouvrirLienExterne(url, type)** - Ouverture de lien externe
-13. **resolveMock(value)** - Résolution de valeur mock
-14. **settingsStorage(key, value)** - Stockage des paramètres
-15. **timezones(timezone)** - Gestion des fuseaux horaires
-16. **tokenStore(key, token)** - Gestion des tokens JWT
-17. **traduireRecurrence(rule)** - Traduction des règles de récurrence
+## Fonctions principales (signatures réelles) :
+1. **convertUTCToLocal(dateUTC, timezone = 'local')** - Convertir une date UTC en `DateTime` local (`functions/convertirUTCenLocal.tsx`, export nommé avec `convertLocalToUTC`)
+2. **convertLocalToUTC(dateLocale)** - Convertir une date locale en UTC (même fichier)
+3. **formaterDatePourServeur(dateDt)** - Formater pour l'API (`"yyyy-MM-dd HH:mm:ss"`, export default)
+4. **catcher(error, titre)** - Gestion centralisée des erreurs (log + toast localisé via namespace `errors`, ignore le 304)
+5. **getCommonFreeSlots(userEvents, friendEvents, date, userDndRules?, friendDndRules?, minDuration = 60)** - Calcul de disponibilités communes (`functions/availability.js`)
+6. **new AutoRefresh(api, url, options?)** - Classe de rafraîchissement (options : `intervalMs`, `maxBackoffMs`, `onData`, `onPostRequest`, `onError`, `extraParams` ; méthodes `refresh/start/stop/restart/destroy/forceRefresh/setParams`)
+7. **ceilBy5(d: DateTime)** - Arrondi au multiple de 5 supérieur (export default)
+8. **ChooseImage(onChange)** - Sélection d'image (export default, nom avec majuscule)
+9. **TraduireRecurrence(regle)** - Traduction des règles de récurrence (export default, nom avec majuscule)
+10. **asyncStorageSettingsRepository { load(), save(changes) }** - Stockage des paramètres (AsyncStorage, clé `'settings'`)
+11. **getToken() / setToken(token) / emptyToken()** - Gestion des tokens (`functions/tokenStore.ts`, mémoire + SecureStore via les contextes)
+12. **getDeviceTimezone() / getAvailableTimezones()** - Fuseaux horaires (`functions/timezones.ts`)
+13. **convertirTimestamp** - Conversion timestamp → date lisible (localisée FR/EN via `locales/*/formats.json`)
+14. **getNow.js** - Fichier vide (aucune fonction exportée)
+15. **log / ouvrirLienExterne / resolveMock / calculerDimensionsEvenements** - Voir fichiers sources (signatures non reprises ici)
 
 ## Utilisation typique :
 ```typescript
@@ -57,8 +55,11 @@ try {
   catcher(error, "Erreur lors de la requête");
 }
 
-// Rafraîchissement automatique
-autoRefresh(eventData, 30000);
+// Rafraîchissement automatique (classe, pas une fonction)
+import AutoRefresh from '@/functions/autoRefresh';
+userEventsRefresh.current = new AutoRefresh(api, '/evenements/', {
+  onData: modifierEvenementsUtilisateurFetched,
+});
 ```
 
 ## Fonctions de conversion :
