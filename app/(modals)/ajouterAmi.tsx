@@ -103,7 +103,7 @@ export default function ajouterAmi() {
 
     return membre.emailConfirme ? (
         <ModalBase>
-            <View style={{ flex: 1, gap: 4, paddingBottom: insets.bottom }}>
+            <View style={{ flex: 1, gap: 4, }}>
                 <View style={{ position:'relative', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 8, }}>
                     <Animated.View style={[s.tab, animatedTab]}/>
                     {pages.map((p, index) => 

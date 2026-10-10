@@ -168,20 +168,11 @@ export default function Home() {
     ?.startOf('day')
     .plus({ hours: maintenantFab.hour + 1 })
 
-  useNavFab("home", {
-    href: '/home/create',
-    params: debutCreation ? { start: debutCreation.toISO() } : undefined,
-    icon: null,
-    visible: !vueCalendrier, // user story 5: would otherwise catch taps meant for the calendar
-  })
+  
 
   //SharedValues
   const evAmisOffset = useSharedValue(0)
   const dateAujShared = useSharedValue<number>(0)
-  const opaciteEcran = useSharedValue(0)
-  const opaciteZoomableFlatlist = useSharedValue(1)
-  const opaciteListeEv = useSharedValue(0)
-  const opaciteRetour = useSharedValue(0);
   const chargementShared = useSharedValue(chargementEvenements)
   const offsetXBase = useSharedValue(0)
   const offsetYBase = useSharedValue(0)
@@ -229,7 +220,7 @@ export default function Home() {
   const modifierEvenementsMembreFetched = (data: any)=>{
     try {
       const events = data.evenements
-      log("modifierEvenementsMembreFetched data.length", data)
+      log("modifierEvenementsMembreFetched", data && true)
       if (events) {
         // User story 9: placeholders ('factice') are dropped here instead of becoming
         // `undefined` entries, which crashed the sort below and the list rendering.
@@ -281,7 +272,7 @@ export default function Home() {
    */
   const modifierEvenementsAmisFetched = (data: any) => {
     const events = data.resultat ?? []
-    log("modifier evenements amis data: ", data)
+    log("modifier evenements amis data: ", data && true)
     try {
       const amisFinal = events?.map((ami: Friend) => {
           //log('ami evenements', ami.evenements)
@@ -544,6 +535,14 @@ export default function Home() {
       onPan(current)
     }
   )
+
+  useNavFab("home", {
+    href: '/home/create',
+    params: debutCreation ? { start: debutCreation.toISO() } : undefined,
+    icon: null,
+    //TODO: phil stp delete ca ca na pas sa place
+    visible: true, // user story 5: would otherwise catch taps meant for the calendar
+  })
 
   useFocusEffect(
     useCallback(() => {

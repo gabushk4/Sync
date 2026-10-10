@@ -279,9 +279,12 @@ export default function ProfilEcran(){
 
     /* const getWidgetsAmis = async()=>{}
      */
-    useActionFab({
+    useActionFab("profil", {
         action: ouvrirModalQRCode,
-        icon:<Icon name='qr-code' color={colors.text} size={24}/>
+        config: {
+            visible:true,
+            icon: <Icon name='qr-code' color={colors.text} size={24} />
+        }
     })
 
     useEffect(()=>{
