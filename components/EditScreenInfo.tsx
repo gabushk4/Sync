@@ -1,44 +1,37 @@
 import { useTranslation } from 'react-i18next';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text, View, useColorScheme } from 'react-native';
 
 import { ExternalLink } from './ExternalLink';
-import { MonoText } from './StyledText';
-import { Text, View } from './Themed';
 
 import Colors from '@/constants/Colors';
 
 export default function EditScreenInfo({ path }: { path: string }) {
   const { t } = useTranslation();
+  const theme = useColorScheme() === 'dark' ? 'dark' : 'light';
   return (
-    <View>
-      <View style={styles.getStartedContainer}>
+    <View style={{ backgroundColor: Colors[theme].background }}>
+      <View style={[styles.getStartedContainer, { backgroundColor: Colors[theme].background }]}>
         <Text
-          style={styles.getStartedText}
-          lightColor="rgba(0,0,0,0.8)"
-          darkColor="rgba(255,255,255,0.8)">
+          style={[{ color: theme === 'dark' ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.8)" }, styles.getStartedText]}>
           {t('common:demo.openCode')}
         </Text>
 
         <View
-          style={[styles.codeHighlightContainer, styles.homeScreenFilename]}
-          darkColor="rgba(255,255,255,0.05)"
-          lightColor="rgba(0,0,0,0.05)">
-          <MonoText>{path}</MonoText>
+          style={[styles.codeHighlightContainer, styles.homeScreenFilename, { backgroundColor: theme === 'dark' ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }]}>
+          <Text style={[{ color: Colors[theme].text }, { fontFamily: 'SpaceMono' }]}>{path}</Text>
         </View>
 
         <Text
-          style={styles.getStartedText}
-          lightColor="rgba(0,0,0,0.8)"
-          darkColor="rgba(255,255,255,0.8)">
+          style={[{ color: theme === 'dark' ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.8)" }, styles.getStartedText]}>
           {t('common:demo.changeText')}
         </Text>
       </View>
 
-      <View style={styles.helpContainer}>
+      <View style={[styles.helpContainer, { backgroundColor: Colors[theme].background }]}>
         <ExternalLink
           style={styles.helpLink}
           href="https://docs.expo.io/get-started/create-a-new-app/#opening-the-app-on-your-phonetablet">
-          <Text style={styles.helpLinkText} lightColor={Colors.light.tint}>
+          <Text style={[styles.helpLinkText, { color: theme === 'dark' ? Colors.dark.text : Colors.light.tint }]}>
             {t('common:demo.reloadHelp')}
           </Text>
         </ExternalLink>
