@@ -24,7 +24,6 @@ import { withSpringConfig, withTimingConfig } from "@/constants/ReanimatedConfs"
 import { toastTypes } from "@/constants/toastConfig";
 import AppIcon from "@/svgs/appIcon";
 import Icon from "@react-native-vector-icons/ionicons";
-import { Gesture } from "react-native-gesture-handler";
 
 type ItemProps = {
     item: Notification
@@ -96,11 +95,6 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
     const previewExpirationOpacity = useSharedValue(1)
     const expirationOpacity = useSharedValue(1)
     const expirationExplicationOpacity = useSharedValue(0)
-
-    const panGesture = Gesture.Pan()
-        .onChange((e) => {
-            
-        })
 
     /**
      * Runs one of the notification's actions (e.g. accept/refuse an event

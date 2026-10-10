@@ -1,16 +1,14 @@
 import { useFocusEffect, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useColorScheme, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useActionFab } from "@/hooks/useActionFAB";
 
 import { useAPI } from "@/contextes/contexteAPI";
-import { useFont } from "@/contextes/contexteFont";
 import { useInvites } from "@/contextes/contexteInvites";
 import { useMembre } from "@/contextes/contexteMembre";
 import { usePalette } from "@/contextes/contextePalette";
-import { useAccessToken } from "@/contextes/contexteToken";
 
 import EventForm from "@/components/eventForm";
 import catcher from "@/functions/catcher";
@@ -38,14 +36,11 @@ import { DateTime } from "luxon";
 export default function CreateEvent({ }) {
     const { t } = useTranslation('events')
     const { colors } = usePalette()
-    const colorScheme = useColorScheme()
-    const { fonts } = useFont()
     const navigation = useNavigation()
     
     const {api} = useAPI()
     const {invites, resetInvites} = useInvites()
     const {membre, getMembre} = useMembre()
-    const { getToken } = useAccessToken()
     const router = useRouter()
     
     const formRef = useRef<EventFormHandle>(null)
@@ -72,11 +67,11 @@ export default function CreateEvent({ }) {
         ? debutDemande
         : DateTime.now().plus({ hours: 1 })
 
-    const [enChargement, setEnChargement] = useState(false)
+    const [, setEnChargement] = useState(false)
     
     //log('setter end')
 
-    const [event, setEvent] = useState<Event>(defaultEvent)
+    const [event] = useState<Event>(defaultEvent)
 
     /**
      * Opens the conflict modal, which compares the existing event with the

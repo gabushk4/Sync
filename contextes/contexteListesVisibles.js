@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { createContext, useContext } from "react";
 import log from "../fonctions/log";
 

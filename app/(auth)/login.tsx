@@ -45,7 +45,7 @@ export default function ConnexionEcran(){
     const [mdp, setMdp] = useState<string>('');
     const [masquerMdp, setMasquerMdp] = useState(true)
     const [estDesactive, setEstDesactive] = useState(true)
-    const [enChargement, setEnChargement] = useState(false)
+    const [, setEnChargement] = useState(false)
 
     const connecter = async () => {
         setEstDesactive(true);

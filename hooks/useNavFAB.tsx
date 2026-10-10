@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import { useFocusEffect } from 'expo-router'
 import { useRef } from 'react'
 

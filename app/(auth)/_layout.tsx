@@ -2,11 +2,9 @@
 
 import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { useColorScheme } from 'react-native';
 
 export default function AuthLayout() {
-    const colorScheme = useColorScheme()
-  const { t } = useTranslation('auth')
+    const { t } = useTranslation('auth')
   return (
     <Stack
       screenOptions={{headerBackButtonDisplayMode:'minimal', headerBackVisible:false}}

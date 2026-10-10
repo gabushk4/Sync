@@ -6,13 +6,12 @@ import { useNavFab } from '@/hooks/useNavFAB';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Animated, { cancelAnimation, ReduceMotion, scrollTo, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue, withDecay, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { cancelAnimation, scrollTo, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue, withDecay, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
 
 import { DateTime } from 'luxon';
 
-import { Dimensions, Easing, Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Easing, Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import { scheduleOnRN } from 'react-native-worklets';
 
 import { getCommonFreeSlots } from '@/functions/availability';
 import catcher from '@/functions/catcher';
@@ -45,17 +44,8 @@ const AnimatedStyleMinVal = 0.1
 const LIST_HEIGHT = 104
 // Height of the floating back-to-now button.
 const HAUTEUR_RETOUR = 34
-const { width: WIN_W, height: WIN_H } = Dimensions.get('window')
 // Max events per request in the month view (the API defaults to 20, too few for a month).
 const LIMITE_MOIS = 300
-
-/** Formats the displayed local day as the UTC date range expected by the events API. */
-function getEventDateRangeParams(date: DateTime) {
-  return {
-    debut: formaterDatePourServeur(convertLocalToUTC(date.startOf('day'))),
-    fin: formaterDatePourServeur(convertLocalToUTC(date.endOf('day'))),
-  }
-}
 
 /**
  * Query params for GET /evenements and /evenements/amis covering [debut, fin].
@@ -113,7 +103,7 @@ export default function Home() {
   const { api } = useAPI()
   const colorScheme = useColorScheme()
   const { initialiserOffset, afficherRetourMaintenant, onPan, offset: offsetX, LEFT_GO_TO_BEFORE, LEFT_GO_TO_AFTER, clampOffset, maxOffset } = useGestionScroll()
-  const { pxHeures, pxHeuresShared, L_HEURES } = useTimeline();
+  const { pxHeures, L_HEURES } = useTimeline();
   const { membre } = useMembre()
 
   const icones = {
@@ -129,18 +119,17 @@ export default function Home() {
   }
   
   //Refs
-  const chargerEvenementsEvent = useRef(false)
   const friendsList = useAnimatedRef<Animated.ScrollView>()
   const friendsEventsRefresh = useRef<AutoRefresh>(null)
   const userEventsRefresh = useRef<AutoRefresh>(null)
 
   //Sates
-  const [currentTime, setCurrentTime] = useState<DateTime>()
+  const [, setCurrentTime] = useState<DateTime>()
   const [friends, setFriends] = useState<Array<any>>([])
   const [userEvents, setUserEvents] = useState<Array<any>>([])
   const [todayDateTime, setTodayDateTime] = useState<DateTime>()
-  const [chargementEchec, setChargementEchec] = useState(false)
-  const [chargementEvenements, setChargementEvenements] = useState(false)
+  const [, setChargementEchec] = useState(false)
+  const [chargementEvenements] = useState(false)
   // Vertical center of the member's row (where their photo sits), measured from
   // the layout: the back-to-now button is centered on that line.
   const yZoneCalendrier = useRef(0)
@@ -155,7 +144,7 @@ export default function Home() {
     if (!rangeeMembre.current) return
     setCentreRangeeMembre(yZoneCalendrier.current + rangeeMembre.current.y + rangeeMembre.current.height / 2)
   }
-  const [afficherRetour, setAfficherRetour] = useState({afficher:afficherRetourMaintenant.value.afficher, left:afficherRetourMaintenant.value.left})
+  const [, setAfficherRetour] = useState({afficher:afficherRetourMaintenant.value.afficher, left:afficherRetourMaintenant.value.left})
   // User story 5: whether the month calendar replaces the timeline, and which month it shows.
   const [vueCalendrier, setVueCalendrier] = useState(false)
   const [moisCalendrier, setMoisCalendrier] = useState<DateTime>()

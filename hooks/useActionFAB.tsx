@@ -1,10 +1,10 @@
 import { useFocusEffect } from 'expo-router';
-import { ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { FabConfig, useFabActions } from '@/contextes/contexteFAB'; 
 import log from '@/functions/log';
 
 export function useActionFab(owner: string, { action, config }: { action: () => void; config: FabConfig }) {
-    const { setFabConfig, actionRef, release } = useFabActions();
+    const { setFabConfig, release } = useFabActions();
 
     const configRef = useRef(config)
 

@@ -3,7 +3,7 @@ import { LinearGradient } from "expo-linear-gradient"
 import { router } from "expo-router"
 import { useFocusEffect, useIsFocused } from "expo-router/react-navigation"
 import React, { useEffect, useState } from "react"
-import { Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TouchableOpacity, useColorScheme, View } from "react-native"
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TouchableOpacity, View } from "react-native"
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler"
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming, } from "react-native-reanimated"
 
@@ -13,7 +13,6 @@ import log from "@/functions/log"
 
 import { useFont } from "@/contextes/contexteFont"
 import { usePalette } from "@/contextes/contextePalette"
-import { useRouteAbs } from "@/contextes/contexteRoute"
 
 import { withSpringConfig, withTimingConfig } from "@/constants/ReanimatedConfs"
 
@@ -23,11 +22,9 @@ import { useModal } from "@/contextes/contexteModals"
 
 export default function ModalBase({children}){
     const { colors } = usePalette()
-    const colorScheme = useColorScheme()
-    const {dismissButton, resetDismissButton} = useModal()
+    const {dismissButton} = useModal()
 
     const { fonts } = useFont()
-    const { ajouterEcran, getRoute } = useRouteAbs()
     const isFocused = useIsFocused()
     
     var s = StyleSheet.create({        
@@ -162,11 +159,6 @@ export default function ModalBase({children}){
             transform: [{ rotate: '45deg' }],
         },
     });
-
-    const icones = {
-        croix: colorScheme === 'dark' ? require('@/assets/icones/croix-dark-icon.png') : require('@/assets/icones/croix-light-icon.png'),
-        fleche: colorScheme === 'dark' ?require('@/assets/icones/fleche-d-dark-icon.png'):require('@/assets/icones/fleche-d-light-icon.png')
-    }
 
     const [fullScreen, setFullScreen] = useState(false)
     const [closing, setClosing] = useState(false)

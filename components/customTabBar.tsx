@@ -2,12 +2,10 @@ import { usePalette } from "@/contextes/contextePalette";
 import Icon from "@react-native-vector-icons/ionicons";
 import { BottomTabBar, type BottomTabBarProps } from 'expo-router/js-tabs';
 import { useRouter } from "expo-router";
-import React, { useMemo, useRef, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useFabActions, useFabState, FabConfig } from "@/contextes/contexteFAB";
-import log from "@/functions/log";
 import Animated, { useAnimatedStyle, withTiming, useSharedValue } from "react-native-reanimated";
-import { runOnJS } from "react-native-worklets";
 import { withTimingConfig } from "@/constants/ReanimatedConfs";
 
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);

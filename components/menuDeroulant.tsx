@@ -1,13 +1,11 @@
-import Haptics from '@/abstractions/haptics'
 import { useFont } from '@/contextes/contexteFont'
 import { usePalette } from '@/contextes/contextePalette'
 import log from '@/functions/log'
 import { Recurrence } from '@/types/calendar'
 import Icon from "@react-native-vector-icons/ionicons";
 import { Picker } from '@react-native-picker/picker'
-import RNPickerSelect from 'react-native-picker-select'
 import React, { useRef, useState } from 'react'
-import { FlatList, Modal, Platform, Pressable, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, useColorScheme, View, ViewProps } from 'react-native'
+import { FlatList, Modal, Platform, Pressable, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View, ViewProps } from 'react-native'
 import Animated, {createAnimatedComponent, Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 
 
@@ -26,7 +24,6 @@ const ITEM_NUMBER = 4
 export default function MenuDeroulant({ values, selected, onSelection, disabled, style }: Props) {
   const { colors } = usePalette()
   const { fonts } = useFont()
-  const colorScheme = useColorScheme()
 
   const androidTriggerRef = useRef<View>(null)
   const androidDropDownRef = useRef<FlatList>(null)
@@ -184,10 +181,6 @@ export default function MenuDeroulant({ values, selected, onSelection, disabled,
         </Modal>
       </View>
     )
-  }
-
-  const openAndroidDropDown = () => {
-    
   }
 
   const closeAndroidDropDown = () => {

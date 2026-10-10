@@ -1,4 +1,3 @@
-import { useFont } from '@/contextes/contexteFont'
 import { usePalette } from '@/contextes/contextePalette'
 import { useTimeline } from '@/contextes/contexteTimeline'
 import { findWidth } from '@/functions/calculerDimensionsEvenements'
@@ -8,7 +7,6 @@ import React from 'react'
 import { StyleSheet, View } from 'react-native'
 
 import { Event } from '@/types/calendar'
-import log from '@/functions/log'
 
 
 type Props = {
@@ -33,7 +31,6 @@ type Props = {
 export default function EventBloc({ event, blockColor, displayDate, horizontal = false } : Props) {
   const { pxHeures, L_HEURES, H_HEURES } = useTimeline() as any
   const { colors } = usePalette() 
-  const { fonts } = useFont()
   
   //log('event bloc displayed date', displayDate, event)
 

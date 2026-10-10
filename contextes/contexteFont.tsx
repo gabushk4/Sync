@@ -40,7 +40,7 @@ export function FontProvider({ children }: { children: ReactNode }) {
         try {
           const parsed = JSON.parse(val) as Fonts;
           setFontFamilyState(parsed);
-        } catch (e) {
+        } catch {
           // Ignore JSON parse error and keep the default fonts
         }
       }

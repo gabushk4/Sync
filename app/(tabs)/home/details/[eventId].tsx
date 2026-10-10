@@ -2,12 +2,10 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useFocusEffect, useIsFocused } from "expo-router/react-navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, StyleSheet, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 
 import { useAPI } from "@/contextes/contexteAPI";
-import { useFont } from "@/contextes/contexteFont";
-import { useInvites } from "@/contextes/contexteInvites";
 import { useMembre } from "@/contextes/contexteMembre";
 import { usePalette } from "@/contextes/contextePalette";
 import { useAccessToken } from "@/contextes/contexteToken";
@@ -29,26 +27,13 @@ import { DateTime } from "luxon";
 export default function Details(){
     const { t } = useTranslation('events')
     const { colors } = usePalette()
-    const { fonts } = useFont()
-    const colorScheme = useColorScheme()
-    const { api, APIBaseURL } = useAPI()
+    const { api } = useAPI()
     const isFocused = useIsFocused()
-    const {resetInvites, ajouterInvite, invites} = useInvites()
     const { getToken } = useAccessToken()
     const { membre } = useMembre()
     
     const { eventId, start, end } = useLocalSearchParams()
 
-    const [membreEditeur, setMembreEditeur] = useState<boolean>()    
-
-    const [modeEdit, setModeEdit] = useState<boolean>(false)
-    const [titre, setTitre] = useState<string>()
-    const [description, setDescription] = useState<string>()
-    const [prive, setPrive] = useState<boolean>()
-    const [dateEvenement, setDateEvenement] = useState<DateTime>()
-    const [debutEvenement, setDebutEvenement] = useState<DateTime>()
-    const [finEvenement, setFinEvenement] = useState<DateTime>()
-    const [montrerDtPickers, setMontrerDtPickers] = useState<boolean>(false)
     const [event, setEvent] = useState<Event>(defaultEvent)  
 
     const verifAvantDelete = ()=>{        
