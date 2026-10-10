@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # Temporaire : informatif uniquement tant que la dette préexistante
-    # n'est pas résorbée (voir Tickets.md T2, T3 puis T4 pour re-bloquer).
+    # n'est pas résorbée (voir Tickets.md T2-T4 puis T5 pour re-bloquer).
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4

@@ -1,5 +1,6 @@
 {
   "expo": {
+    "owner": "alkemist",
     "name": "sync",
     "slug": "sync",
     "version": "1.0.0",
