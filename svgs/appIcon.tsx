@@ -8,9 +8,7 @@ interface AppIconProps extends SvgProps {
 function AppIcon({ size = 24, ...svgProps }: AppIconProps) {
     return (
         <Svg
-            xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 480 480"
-            xmlSpace="preserve"       
             width={size}
             height={size}
             fill="none"
