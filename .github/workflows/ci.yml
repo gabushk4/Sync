@@ -71,6 +71,4 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
-      # Quarantaine temporaire du snapshot StyledText cassé (voir
-      # Tickets.md T1). Tout autre test qui échoue bloque la PR.
-      - run: npm run test -- --testPathIgnorePatterns "/node_modules/" "StyledText-test"
+      - run: npm run test
