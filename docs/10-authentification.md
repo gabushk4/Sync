@@ -10,17 +10,17 @@ Cette section contient tout ce qui concerne l'authentification : flux d'authenti
 
 ### 1. Inscription (`app/(auth)/register.tsx`)
 
-- Formulaire de création de compte
-- Vérification d'unicité du pseudo
-- Confirmation par email
-- Création du token JWT initial
+- Formulaire pseudo + courriel + mot de passe (+ confirmation)
+- `POST /membres/inscription` avec `{ pseudo, mot_de_passe, courriel, fuseau_horaire }`
+- En cas de 201 : toast de succès, **pas de token créé**
+- Redirection vers `/(auth)/login` après ~300ms (l'utilisateur se connecte ensuite)
 
 ### 2. Connexion (`app/(auth)/login.tsx`)
 
-- Formulaire de connexion
-- Vérification des identifiants
-- Stockage du token JWT
-- Navigation vers l'application principale
+- Formulaire pseudo + mot de passe (mot de passe > 8 caractères requis côté client)
+- `POST /membres/connexion` → `{ access_token, refresh_token }`
+- `signIn(access_token, refresh_token)` : access token en SecureStore (via contexte), refresh token en SecureStore, `getMembre()`, état `authenticated`
+- Toast de bienvenue `login.welcome`
 
 ### 3. Déconnexion
 
@@ -59,18 +59,18 @@ La protection des routes est gérée par le `AuthProvider` qui :
 
 ```typescript
 // contexteToken.tsx
-export const AccessTokenProvider = ({ children }: any) => {
-  const [token, setToken] = useState<string | null>(null);
-  
-  const getToken = useCallback(async () => {
-    // Récupération depuis secure store
-  }, []);
-  
-  return <AccessTokenProviderContext.Provider value={{ token, getToken, setToken }}>
-    {children}
-  </AccessTokenProviderContext.Provider>;
+type AccessTokenContextType = {
+  getToken: () => Promise<string | null | undefined>;
+  setToken: (token: string | null) => Promise<void>;
+  expirationAccessToken: number;   // 1h
+  expirationRefreshToken: number;  // 30 jours
+  resetTokens: () => Promise<void>;
 };
 ```
+
+Le refresh est géré dans `contexteAPI.tsx` : sur 401 (une seule tentative),
+`POST {APIBaseURL}/token` avec le `refresh_token`, puis rejoue la requête
+d'origine. Si le refresh échoue : suppression des tokens + `authEvents.emitUnauthorized()` → `signOut()`.
 
 ### Stockage du Token
 

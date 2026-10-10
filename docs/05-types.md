@@ -9,65 +9,33 @@
 - `settings.ts` - Types paramètres utilisateur (thème, langue, notifications)
 - `url.ts` - Types URLs (validation, formats)
 
-## Types principaux :
-1. **Calendar/Event Types** - Structure des événements (id, titre, description, debut, fin, prive, regle_recurrence, participants)
-2. **Invite Types** - Structure des invitations avec privilèges
-3. **PFP Types** - Types pour les photos de profil avec support URLs externes
-4. **Availability Types** - Types de disponibilités (créneaux libres, conflits)
-5. **Settings Types** - Types de paramètres utilisateur
-6. **Listener Types** - Types d'événements et gestionnaires
-7. **URL Types** - Types et validation d'URLs
+## Types principaux (extraits réels) :
+1. **Event** (`types/calendar.ts`) - `id?`, `titre?`, `description`, `url?: UrlDescriptor`, `debut/fin: DateTime | undefined`, `prive: 0 | 1`, `privilege_membre: "lecteur" | "editeur" | null`, `regle_recurrence?`, `timezone`
+2. **Friend / UserEvent / Recurrence** (`types/calendar.ts`) - `Friend { id, fp_url?, evenements: Event[] }`
+3. **Participant** (`types/invites.ts`) - `id`, `fp_url`, `pseudo`, `privilege: 'editeur' | 'lecteur'`, `statut: 'en_attente' | 'acceptee' | 'refusee'`
+4. **FPType** (`types/pfp.ts`) - `string | { uri, mimeType?, fileName? } | undefined` + garde `isFpObject()`
+5. **UrlDescriptor** (`types/url.ts`) - Descripteur de requête `{ method, string, data }` (pas une validation d'URL)
+6. **Interval / FriendIntervals / DateTimeSuggestions** (`types/availabilities.ts`) - Créneaux avec `DateTime` luxon
+7. **AppSettings** (`types/settings.ts`) - `{ language: 'en' | 'fr', timezone: string, theme: number }` (`theme` = teinte HSL, pas `'light' | 'dark'`)
+8. **listener.ts** - Fichier vide (aucun type défini)
 
 ## Exemple d'utilisation :
 ```typescript
-interface Event {
-  id: string;
-  titre: string;
-  description: string;
-  debut: number;
-  fin: number;
-  prive: boolean;
-  regle_recurrence?: string;
-  participants: Array<{ id: string; privilege: string }>;
-}
+import { Event } from '@/types/calendar';
+import { AppSettings } from '@/types/settings';
+import { Participant } from '@/types/invites';
 
-interface Availability {
-  slot: number;
-  available: boolean;
-  conflicts: Array<{ id: string; titre: string }>;
-  suggestions?: Array<{ slot: number; priority: number }>;
-}
-
-interface Settings {
-  theme: 'light' | 'dark';
-  language: 'en' | 'fr';
-  notifications: {
-    push: boolean;
-    email: boolean;
-    sound: boolean;
-  };
-}
-
-interface Listener {
-  type: string;
-  handler: (event: any) => void;
-}
-
-interface URL {
-  valid: boolean;
-  scheme: string;
-  host: string;
-  path: string;
-}
+const theme: number = settings.theme; // teinte HSL 0-360
+const peutEditer = (p: Participant) => p.privilege === 'editeur';
 ```
 
 ## Types de données :
-- Événements (création, modification, suppression)
-- Invitations (gestion des privilèges)
-- Disponibilités (créneaux, conflits)
-- Paramètres (thème, langue, notifications)
-- Photos de profil (URLs, placeholders)
-- URLs (validation, parsing)
-- Listeners (événements, gestionnaires)
+- Événements (`Event`, `Friend`, `UserEvent`, `Recurrence` — dates `DateTime` luxon, `prive: 0 | 1`)
+- Invitations (`Participant` avec `privilege` et `statut`)
+- Disponibilités (`Interval`, `FriendIntervals`, `DateTimeSuggestions`)
+- Paramètres (`AppSettings` : langue, timezone, teinte `theme: number`)
+- Photos de profil (`FPType` : URL string ou objet `{ uri, mimeType, fileName }`)
+- Descripteurs de requête (`UrlDescriptor : { method, string, data }`)
+- Listeners : `types/listener.ts` est vide
 
 [Status: Command completed]

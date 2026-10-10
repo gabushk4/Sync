@@ -1,10 +1,24 @@
 # 📚 Documentation
 
 **Navigation rapide :**
+- Contextes → [01-contextes.md](./01-contextes.md)
 - UI → [02-composants.md](./02-composants.md)
 - Fonctions → [03-fonctions.md](./03-fonctions.md)
 - Routes → [04-routes.md](./04-routes.md)
 - Types → [05-types.md](./05-types.md)
+- Hooks → [06-hooks.md](./06-hooks.md)
+- Config → [07-config.md](./07-config.md)
+- Locales → [08-locales.md](./08-locales.md)
+- Logique métier → [09-logique-metier.md](./09-logique-metier.md)
+- Authentification → [10-authentification.md](./10-authentification.md)
+- Spécificités Expo → [11-specificites-expo.md](./11-specificites-expo.md)
+- Paramètres → [settings.md](./settings.md)
+
+
+## [Contextes Globaux](./01-contextes.md)
+Providers, ordre dans `app/_layout.tsx`, patterns `useX`.
+
+## [Composants UI](./02-composants.md)
 
 
 ## [Composants UI](./02-composants.md)
