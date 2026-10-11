@@ -31,3 +31,17 @@ export type NouvelEvenement = {
     participants: { id: string, privilege: string }[]
     [cle: string]: unknown
 }
+
+/**
+ * Every conflicting event of an API 409 answer: `evenements` lists them all, an
+ * older API only sends the first one as `evenement`. Used by the create screen
+ * and the conflict screen (a removal that leaves conflicts).
+ *
+ * @author Philip Kvaratshelya — user story 8 (event conflicts)
+ * @param {{ evenements?: EvenementEnConflit[], evenement?: EvenementEnConflit }} data - 409 response body.
+ * @returns {EvenementEnConflit[]}
+ */
+export function conflitsDeLaReponse(data: { evenements?: EvenementEnConflit[], evenement?: EvenementEnConflit }): EvenementEnConflit[] {
+    if (data?.evenements) return data.evenements
+    return data?.evenement ? [data.evenement] : []
+}

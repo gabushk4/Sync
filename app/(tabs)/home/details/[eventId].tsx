@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useFocusEffect, useIsFocused } from "expo-router/react-navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -21,6 +21,10 @@ import ToastAbs from "@/abstractions/toastAbs";
 import EventForm from "@/components/eventForm";
 import { toastTypes } from "@/constants/toastConfig";
 import { useNavFab } from "@/hooks/useNavFAB";
+import PanneauDecisionInvitation from "@/components/panneauDecisionInvitation";
+import ouvrirRevueInvitation from "@/functions/ouvrirRevueInvitation";
+import useDecisionInvitation from "@/hooks/useDecisionInvitation";
+import { InvitationInfo } from "@/types/invitation";
 import { defaultEvent, Event } from "@/types/calendar";
 import { UrlDescriptor } from "@/types/url";
 import Icon from "@react-native-vector-icons/ionicons";
@@ -37,7 +41,28 @@ export default function Details(){
     const { getToken } = useAccessToken()
     const { membre } = useMembre()
     
-    const { eventId, start, end } = useLocalSearchParams()
+    const { eventId, start, end, invitation: invitationParam, depuisRevue } = useLocalSearchParams()
+    const navigation = useNavigation()
+
+    // Decision mode: opened from the invitation review by tapping the leader's invited
+    // event. The event is read-only (no edit / delete); a panel lists its participants
+    // with their answer and offers accept / refuse.
+    // Philip Kvaratshelya — user story 8 (answering an invitation in conflict).
+    const invitation = useMemo<InvitationInfo | null>(
+        () => (typeof invitationParam === 'string' ? JSON.parse(invitationParam) : null),
+        [invitationParam]
+    )
+    // "Adjust my schedule" (panel button or conflict screen): back to the review this
+    // page was opened from, else open it (page opened from the feed).
+    const voirHoraire = () => {
+        if (depuisRevue) router.back()
+        else if (invitation) ouvrirRevueInvitation(invitation)
+    }
+    const decision = useDecisionInvitation(invitation, {
+        // Answered: back to the home timeline (the invitation review is done).
+        onRepondu: () => navigation.dispatch({ type: 'POP_TO_TOP' }),
+        onVoirHoraire: voirHoraire,
+    })
 
     const [membreEditeur, setMembreEditeur] = useState<boolean>()    
 
@@ -172,7 +197,9 @@ export default function Details(){
     useNavFab("details", {
             icon: <Icon name="pencil" size={24} color={colors.text} />,
             href: '/(tabs)/home/edit/[event]' as const,
-            params: FABParams
+            params: FABParams,
+            // No editing while deciding on an invitation.
+            visible: !invitation,
         })
 
     useFocusEffect(useCallback(() => {
@@ -206,17 +233,32 @@ export default function Details(){
         <View style={{flex:1}}>
             <EventForm
                 event={event}
-                mode={'details'}                
+                mode={'details'}
+                masquerParticipants={!!invitation}
             />
-            {/* quit (non-creators) / delete (creator) button */}
-            <TouchableOpacity style={s.floatingBtn} onPress={() => {
-                if (event.privilege_membre === 'editeur')
-                    verifAvantDelete()
-                else
-                    quitterEvenement()
-            }}>
-                <Icon name='trash-sharp' color={colors.error} size={28}/>
-            </TouchableOpacity>
+            {invitation ? (
+                <>
+                    <PanneauDecisionInvitation
+                        idEvenement={invitation.id_evenement}
+                        organisateur={invitation.pseudo_invitant}
+                        voirHoraire={voirHoraire}
+                        accepter={decision.accepter}
+                        refuser={decision.refuser}
+                        enCours={decision.enCours}
+                    />
+                    {decision.conflit}
+                </>
+            ) : (
+                // quit (non-creators) / delete (creator) button
+                <TouchableOpacity style={s.floatingBtn} onPress={() => {
+                    if (event.privilege_membre === 'editeur')
+                        verifAvantDelete()
+                    else
+                        quitterEvenement()
+                }}>
+                    <Icon name='trash-sharp' color={colors.error} size={28}/>
+                </TouchableOpacity>
+            )}
         </View>
     )
 }

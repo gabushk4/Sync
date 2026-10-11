@@ -2,6 +2,7 @@ import { useFont } from '@/contextes/contexteFont';
 import { usePalette } from "@/contextes/contextePalette";
 
 import ceilBy5 from '@/functions/ceilBy5';
+import { estJourneeEntiere } from '@/functions/jourCreation';
 import { convertirTimestampDateLongue, convertirTimestampHeure } from "@/functions/convertirTimestamp";
 import log from "@/functions/log";
 
@@ -55,6 +56,9 @@ const SLOT_SUGGESTIONS = [
  * @param {boolean} [props.disabled] - Disables the Android picker trigger buttons.
  * @param {DateTime} [props.minimumStart] - Earliest selectable start.
  * @param {DateTime} [props.maximum] - Latest selectable date/time, for both start and end pickers.
+ * @author Philip Kvaratshelya — rectification for a more conventional display: the "all day" switch works (it never
+ *   toggled, then reset the dates), turns itself on for whole days from the
+ *   calendar, and each Android date picker opens alone
  * @returns {JSX.Element}
  */
 export default function DateTimeSelecteur({timezone, disabled=false, minimumStart, maximum} : Props){
@@ -82,25 +86,43 @@ export default function DateTimeSelecteur({timezone, disabled=false, minimumStar
 
     const dtNow = DateTime.now().startOf('minute');   
 
-    const startRef = useRef(start)
-    const endRef = useRef(end)
+    // Times before "all day" was switched on, restored when it's switched off
+    // (null: none, e.g. a whole-day range from the calendar).
+    const startRef = useRef<DateTime | null>(null)
+    const endRef = useRef<DateTime | null>(null)
 
+    // Android shows each picker as a dialog: one flag per picker. The start and end
+    // date pickers shared one, so tapping either date opened both dialogs.
     const [showDatePicker, setShowDatePicker] = useState(Platform.OS === 'ios');
+    const [showFinDatePicker, setShowFinDatePicker] = useState(Platform.OS === 'ios');
     const [showDebutPicker, setShowStartPicker] = useState(Platform.OS === 'ios');
     const [showFinPicker, setShowEndPicker] = useState(Platform.OS === 'ios');
     const [isAllDay, setIsAllDay] = useState(false)
+    // The switch is turned on by itself once, when the pre-filled dates are whole
+    // days (a range selected in the month calendar).
+    const allDayDetecte = useRef(false)
     
 
     /**
-     * Applies a new start date (keeping the existing start time), shifting
-     * the end so the event's duration stays the same.
+     * Applies a new start date (keeping the existing start time). The end is kept,
+     * or moved after the new start when it would come before it. All day: the
+     * start stays at midnight and the end at least at the end of that day.
      *
+     * @author Philip Kvaratshelya — rectification for a more conventional display (all-day mode, end kept)
      * @param {Date} jsDate - The date picked in the native picker.
      * @returns {void}
      */
     const handleStartDateChange = (jsDate : Date) => {
+        if (Platform.OS === 'android') setShowDatePicker(false);
+        if (isAllDay) {
+            const debutJour = DateTime.fromJSDate(jsDate).startOf('day')
+            setStart(debutJour)
+            if (end < debutJour.endOf('day')) setEnd(debutJour.endOf('day'))
+            return
+        }
         const newDate = ceilBy5(DateTime.fromJSDate(jsDate).startOf('day'));
-        let newFin = end.startOf('day')
+        // The end used to be reset to its day's midnight here, losing its time.
+        let newFin = end
 
         let diffTime = end.diff(start, 'minutes').minutes //for keeping same event length
         
@@ -118,17 +140,18 @@ export default function DateTimeSelecteur({timezone, disabled=false, minimumStar
         //TODO: keep same length as a setting
         //setEnd(newStart.plus({minutes:diffTime})); //Applies event length
         setEnd(newFin)
-
-        if (Platform.OS === 'android') setShowDatePicker(false);
     };
 
     /**
      * Applies a new end date, keeping the existing end time.
      *
+     * @author Philip Kvaratshelya — rectification for a more conventional display (closes its own Android dialog)
      * @param {Date} jsDate - The date picked in the native picker.
      * @returns {void}
      */
     const handleEndDateChange = (jsDate: Date) => {
+        // It never closed its Android dialog.
+        if (Platform.OS === 'android') setShowFinDatePicker(false);
         let newDate: DateTime | null = ceilBy5(DateTime.fromJSDate(jsDate).set({second:0}));
 
         // Change only the date not the time
@@ -188,18 +211,45 @@ export default function DateTimeSelecteur({timezone, disabled=false, minimumStar
 
     
 
+    // Pre-filled whole days (a range from the month calendar): "all day" on.
     useEffect(() => {
-        if (isAllDay) {
+        if (allDayDetecte.current || isAllDay || !estJourneeEntiere(start, end)) return
+        allDayDetecte.current = true
+        setIsAllDay(true)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [start, end])
+
+    /**
+     * "All day" switch. On: keeps the current times, then covers the start day's
+     * midnight to the end day's 23:59:59. Off: brings the kept times back, or (none
+     * kept, or they're past) the next 5-minute mark for an hour.
+     * It used to run on mount too (resetting the pre-filled dates), and switching
+     * off could restore a past start the form then refused.
+     *
+     * @author Philip Kvaratshelya — rectification for a more conventional display
+     * @param {boolean} active - New value of the switch.
+     * @returns {void}
+     */
+    const basculerJourEntier = (active: boolean) => {
+        setIsAllDay(active)
+        if (active) {
             startRef.current = start
             endRef.current = end
             setStart(start.startOf('day'))
             setEnd(end.endOf('day'))
-        } else {
-            setStart(ceilBy5(startRef.current))
-            setEnd(ceilBy5(endRef.current))
+            return
         }
-            
-    }, [isAllDay])
+        const maintenant = ceilBy5(DateTime.now())
+        let debut = startRef.current && startRef.current >= maintenant
+            ? startRef.current
+            // Same day as the all-day event, at the current time at the earliest.
+            : DateTime.max(maintenant, ceilBy5(start.set({ hour: maintenant.hour, minute: maintenant.minute })))
+        let fin = endRef.current && endRef.current > debut ? endRef.current : debut.plus({ minutes: END_DELAY_FROM_START })
+        startRef.current = null
+        endRef.current = null
+        setStart(debut)
+        setEnd(fin)
+    }
 
     const s = StyleSheet.create({
         label: {
@@ -268,7 +318,9 @@ export default function DateTimeSelecteur({timezone, disabled=false, minimumStar
                     <SwitchAbs
                         style={{width:'20%'}}
                         value={isAllDay}
-                        onChange={() => { setIsAllDay((prev) => !prev) }}
+                        // onValueChange: SwitchAbs only forwards that one; the
+                        // onChange used here was dropped, so the switch never toggled.
+                        onValueChange={(active) => basculerJourEntier(active)}
                     />
             </View>    
             {/* --- Start --- */}
@@ -324,11 +376,11 @@ export default function DateTimeSelecteur({timezone, disabled=false, minimumStar
                 {/* Date */}
                 <View style={s.pickerContainer}>                
                     {Platform.OS === 'android' && (
-                        <TouchableOpacity onPress={() => setShowDatePicker(true)} disabled={disabled} style={s.dateTimePicker} >
+                        <TouchableOpacity onPress={() => setShowFinDatePicker(true)} disabled={disabled} style={s.dateTimePicker} >
                             <Text style={[s.inputTemps, {fontSize:17}]}>{convertirTimestampDateLongue(end.startOf('day'))}</Text>
                         </TouchableOpacity>
                     )}
-                    {showDatePicker && (
+                    {showFinDatePicker && (
                         <RNDateTimePicker
                             value={end.startOf('day').toJSDate()}
                             mode="date"

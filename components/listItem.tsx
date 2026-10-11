@@ -5,7 +5,7 @@ import { findLeft, findWidth } from '@/functions/calculerDimensionsEvenements'
 import { convertirTimestampDateCourte, convertirTimestampHeure } from '@/functions/convertirTimestamp'
 import { Event } from '@/types/calendar'
 import Icon from '@react-native-vector-icons/ionicons'
-import { router } from 'expo-router'
+import ouvrirDetailsEvenement from '@/functions/ouvrirDetailsEvenement'
 import { DateTime } from 'luxon'
 import React from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
@@ -19,6 +19,8 @@ type Props = {
     displayedDate?: DateTime;
     listOffset: SharedValue<number>;
     eventsColor?: string;
+    /** Replaces the default tap (open the event's details). */
+    onPress?: (event: Event) => void;
     textColor?: string;
 }
 
@@ -38,7 +40,7 @@ const PAD = 6
  * @param {Props} props
  * @returns {JSX.Element | null}
  */
-export default function ListItem({ event, horizontal, displayedDate, listOffset, eventsColor, textColor }:Props) {
+export default function ListItem({ event, horizontal, displayedDate, listOffset, eventsColor, textColor, onPress }:Props) {
     const { fonts } = useFont()
     const { colors } = usePalette()
     const { L_HEURES, H_HEURES, pxHeures } = useTimeline()
@@ -120,11 +122,13 @@ export default function ListItem({ event, horizontal, displayedDate, listOffset,
         <TouchableOpacity
             style={s.bloc}
             activeOpacity={0.7}
-            onPress={() => {
-                router.navigate({ pathname: '/(tabs)/home/details/[eventId]', params: { eventId: event.id as string, start: debut.toISO(), end: fin.toISO() } })
-            }}
+            // Same navigation as the month calendar's events list (user story 5, Philip Kvaratshelya).
+            // `onPress` / `cliquable` / `couleur`: overrides of the invitation review
+            // screen (Philip Kvaratshelya — user story 8).
+            disabled={event.cliquable === false}
+            onPress={() => onPress ? onPress(event) : ouvrirDetailsEvenement({ id: event.id, debut, fin })}
         >
-            <EventBloc event={event} blockColor={eventsColor} horizontal={horizontal} displayDate={displayedDate} />
+            <EventBloc event={event} blockColor={event.couleur ?? eventsColor} horizontal={horizontal} displayDate={displayedDate} />
             <Animated.View style={[s.texte, texteAnime]}>
                 <Text style={s.heure} numberOfLines={1}>{startText}</Text>
                 {event.titre

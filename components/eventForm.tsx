@@ -61,6 +61,8 @@ type Props = {
         maximumStart?: DateTime;
         minimumStart?: DateTime;
     }
+    /** Hides the participants section (the invitation decision page shows its own list). */
+    masquerParticipants?: boolean
     // setEvent n'est plus utilisé pour la synchronisation continue.
     // Garde-le seulement si un autre écran en dépend pour un aperçu readonly.
     setEvent?: React.Dispatch<React.SetStateAction<Event>>
@@ -82,7 +84,7 @@ const dtNow = DateTime.now()
  */
 const EventForm = forwardRef<EventFormHandle, Props>(
 
-function EventForm({ event, prefills, constraints, mode }, ref) {
+function EventForm({ event, prefills, constraints, mode, masquerParticipants = false }, ref) {
     const { t } = useTranslation('events')
     const { colors } = usePalette()
     const { fonts } = useFont()
@@ -458,13 +460,14 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
                 
             </View>
 
-            <View style={[s.champ, {height:'auto', paddingBottom:0}]}>
+            {/* masquerParticipants: invitation decision page (Philip Kvaratshelya — user story 8). */}
+            {!masquerParticipants && <View style={[s.champ, {height:'auto', paddingBottom:0}]}>
                 <ParticipantsListe
                     participantsUrl={eventParticipantsControlUrl}
                     listType='event'
                     peutGererParticipants={mode === 'details' && event.privilege_membre === 'editeur' || mode === 'create'}
                 />                
-            </View>
+            </View>}
 
             <Modal visible={showTextModal} transparent={true} backdropColor="transparent">
                 <Pressable />

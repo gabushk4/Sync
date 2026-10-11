@@ -6,8 +6,10 @@
 
 ## Routes Tabs (app/(tabs)/) :
 - `home/index.tsx` - Écran d'accueil avec timeline horizontal
-- `home/create.tsx` - Création d'événement
-- `home/details/[eventId].tsx` - Détails d'un événement
+- `home/calendrier.tsx` - Calendrier mensuel (sélection d'un jour / d'une plage, « + » pour créer) — Philip, US5
+- `home/create.tsx` - Création d'événement (fenêtre de conflit si chevauchement — US8)
+- `home/details/[eventId].tsx` - Détails d'un événement ; avec le paramètre `invitation` : page de décision (lecture seule, accepter / refuser) — Philip, US8
+- `home/revueInvitation.tsx` - Revue d'une invitation en conflit : horaires de l'organisateur, des invités et du membre — Philip, US8
 - `home/edit/[event].tsx` - Édition d'événement
 - `profile/index.tsx` - Profil utilisateur
 - `profile/[membreId].tsx` - Profil d'un autre membre

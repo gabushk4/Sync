@@ -89,6 +89,14 @@ export type FabConfig = {
   href?: Href;
   params?: any;
   visible: boolean;
+  /**
+   * When set, pressing the FAB shows this error instead of navigating / acting
+   * (e.g. a past day).
+   *
+   * @author Philip Kvaratshelya — rectification for a more conventional display:
+   *   a clear message instead of opening a form that can't be submitted
+   */
+  bloque?: string;
 } | undefined;
 
 type FabState = { owner: string; config: FabConfig } | null;
@@ -116,6 +124,7 @@ function sameConfig(a: FabConfig, b: FabConfig) {
     a.visible === b.visible &&
     (a.href ?? null) === (b.href ?? null) &&
     a.icon === b.icon &&
+    (a.bloque ?? null) === (b.bloque ?? null) &&
     JSON.stringify(a.params ?? null) === JSON.stringify(b.params ?? null)
   );
 }

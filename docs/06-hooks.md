@@ -2,6 +2,7 @@
 
 ## Fichiers de cette catégorie :
 - `useActionFAB.tsx` - Floating Action Button actions
+- `useDecisionInvitation.tsx` - Répondre à une invitation (accepter avec vérification des conflits, refuser) — Philip, US8
 - `useEmailConfirmation.tsx` - Hook confirmation email
 - `useFriendList.tsx` - Hook liste d'amis
 - `useNavFAB.tsx` - Floating Action Button navigation
