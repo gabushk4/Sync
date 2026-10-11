@@ -3,12 +3,6 @@ import { createContext, Dispatch, ReactNode, SetStateAction, useCallback, useCon
 import { ColorValue, TouchableOpacityProps } from 'react-native'
 import { SharedValue, useSharedValue } from 'react-native-reanimated'
 import { usePalette } from './contextePalette'
-import { TouchableProps } from 'react-native-svg'
-
-type ModalType = {
-  nom: string | null
-  data: any | null
-}
 
 type ModalContextType = {
   actualLevel: SharedValue<number>;

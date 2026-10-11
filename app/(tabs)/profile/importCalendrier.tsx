@@ -7,7 +7,6 @@ import Icon from "@react-native-vector-icons/ionicons"
 import { usePalette } from '@/contextes/contextePalette'
 import { useFont } from '@/contextes/contexteFont'
 import { useAPI } from '@/contextes/contexteAPI'
-import { useMembre } from '@/contextes/contexteMembre'
 
 import parseIcs from '@/functions/parseIcs'
 import { choisirFichierIcs, dedupliquerEtDetecterConflits } from '@/functions/importCalendar'
@@ -42,7 +41,6 @@ export default function ImporterCalendrier(){
     const {colors} = usePalette()
     const { fonts } = useFont()
     const {api} = useAPI()
-    const { membre } = useMembre()
 
     const [enCours,setEnCours] = useState(false)
 

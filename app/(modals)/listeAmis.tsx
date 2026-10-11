@@ -12,7 +12,6 @@ import { useAPI } from "@/contextes/contexteAPI";
 import { useFont } from "@/contextes/contexteFont";
 import { usePalette } from "@/contextes/contextePalette";
 import catcher from "@/functions/catcher";
-import { convertirTimestampDateLongue } from "@/functions/convertirTimestamp";
 import { convertUTCToLocal } from "@/functions/convertirUTCenLocal";
 import { modalEvents } from "@/events/modalEvents";
 import { useFriendList } from "@/hooks/useFriendList";
@@ -97,7 +96,6 @@ function DefaultFriendList({ openProfiles, type}: { openProfiles: boolean, type:
                     keyExtractor={item => item.id}
                     contentContainerStyle={{ alignItems: 'center', paddingTop: 16, paddingBottom: 16 }}
                     renderItem={({ item, index }) => {
-                        const dateAmitie = convertirTimestampDateLongue(item.temps_amitie)
                         return (
                             <FriendLine friend={item} listType={type} selected={false} onPress={() => onPressAmi(item)} />
                             

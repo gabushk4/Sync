@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useState } from 'react';
+import React, { forwardRef, useState } from 'react';
 import { TextInput, TextInputProps, Platform, StyleProp, TextStyle, StyleSheet } from 'react-native';
 import { usePalette } from '@/contextes/contextePalette';
 import { useFont } from '@/contextes/contexteFont';

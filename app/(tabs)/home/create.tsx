@@ -6,11 +6,9 @@ import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useActionFab } from "@/hooks/useActionFAB";
 
 import { useAPI } from "@/contextes/contexteAPI";
-import { useFont } from "@/contextes/contexteFont";
 import { useInvites } from "@/contextes/contexteInvites";
 import { useMembre } from "@/contextes/contexteMembre";
 import { usePalette } from "@/contextes/contextePalette";
-import { useAccessToken } from "@/contextes/contexteToken";
 
 import EventForm from "@/components/eventForm";
 import Spinner from "@/components/spinner";
@@ -49,13 +47,12 @@ import { DateTime } from "luxon";
 export default function CreateEvent({ }) {
     const { t } = useTranslation('events')
     const { colors } = usePalette()
-    const colorScheme = useColorScheme()
-    const { fonts } = useFont()
     const navigation = useNavigation()
     
     const {api} = useAPI()
     const {invites, resetInvites} = useInvites()
     const {membre, getMembre} = useMembre()
+    const router = useRouter()
     const { getToken } = useAccessToken()
     
     const formRef = useRef<EventFormHandle>(null)
@@ -100,7 +97,7 @@ export default function CreateEvent({ }) {
     
     //log('setter end')
 
-    const [event, setEvent] = useState<Event>(defaultEvent)
+    const [event] = useState<Event>(defaultEvent)
 
     // Conflict screen shown over this one (409 answer), or null.
     const [conflit, setConflit] = useState<{ existants: EvenementEnConflit[], nouveau: NouvelEvenement } | null>(null)

@@ -30,21 +30,6 @@ type Props = {
 
 const END_DELAY_FROM_START = 60 //minutes
 
-const SLOT_SUGGESTIONS = [
-    {
-        debut: DateTime.now().plus({ hour: 4 }),
-        fin: DateTime.now().plus({hour: 5}).set({minute:0})
-    },
-    {
-        debut: DateTime.now().plus({ day: 7, hour: 4 }),
-        fin: DateTime.now().plus({ day: 7, hour: 5})
-    },
-    {
-        debut: DateTime.now().plus({ day: 2, hour: 4 }).set({minute:0}),
-        fin: DateTime.now().plus({day: 3, hour: 5})
-    }
-]
-
 /**
  * Start/end date and time pickers for an event, with an "all day" toggle.
  * Keeps the event's duration constant when the start date/time moves, and
@@ -175,8 +160,6 @@ export default function DateTimeSelecteur({timezone, disabled=false, minimumStar
     const handleStartTimeChange = (jsDate: Date) => {
         const newDebut = ceilBy5(DateTime.fromJSDate(jsDate).set({ second: 0 }));        
         let newFin = end;
-
-        let diffTime = newFin.diff(start, 'minutes').minutes //for keeping same event length
 
         // If end is before the start, end delayed from start
         if (newFin <= newDebut) {

@@ -1,8 +1,7 @@
-import { Image, ImageProps, ImageSourcePropType, StyleSheet, useColorScheme, View, ViewStyle } from "react-native";
+import { Image, ImageSourcePropType, StyleSheet, useColorScheme, View, ViewStyle } from "react-native";
 import { FPType } from "@/types/pfp";
 import { usePalette } from "@/contextes/contextePalette";
 import { useEffect, useState } from "react";
-import log from "@/functions/log";
 import { useAPI } from "@/contextes/contexteAPI";
 
 

@@ -1,5 +1,4 @@
 import { DateTime } from 'luxon';
-import log from './log';
 
 /* function convertirUTCversLocale(dateUTC, timezone){
   //log('convertirUTCversLocale: dateUTC', dateUTC, 'timezone', timezone)

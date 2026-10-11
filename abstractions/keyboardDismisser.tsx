@@ -1,4 +1,4 @@
-import { ReactElement, ReactNode } from "react";
+import { ReactElement } from "react";
 import { Keyboard, Pressable } from "react-native";
 
 export default function KeyboardDismisser({zIndex, onPress, children}: {zIndex?:number, onPress?: Function, children: ReactElement}){

@@ -7,7 +7,6 @@ import { useFont } from "@/contextes/contexteFont";
 import log from "@/functions/log";
 import { router } from "expo-router";
 import { DateTime } from "luxon";
-import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 import { useTranslation } from 'react-i18next';
 import Animated, { SharedValue } from "react-native-reanimated";

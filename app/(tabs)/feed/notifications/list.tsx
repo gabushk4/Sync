@@ -36,7 +36,7 @@ export default function NotificationsList({}){
     
     const isFocused = useIsFocused()
     const {notifications, nonLues, notifRefresh} = useNotifications()
-    const {APIBaseURL, api} = useAPI()
+    const {api} = useAPI()
     const {getToken} = useAccessToken()
 
     const rienTexte = t('list.emptyState')
@@ -64,7 +64,7 @@ export default function NotificationsList({}){
     const [filtreSelec, setFiltreSelec] = useState('toutes')
     const [selectionner, setSelectionner] = useState(false)
     const [notificationsCopie, setNotificationsCopie] = useState(notificationsVisibles)
-    const [notificationsDelete, setNotificationsDelete] = useState<Array<string>>([])
+    const [, setNotificationsDelete] = useState<Array<string>>([])
     const [notificationsSelec, setNotificationsSelec] = useState<Array<string>>([])
     const [rafraichi, setRafraichi] = useState(false)
 

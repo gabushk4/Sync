@@ -1,6 +1,5 @@
 import TextInputAbs from '@/abstractions/textInputAbs'
 import { useFont } from '@/contextes/contexteFont'
-import { useMembre } from '@/contextes/contexteMembre'
 import { usePalette } from '@/contextes/contextePalette'
 
 import { Event, Recurrence } from '@/types/calendar'
@@ -16,7 +15,7 @@ import { useFocusEffect } from 'expo-router'
 import { DateTime } from 'luxon'
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native'
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 
 import SwitchAbs from '@/abstractions/switchAbs'
 import { useEventDraft } from '@/contextes/contexteEventDraft'
@@ -88,9 +87,7 @@ function EventForm({ event, prefills, constraints, mode, masquerParticipants = f
     const { t } = useTranslation('events')
     const { colors } = usePalette()
     const { fonts } = useFont()
-    const { membre } = useMembre()
-    const colorScheme = useColorScheme()
-    const { ajouterInvite, invites } = useInvites()    
+    const { ajouterInvite } = useInvites()    
     const {start, end, setStart, setEnd, setRequestsEnabled} = useEventDraft()
         
     // Parenthesized explicitly: `? :` binds looser than `||`, so without the

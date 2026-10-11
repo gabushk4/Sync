@@ -1,11 +1,8 @@
-import ModalBase from "@/components/modalBase";
-
 import { usePalette } from "@/contextes/contextePalette";
-import { useFont } from "@/contextes/contexteFont";
 
-import React, { View, Text } from "react-native";
+import React, { View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useMembre } from "@/contextes/contexteMembre";
 import { useAPI } from "@/contextes/contexteAPI";
 import log from "@/functions/log";
@@ -13,8 +10,7 @@ import MemberCode from "@/components/memberCode";
 
 export default function QRCodeAbs() {
     const { colors } = usePalette()
-    const { fonts } = useFont()
-    const { membre, getMembre } = useMembre()
+    const { membre } = useMembre()
     const { APIBaseURL } = useAPI()
 
     const [qrCodeValue, setQrCodeValue] = useState<string>('')

@@ -21,7 +21,7 @@ import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -53,7 +53,6 @@ export default function Settings(){
     const { fonts: f } = useFont()    
     const {t} = useTranslation('settings')
     const { settings: values, hydrated, setSetting } = useSettings()
-    const router = useRouter()
     const {hue, setHue} = usePalette()
 
     const [permissions, setPermissions] = useState<Permissions>()

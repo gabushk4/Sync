@@ -1,6 +1,3 @@
-import { DateTime } from 'luxon';
-import log from './log';
-
 export default function formaterDatePourServeur(dateDt) {
     if(dateDt){
         //log(dateDt)

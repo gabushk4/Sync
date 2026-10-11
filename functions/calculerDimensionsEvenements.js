@@ -1,6 +1,3 @@
-import {DateTime} from "luxon";
-import log from "./log";
-
 const MS_HEURE = 3600000
 
 const findDiffStartEnd = (start, end) =>{

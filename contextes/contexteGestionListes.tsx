@@ -35,7 +35,7 @@ type GestionScrollContextType = {
 const GestionScrollContext = createContext<GestionScrollContextType | null>(null);
 
 export const GestionScrollProvider = ({ children }: { children: ReactNode }) => {
-  const { pxHeures, L_HEURES, H_HEURES } = useTimeline();
+  const { pxHeures, L_HEURES } = useTimeline();
   const {width: WIN_W } = Dimensions.get('window');
 
   const LEFT_GO_TO_BEFORE = 96

@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { ColorValue, View } from 'react-native';
 
 import { CustomTabBar } from '@/components/customTabBar';
-import { useColorScheme } from '@/components/useColorScheme';
 import { useFont } from '@/contextes/contexteFont';
 import { useNotifications } from '@/contextes/contexteNotifications';
 import { usePalette } from '@/contextes/contextePalette';
@@ -19,7 +18,6 @@ function TabBarIcon(props: {
 }
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
   const { t } = useTranslation();
   const { colors } = usePalette()
   const { fonts } = useFont()
