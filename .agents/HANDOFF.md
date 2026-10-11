@@ -114,3 +114,73 @@
   (remonté par `tsc`, préexistant).
 - Note : modif `app.json` (`owner: alkemist`) déjà présente dans le
   working tree avant cette session, non touchée.
+
+---
+
+# HANDOFF — Exécution agent T6, T1, T2, T4 (10/10/2026)
+
+## Fait (vérifié par relecture des diffs + runs d'exécution)
+- 4 branches locales (push KO : pas de credentials GitHub dans cet env ;
+  au user de pousser) : `fix/T6-dead-code` (06970c2, 54 fichiers, +56/−257),
+  `fix/T1-styledtext-test` (7237b38), `fix/T2-broken-imports` (63a5a37),
+  `fix/T4-svg-xmlns` (6d90c4a).
+- T1 : test supprimé + quarantaine retirée ; `jest --ci` vert SANS flag
+  (1 suite, 3/3 — vérifié en worktree dédié).
+- T2 : `modal.tsx`, `EditScreenInfo.tsx` migrés vers RN `Text/View` +
+  `useColorScheme` (light/dark recopié de l'ancien Themed) ; eslint 0 erreur
+  sur les 2 fichiers ; 3 TS2307 supprimés, rien ajouté (vérifié : reste 13
+  erreurs, toutes dans des fichiers non touchés). Point review : `useColorScheme`
+  vient de `react-native` (pas le wrapper `./useColorScheme`) — OK pour ces
+  écrans démo, à confirmer en review.
+- T4 : `xmlns` (+ `xmlSpace` sur appIcon, aussi rejeté) retirés, diffs lus OK.
+- T6 : 154 warnings unused → 0 (diff stat relu ; insertions = lignes
+  d'import modifiées, pas de nouveau code).
+
+## Baselines recalculées sur main (après PR #6 FAB-fix + `npm ci` frais)
+- tsc : 13 erreurs (9 anciennes + 4 retombées PR #6 : `FabConfig.visible`
+  ×2, `useFabActions` args ×2). Faux positif écarté : `expo-audio`
+  "introuvable" venait d'un `node_modules` périmé local, résolu par `npm ci`.
+- eslint brut : 138 erreurs / 285 warnings (dont 6 erreurs retombées PR #6 :
+  `voiceRecorderButton` purity ×2 + refs ×3, `useActionFAB` refs ×1).
+- → Nouveau ticket T13 ajouté à `Tickets.md` (retombées PR #6, bloque T5) ;
+  T5 dépend désormais de T2, T3, T4, T13.
+
+## Reste / reprise
+- Pousser : `for b in fix/T6-dead-code fix/T1-styledtext-test fix/T2-broken-imports fix/T4-svg-xmlns; do git push -u origin $b; done`
+  (depuis un env avec credentials), ouvrir 1 PR par branche, merger dans
+  l'ordre T6 → T1 → T2 → T4.
+- Tickets restants : T3, T5 (après T2+T3+T4+T13), T7-T12, T13 (neuf).
+- Incident suivi : un sous-agent avait écrasé ce fichier par son rapport
+  de 30 lignes ; contenu restauré depuis l'historique (aucune perte) —
+  consigne : les agents APPENDENT au HANDOFF, ne le réécrivent jamais.
+
+---
+
+# HANDOFF — Vérification indépendante + PR descriptions (11/10/2026)
+## Vérifié (worktrees /tmp, node_modules symlinké, sans toucher au working tree)
+- Bases OK : les 4 branches `fix/*` partent toutes de `3df9b0a` (main = PR #6).
+- T1 (`7237b38`) : `jest --ci` vert SANS flag (1 suite, 3/3) ; quarantaine
+  retirée de `ci.yml:74`. tsc inchangé (14, attendu).
+- T2 (`63a5a37`) : `eslint` 0 problème sur `app/modal.tsx` +
+  `components/EditScreenInfo.tsx` ; tsc 14 → 11 (3 TS2307 supprimés, 0 ajouté).
+- T4 (`6d90c4a`) : tsc 14 → 11 (3 TS2322 xmlns supprimés, 0 ajouté).
+  `xmlSpace` aussi retiré sur `appIcon` (rejeté lui aussi, OK).
+- T6 (`06970c2`, 54 fichiers) : `no-unused-vars` 154 → 0 (136 TS + 18 base) ;
+  bonus `import/no-unresolved` 17 → 11 (imports incassables mais inutilisés
+  supprimés) ; aucune nouvelle erreur/warning ; tsc inchangé (14).
+  Spot-check `profile/index.tsx` : styles animés supprimés (`flatListWidgetsAnime`,
+  `banniereImageAnime`, `photoProfilAnime`, `cameraStyle`) = définitions mortes
+  (0 usage JSX sur main comme sur T6) ; `[, setFpSource]` correct (setter utilisé
+  l.250-271).
+## Écarts vs HANDOFF précédent (à corriger, non bloquants)
+- Baseline tsc réelle = **14** erreurs, pas 13 : `components/ExternalLink.tsx:13`
+  (TS2578 `Unused '@ts-expect-error'`, préexistant depuis `bef6624`, SDK plus
+  strict) oublié du décompte. Reste après T2+T4 combinés = 8 (3 T3 + 4 T13 + 1
+  ExternalLink) — prévoir ticket (T3-bis ou ajout à T13).
+- Baseline eslint réelle = 138 erreurs / **284** warnings (pas 285).
+- "Reste 13 erreurs" après T2 : en fait 11 sur la branche T2 seule (14 − 3).
+## Non fait
+- Push/PR GitHub : impossible depuis cet env (`gh` absent, aucun credential,
+  `git ls-remote` échoue). Branches `fix/*` locales sans upstream.
+  Commande : `for b in fix/T6-dead-code fix/T1-styledtext-test fix/T2-broken-imports fix/T4-svg-xmlns; do git push -u origin $b; done` puis ouvrir 4 PR
+  (descriptions fournies en chat le 11/10/2026, ordre de merge T6 → T1 → T2 → T4).

@@ -18,6 +18,7 @@
   n'as pas pu faire et pourquoi.
 - Si tu dois t'arrêter avant d'avoir fini, termine HANDOFF.md avec
   les instructions pour qu'un autre agent reprenne.
+- Les agents APPENDENT au HANDOFF, ne le réécrivent jamais.
 
 ## Expo
 - Version du projet : voir package.json. Pour toute API Expo, utilise
