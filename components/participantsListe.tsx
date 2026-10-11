@@ -207,7 +207,11 @@ export default function ParticipantsListe({ participantsUrl, listType, peutGerer
                         pathname: '/(modals)/listeAmis',
                         params: {
                             type: listType,
-                            inviterUrl: participantsUrl,
+                            // Only for an existing event (invite right away). While creating
+                            // one there's no URL: the friends are only added to the draft,
+                            // and invited when the event is created (POST /evenements).
+                            // Philip Kvaratshelya — user story 8.
+                            ...(participantsUrl ? { inviterUrl: participantsUrl } : {}),
                             availableFriendIds: JSON.stringify(availableFriendIds),
                             hasMoreFriends: String(friendsHasMore),
                         },

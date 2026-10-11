@@ -22,5 +22,14 @@
 		"nothingToImport": "Aucun événement à venir trouvé dans cette période.",
 		"failed": "Impossible d’importer les événements. Réessayez.",
 		"untitled": "Événement sans titre"
+	},
+	"month": {
+		"pickDay": "Touche un jour pour voir ses événements.",
+		"noEvents": "Aucun événement ce jour-là.",
+		"noEventsRange": "Aucun événement pendant ces jours.",
+		"untitled": "Événement",
+		"allDay": "Journée",
+		"today": "Aujourd'hui",
+		"dayOf": "Jour {{n}} sur {{total}}"
 	}
 }

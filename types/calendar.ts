@@ -19,6 +19,10 @@ export type Event = {
   // plus tard, l'import du calendrier système (story #4) qui a besoin
   // de la même colonne côté serveur pour savoir où réimporter depuis.
   source?: 'sync' | 'ics' | 'google' | 'outlook' | 'device';
+  // Timeline display overrides (invitation review screen): block color, and
+  // whether tapping the block does anything. Philip Kvaratshelya — user story 8.
+  couleur?: string;
+  cliquable?: boolean;
 };
 
 export const defaultEvent = <Event>{

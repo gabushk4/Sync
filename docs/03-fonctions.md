@@ -6,13 +6,18 @@
 - `calculerDimensionsEvenements.js` - Calcul des dimensions des blocs d'événements
 - `catcher.js` - Gestion d'erreurs unifiée (logging, toasts, rejet)
 - `ceilBy5.tsx` - Arrondi au multiple de 5
+- `couleurStatutInvitation.ts` - Couleur d'un statut d'invitation (vert / jaune / rouge) + `assombrir` — Philip, US8
 - `choisirImage.tsx` - Sélection d'image (placeholder, upload, URL)
 - `convertirTimestamp.js` - Conversion timestamp → date lisible
 - `convertirUTCenLocal.tsx` - Conversion fuseaux horaires (UTC → Local, Local → UTC)
+- `evenementsMembre.ts` - Paramètres de requête jour / plage / mois, formatage des évènements du membre, `dernierInstant` — Philip, US5
 - `formaterDatePourServeur.js` - Formatage de dates (ISO 8601 pour l'API)
 - `getNow.js` - Récupération du temps actuel (UTC, local, timestamp)
+- `jourCreation.ts` - Règles du « + » : heure proposée, jour passé, `estJourneeEntiere` — Philip
 - `log.js` - Logging unifié (console, fichier, analytics)
+- `ouvrirDetailsEvenement.ts` - Ouvre les détails d'un évènement (timeline + liste du calendrier) — Philip, US5
 - `ouvrirLienExterne.js` - Ouverture de liens externes (in-app, navigateur)
+- `ouvrirRevueInvitation.ts` - Ouvre la revue d'une invitation / sa page de décision — Philip, US8
 - `resolveMock.js` - Résolution de valeurs mock pour les tests
 - `settingsStorage.ts` - Stockage des paramètres (secure store, cache)
 - `timezones.ts` - Gestion des fuseaux horaires (liste, décalage, conversion)

@@ -20,8 +20,18 @@ export default function HomeLayout() {
             <Stack.Screen
                 name="index" options={{ headerTitle: 'sync'}}
             />
+            {/* Month calendar, its own page since 2026-10-10.
+                Philip Kvaratshelya — user story 5 (month calendar). */}
+            <Stack.Screen
+                name="calendrier" options={{headerBackVisible:true, headerBackButtonDisplayMode:'minimal', headerTitle:t('navigation.calendar')}}
+            />
             <Stack.Screen
                 name="create" options={{headerBackVisible:true, headerBackButtonDisplayMode:'minimal', headerTitle:t('navigation.create')}}
+            />
+            {/* Invitation review ("adjust my schedule" for an invitation in conflict).
+                Philip Kvaratshelya — user story 8. */}
+            <Stack.Screen
+                name="revueInvitation" options={{headerBackVisible:true, headerBackButtonDisplayMode:'minimal', headerTitle:t('navigation.invitationReview')}}
             />
             <Stack.Screen
                 name="details/[eventId]" options={{headerBackVisible:true, headerBackButtonDisplayMode:'minimal', headerTitle:t('navigation.details')}}

@@ -25,7 +25,7 @@ branche, sans toucher au comportement. Critère commun : `npx eslint <fichiers>`
   (TS2607/TS2786).
 - [ ] **T4 — `svgs/appIcon.tsx:11`, `svgs/closeMenu.tsx:11`, `svgs/hamburgerMenu.tsx:11` (3 erreurs tsc)**
   Prop `xmlns` rejetée par les types `react-native-svg` (TS2322). Mécanique.
-- [ ] **T5 — Re-bloquer le typecheck (dépend de T2, T3, T4)**
+- [ ] **T5 — Re-bloquer le typecheck (dépend de T2, T3, T4, T13)**
   Quand `npx tsc --noEmit` sort en exit 0 : retirer `continue-on-error: true`
   du job `typecheck` dans `.github/workflows/ci.yml`. Sans ça, la CI reste
   aveugle aux nouvelles erreurs de types.
@@ -64,6 +64,17 @@ branche, sans toucher au comportement. Critère commun : `npx eslint <fichiers>`
   `participantsListe.tsx`, `chargementEcran.js`, `app/modal.tsx`,
   `abstractions/QrCodeAbs.tsx`, `abstractions/textInputAbs.tsx`).
   `abstractions/touchableOpacityAbs.tsx` → voir T3 (exclu d'ici).
+- [ ] **T13 — Retombées tsc/lint de la PR #6 FAB-fix (prioritaire, bloque T5 ; à assigner à l'auteur de la PR #6)**
+  tsc (4 erreurs) : `app/(tabs)/home/details/[eventId].tsx:172` et
+  `app/(tabs)/inbox/index.tsx:51` (prop `visible` manquante pour `FabConfig`),
+  `app/(tabs)/home/edit/[event].tsx:161` et `app/(tabs)/profile/edit.tsx:62`
+  (`useFabActions` : 2 args attendus, 1 reçu).
+  lint (6 erreurs) : `components/voiceRecorderButton.tsx` (2 `purity`
+  `Date.now` pendant le render, 3 `refs` pendant le render),
+  `hooks/useActionFAB.tsx` (1 `refs` pendant le render).
+  Acceptation : `npx tsc --noEmit` et `npx eslint` sur ces 6 fichiers → 0 erreur.
+  (Faux positif écarté : `expo-audio` "introuvable" venait d'un `node_modules`
+  périmé en local, résolu par `npm ci` — la CI n'est pas concernée.)
 - [ ] **T12 — Couverture Jest (optionnel, pour la fin)**
   Activer `collectCoverage` + seuils dans le bloc `jest` de `package.json`
   une fois la suite verte (doc https://docs.expo.dev/develop/unit-testing/).

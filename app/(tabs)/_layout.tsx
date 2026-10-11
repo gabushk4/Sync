@@ -41,9 +41,25 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="home"        
+        name="home"
+        // "sync" tab pressed while already in the home tab, over the timeline (e.g. on
+        // the calendar page): go back to the existing timeline, like the calendar's
+        // back arrow, so it keeps its state (already on the calendar's selected day).
+        // The tab used to be a link (`href` option) that opened the home route again:
+        // a fresh timeline, back on today, pushed over the calendar. Without `href`,
+        // the tab only switches tabs, and this listener pops the home stack.
+        // Philip Kvaratshelya — user story 5 (month calendar).
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            const etatOnglets = navigation.getState()
+            const ongletHome = etatOnglets.routes[etatOnglets.index]
+            const pileHome = ongletHome?.name === 'home' ? ongletHome.state : undefined
+            if (!pileHome?.key || (pileHome.index ?? 0) === 0) return
+            e.preventDefault()
+            navigation.dispatch({ type: 'POP_TO_TOP', target: pileHome.key })
+          },
+        })}
         options={{
-          href:"/(tabs)/home",
           title: t('common:tabs.home'),
           headerTitle:t('common:tabs.home'),
           tabBarIcon: ({ color }) => <TabBarIcon name={'grid-outline'} color={color} />,          
