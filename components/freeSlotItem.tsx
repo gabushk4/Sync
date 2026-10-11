@@ -42,7 +42,11 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
                     ? findWidth(freeSlot.start, freeSlot.end, displayedDate, pxHeures + L_HEURES)
         : '100%'
     
-    const isInPast = freeSlot.start.toMillis() < DateTime.now().toMillis() && freeSlot.end.toMillis() < DateTime.now().toMillis() 
+    // `passe`: today's hours already elapsed (see getCommonFreeSlots), shown greyed out.
+    // Rectification (Philip Kvaratshelya) for a more conventional display: past
+    // slots stay visible instead of disappearing.
+    const isInPast = !!freeSlot.passe
+        || (freeSlot.start.toMillis() < DateTime.now().toMillis() && freeSlot.end.toMillis() < DateTime.now().toMillis())
 
     const LABEL_W = 96
     const itemSize = (horizontal ? width : height) as number
@@ -101,7 +105,7 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
                 top: top,
                 height: height,
                 width: width,
-                ...(isInPast ? {borderColor:colors.muted} : {}) 
+                ...(isInPast ? { borderColor: colors.muted, opacity: 0.45 } : {})
             }]}
             onPress={() => {
                 //TODO: go to create with owner.id and start and end values passed 
