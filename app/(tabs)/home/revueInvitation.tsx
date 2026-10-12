@@ -99,19 +99,21 @@ export default function RevueInvitation() {
      * @returns {Event[]}
      */
     const evenementsDe = (personne: PersonneHoraire, role: 'leader' | 'invite' | 'moi'): Event[] =>
-        personne.evenements.map((ev) => ({
+        personne.evenements.map((ev) => (({
             ...ev,
             id: ev.id_publique,
             debut: convertUTCToLocal(ev.debut, membre.timezone),
             fin: convertUTCToLocal(ev.fin, membre.timezone),
             ...(ev.masque ? { titre: t('invitationReview.private') } : {}),
+
             couleur: ev.est_invitation
                 ? role === 'leader'
                     ? assombrir(colors.success)
                     : couleurStatutInvitation(ev.statut_invitation, colors)
                 : ev.masque ? colors.muted : undefined,
-            cliquable: !!ev.est_invitation && role !== 'invite',
-        }) as Event)
+
+            cliquable: !!ev.est_invitation && role !== 'invite'
+        }) as Event))
 
     /**
      * Events that make a person busy, for the common free slots: everything but the

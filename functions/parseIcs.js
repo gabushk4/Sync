@@ -25,7 +25,7 @@ function deechapper(valeur) {
         .replace(/\\n/gi, '\n')
         .replace(/\\,/g, ',')
         .replace(/\\;/g, ';')
-        .replace(/\\\\/g, '\\')
+        .replace(/\\\\/g, '\\');
 }
 // Parse une ligne "NOM;PARAM1=X;PARAM2=Y:valeur" en {nom, params, valeur}
 function parserLigne(ligne){

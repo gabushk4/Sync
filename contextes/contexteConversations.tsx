@@ -56,7 +56,7 @@ function versUrlAudio(url: string | undefined, baseApp: string): string | undefi
     if (!url) return undefined
     const debutChemin = url.indexOf('/audio/')
     if (debutChemin === -1) return url
-    return `${baseApp.replace(/\/$/, '')}${url.slice(debutChemin)}`
+    return `${baseApp.replace(/\/$/, '')}${url.slice(debutChemin)}`;
 }
 
 function convertirMessage(m: MessageBrut, baseApp: string): Message {
