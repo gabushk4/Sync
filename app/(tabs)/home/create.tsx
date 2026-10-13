@@ -52,8 +52,6 @@ export default function CreateEvent({ }) {
     const {api} = useAPI()
     const {invites, resetInvites} = useInvites()
     const {membre, getMembre} = useMembre()
-    const router = useRouter()
-    const { getToken } = useAccessToken()
     
     const formRef = useRef<EventFormHandle>(null)
 
