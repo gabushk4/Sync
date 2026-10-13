@@ -19,8 +19,7 @@ export default function EditProfil() {
     const { colors } = usePalette()
     const { fonts } = useFont()
     const colorScheme = useColorScheme()
-    const { patchProfil, membre } = useMembre()
-    const { APIBaseURL } = useAPI()
+    const { patchProfil, membre } = useMembre()    
 
     const icones = {
         camera:colorScheme === 'dark' ?require('@/assets/icones/camera-dark-icon.png'):require('@/assets/icones/camera-light-icon.png'),        
