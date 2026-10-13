@@ -74,6 +74,7 @@ export default function ProfilEcran(){
     const paramsOptionBottom = useSharedValue(0)
     const editOptionBottom = useSharedValue(0)
     const logOutOptionBottom = useSharedValue(0)
+    const importOptionBottom = useSharedValue(0) // story #7 : importer un calendrier .ics
     const optionOpacity = useSharedValue(0)
 
     const opaciteAnime = useSharedValue(1)
@@ -186,6 +187,12 @@ export default function ProfilEcran(){
             opacity: optionOpacity.value
         }
     })
+    const importOptionAnimated = useAnimatedStyle(() => {
+        return {
+            bottom: importOptionBottom.value,
+            opacity: optionOpacity.value
+        }
+    })
     const backdropAnimated = useAnimatedStyle(() => {
         return {
             opacity:interpolate(optionOpacity.value, [0, 1], [0, 0.5])
@@ -245,11 +252,13 @@ export default function ProfilEcran(){
         editOptionBottom.value = withDelay(0, withSpring(isOpen ? FLOATING_BTN_HEIGHT + MENU_OPTIONS_GAP : 0, withSpringConfig))
         paramsOptionBottom.value = withDelay(40, withSpring(isOpen ? (FLOATING_BTN_HEIGHT + MENU_OPTIONS_GAP) * 2 : 0, withSpringConfig))
         logOutOptionBottom.value = withDelay(80, withSpring(isOpen ? (FLOATING_BTN_HEIGHT + MENU_OPTIONS_GAP) * 3 : 0, withSpringConfig))
-        optionOpacity.value = withDelay(isOpen ? 0 : 120, withTiming(isOpen ? 1 : 0, withTimingConfig))
+        importOptionBottom.value = withDelay(120, withSpring(isOpen ? (FLOATING_BTN_HEIGHT + MENU_OPTIONS_GAP) * 4 : 0, withSpringConfig))
+        optionOpacity.value = withDelay(isOpen ? 0 : 160, withTiming(isOpen ? 1 : 0, withTimingConfig))
         
         setTimeout(() => Haptics.click(), 0 + SPRING_DURATION_ESTIMATE)
         setTimeout(() => Haptics.clickLeger(), 40 + SPRING_DURATION_ESTIMATE)
         setTimeout(() => Haptics.click(), 80 + SPRING_DURATION_ESTIMATE)
+        setTimeout(() => Haptics.clickLeger(), 120 + SPRING_DURATION_ESTIMATE)
     }
     /* 
         const getWidgetsMembre = async ()=>{
@@ -488,6 +497,16 @@ export default function ProfilEcran(){
                             }}
                         >
                             <Icon name='log-out' color={colors.error} size={28} />
+                        </AnimatedTouchableOpacity>
+                        {/* Story #7 : importer un calendrier .ics */}
+                        <AnimatedTouchableOpacity
+                            style={[s.floatingButton, s.floatingOption, importOptionAnimated]}
+                            onPress={() => {
+                                toggleHamburgerMenu()
+                                router.push('/(tabs)/profile/importCalendrier')
+                            }}
+                        >
+                            <Icon name='calendar' color={colors.text} size={28} />
                         </AnimatedTouchableOpacity>
                 </View>
         </View>         

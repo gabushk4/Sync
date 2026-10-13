@@ -6,6 +6,9 @@ import log from "./log"
 export default function catcher(error, titre){
     //const {ouvirModal} = useModal()
   log(`catcher ${titre}`, error?.response?.data, error?.code)
+    // Session expired / signed out: contexteAPI already sends the member to the
+    // login screen and flags the error, so there's nothing useful to show.
+    if (error?.deconnecte) return
     const status = error?.response?.status ?? error?.status
     const errorKey = String(status ?? error?.code ?? 'default')
     const fallback = i18n.t('default', { ns: 'errors', returnObjects: true })

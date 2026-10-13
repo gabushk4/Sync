@@ -21,7 +21,7 @@ type Friend = {
     temps_amitie: string,
     id_publique: string,
     pseudo: string,
-    pfp_url: string
+    fp_url: string
 }
 
 export type ListType = 'event' | 'select' | 'consult' | 'message'

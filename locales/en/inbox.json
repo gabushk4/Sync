@@ -1,1 +1,6 @@
-{}
+{
+	"requests": {
+		"title": "Friend requests",
+		"empty": "You have no pending friend requests."
+	}
+}

@@ -19,6 +19,7 @@ import { ThemeProvider } from "expo-router/react-navigation";
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 //Components
 import Toast from 'react-native-toast-message';
@@ -28,6 +29,7 @@ import ChargementEcran from '@/components/chargementEcran';
 import { AuthProvider, useAuth } from '@/contextes/contexteAuth';
 import { GestionScrollProvider } from '@/contextes/contexteGestionListes';
 import { InvitesProvider } from '@/contextes/contexteInvites';
+import { ConversationsProvider } from '@/contextes/contexteConversations';
 import { MockModeProvider } from '@/contextes/contexteMockMode';
 import { NotificationProvider } from '@/contextes/contexteNotifications';
 import { SettingsProvider, useSettings } from '@/contextes/contexteSettings';
@@ -53,7 +55,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   return (
-    
+    <GestureHandlerProvider>
       <FontProvider>
         <AccessTokenProvider>
           <MockModeProvider>
@@ -91,12 +93,12 @@ export default function RootLayout() {
           </MockModeProvider>
         </AccessTokenProvider>            
       </FontProvider>
-    
+    </GestureHandlerProvider>
   );
 }
 
 function AppLoader() {
-  const { fontsLoaded } = useFont();  
+  const { fontsLoaded } = useFont();
   const { settings, hydrated: settingsLoaded } = useSettings();
   const [localeLoaded, setLocaleLoaded] = useState(false);
 
@@ -120,7 +122,7 @@ function AppLoader() {
 
 function RootLayoutNav() {
   const { navTheme } = usePalette();
-  const { state } = useAuth()  
+  const { state } = useAuth()
 
   /* const enregistrerPushToken = async (accessToken: string)=>{
     
@@ -164,34 +166,38 @@ function RootLayoutNav() {
   } */
 
   if (state === 'loading') {
-    return <ChargementEcran/>;
+    return <ChargementEcran />;
   }
 
   return (
     <ThemeProvider value={navTheme}>
       <Stack>
+        {/* Modals and scanQR are only ever opened by a signed-in member, so they live
+            behind the same guard as the tabs: signing out removes them all at once and
+            shows (auth). Outside the guard, an open modal (e.g. the sign-out confirmation)
+            stayed on top of the login screen. */}
         <Stack.Protected guard={state === 'authenticated'}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />          
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="(modals)"
+            options={{
+              presentation: 'transparentModal',
+              animation: 'none',
+              gestureEnabled: false,
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name='scanQR'
+            options={{
+              headerShown:false
+            }}
+          />
         </Stack.Protected>
         <Stack.Protected guard={state === 'unauthenticated'}>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        </Stack.Protected>  
-        <Stack.Screen
-          name="(modals)"
-          options={{
-            presentation: 'transparentModal',
-            animation: 'none',                
-            gestureEnabled: false,            
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name='scanQR'
-          options={{
-            headerShown:false
-          }}
-        />
-      </Stack>      
+        </Stack.Protected>
+      </Stack>
       <Toast config={toastConfig}/>
     </ThemeProvider>
   );

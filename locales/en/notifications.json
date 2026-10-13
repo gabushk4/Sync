@@ -1,6 +1,7 @@
 {
 	"types": {
 		"amis": "friends",
+		"demande_ami": "friend request",
 		"sync": "sync",
 		"evenements": "events"
 	},
@@ -12,6 +13,17 @@
 		"emptyState": "There's nothing for you...\nTake this moment for yourself!",
 		"deselect": "Deselect",
 		"unread": "Unread"
+	},
+	"answer": {
+		"acceptee": "accepted",
+		"refusee": "refused"
+	},
+	"refused": {
+		"link": "Refused",
+		"linkCount": "Refused ({{count}})",
+		"emptyState": "No refused invitations",
+		"invitedBy": "Invited by {{pseudo}}",
+		"loadFailed": "Unable to load refused invitations"
 	},
 	"errors": {
 		"actionFailed": "Error performing the action",

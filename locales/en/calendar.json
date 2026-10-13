@@ -3,5 +3,24 @@
 		"allDay": "all day",
 		"starts": "starts",
 		"ends": "ends"
+	},
+	"import": {
+		"title": "Import system calendar",
+		"chooseCalendars": "Calendars to import",
+		"description": "Choose which calendars to import. Sync will save upcoming event titles, times, notes, and locations to your account (up to 5 years).",
+		"permissionTitle": "Allow calendar access",
+		"permissionDescription": "Sync needs read access to find events to import.",
+		"grantPermission": "Allow access",
+		"openSettings": "Open settings",
+		"noCalendars": "No system calendars are available.",
+		"selectAll": "Select all",
+		"selectNone": "Deselect all",
+		"importButton": "Import events",
+		"importing": "Importing…",
+		"selectCalendar": "Select at least one calendar.",
+		"success": "{{imported}} event(s) imported, {{duplicates}} already existed.",
+		"nothingToImport": "No upcoming events were found in this period.",
+		"failed": "Could not import events. Try again.",
+		"untitled": "Untitled event"
 	}
 }

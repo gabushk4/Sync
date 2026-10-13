@@ -19,7 +19,14 @@
 Providers, ordre dans `app/_layout.tsx`, patterns `useX`.
 
 ## [Composants UI](./02-composants.md)
-
+- Hooks → [06-hooks.md](./06-hooks.md)
+- Config → [07-config.md](./07-config.md)
+- Settings → [settings.md](./settings.md)
+- Contextes → [01-contextes.md](./01-contextes.md)
+- Locales → [08-locales.md](./08-locales.md)
+- Métier → [09-logique-metier.md](./09-logique-metier.md)
+- Auth → [10-authentification.md](./10-authentification.md)
+- Expo → [11-specificites-expo.md](./11-specificites-expo.md)
 
 ## [Composants UI](./02-composants.md)
 Formulaires, listes, photos, timeline, codes membres, toasts.
@@ -32,5 +39,27 @@ Configuration, routes tabs/auth/modals, protection, AppLoader.
 
 ## [Types TypeScript](./05-types.md)
 Types événements, invitations, photos de profil.
----
 
+## [Custom Hooks](./06-hooks.md)
+Hooks d'état (timeline, notifications, feed), hooks utilitaires (email, amis, timezone).
+
+## [Configuration](./07-config.md)
+Thèmes (couleurs, radius), Reanimated, boutons dismiss, toast config.
+
+## [Paramètres Utilisateur](./settings.md)
+Liste complète des paramètres utilisateur (notifications, thème, etc.).
+
+## [Contextes](./01-contextes.md)
+Providers d'état global (auth, theme, notifications, etc.).
+
+## [Internationalisation](./08-locales.md)
+Configuration i18next, traductions FR/EN, fallbacks.
+
+## [Logique Métier](./09-logique-metier.md)
+Business logic, validations, règles métier.
+
+## [Authentification](./10-authentification.md)
+Flux auth, JWT, sessions, refresh tokens.
+
+## [Spécificités Expo](./11-specificites-expo.md)
+API Expo, navigation, assets, permissions.

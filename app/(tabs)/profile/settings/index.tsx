@@ -106,6 +106,12 @@ export default function Settings(){
 
     const settings: Setting[] = [
         {
+            id: 'importCalendar',
+            titleKey: 'importCalendar',
+            type: 'link',
+            href: '/(tabs)/profile/importCalendar',
+        },
+        {
             id: 'timezone',
             titleKey: 'timezone',
             type: 'dropdown',

@@ -1,5 +1,6 @@
 {
 	"navigation": {
-		"title": "News feed"
+		"title": "News feed",
+		"refused": "Refused invitations"
 	}
 }

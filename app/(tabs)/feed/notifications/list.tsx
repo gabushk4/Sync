@@ -7,7 +7,10 @@ import Animated, { useAnimatedStyle, withRepeat, withSpring, withTiming } from "
 
 import { useAPI } from "@/contextes/contexteAPI";
 import { useFont } from "@/contextes/contexteFont";
-import { Notification, useNotifications } from "@/contextes/contexteNotifications";
+import { estInvitationRefusee, Notification, useNotifications } from "@/contextes/contexteNotifications";
+import categorieNotification from "@/functions/categorieNotification";
+import Icon from "@react-native-vector-icons/ionicons";
+import { useRouter } from "expo-router";
 import { usePalette } from "@/contextes/contextePalette";
 import { useAccessToken } from "@/contextes/contexteToken";
 
@@ -16,6 +19,15 @@ import NotificationItem from "@/components/notificationItem";
 import { withTimingConfig } from "@/constants/ReanimatedConfs";
 import Spinner from "@/svgs/spinner";
 
+/**
+ * Notifications list shown in the feed tab: filter chips (sync, friends, events,
+ * unread), multi-select delete, pull to refresh, and a link to the refused
+ * invitations page. Refused event invitations are left out of this list.
+ * Updated for user story 9 (accept/refuse an event invitation from a notification).
+ * SUBJECT TO CHANGE: may be revised depending on how teammates implement their own user stories.
+ *
+ * @returns {JSX.Element}
+ */
 export default function NotificationsList({}){
     const { t } = useTranslation('notifications')
     const { colors } = usePalette()
@@ -39,25 +51,40 @@ export default function NotificationsList({}){
         expiration: colorScheme === 'dark' ?require('@/assets/icones/horloge-dark-icon.png'):require('@/assets/icones/horloge-light-icon.png')
     }
 
+    const router = useRouter()
+
+    // User story 9: refused event invitations are moved to their own page
+    // (feed/refusees) instead of staying in the main list.
+    // SUBJECT TO CHANGE: may be revised depending on how teammates implement their own user stories.
+    const notificationsVisibles = notifications.filter((n) => !estInvitationRefusee(n))
+    const nbRefusees = notifications.length - notificationsVisibles.length
+
     const notificationsOriginales = useRef<Array<Notification>>([])
 
     const [filtreSelec, setFiltreSelec] = useState('toutes')
     const [selectionner, setSelectionner] = useState(false)
-    const [notificationsCopie, setNotificationsCopie] = useState(notifications)
-    const [notificationsDelete, setNotificationsDelete] = useState<Array<string>>([])   
+    const [notificationsCopie, setNotificationsCopie] = useState(notificationsVisibles)
+    const [notificationsDelete, setNotificationsDelete] = useState<Array<string>>([])
     const [notificationsSelec, setNotificationsSelec] = useState<Array<string>>([])
-    const [rafraichi, setRafraichi] = useState(false)    
+    const [rafraichi, setRafraichi] = useState(false)
 
     const flatListRef = useRef<FlatList>(null)
-    
+
+    /**
+     * Applies a filter chip to the list.
+     *
+     * @param {string} filtre - '' (all), 'non_lue', or a category ('amis' | 'evenements' | 'sync').
+     * @returns {void}
+     */
     const trier = (filtre: string) => {
         const notifsCopie = [...notificationsOriginales.current]
         if (filtre === '') {
             setNotificationsCopie(notifsCopie)
         } else if (filtre !== 'non_lue') {
-            setNotificationsCopie(notifsCopie.filter(notif => notif.payload.type.includes(filtre)))
+            // User story 9: filter by the notification's category (it used to read `payload.type`).
+            setNotificationsCopie(notifsCopie.filter(notif => categorieNotification(notif.type) === filtre))
         } else {
-            setNotificationsCopie(notifsCopie.filter(notif => notif.statut === 'non_lue'))
+            setNotificationsCopie(notifsCopie.filter(notif => notif.statut_notification === 'non_lue'))
         }
     }
 
@@ -79,7 +106,13 @@ export default function NotificationsList({}){
         }
     })
 
-    const supprNotif = async (ids=[] as Array<string>)=>{      
+    /**
+     * Deletes the given notifications (soft delete server-side), then refreshes the list.
+     *
+     * @param {Array<string>} ids - Public ids of the notifications to delete.
+     * @returns {Promise<void>}
+     */
+    const supprNotif = async (ids=[] as Array<string>)=>{
         if(ids){
             const token = await getToken()
             setNotificationsDelete(prev => [...prev, ...ids])
@@ -90,20 +123,20 @@ export default function NotificationsList({}){
             )
 
             notifRefresh?.forceRefresh()
-            const nouvNotifs = notifications.filter((n) => !ids.includes(n.id))
+            const nouvNotifs = notificationsVisibles.filter((n) => !ids.includes(n.id))
             setNotificationsCopie(nouvNotifs)
         }
     }
-    
+
     useEffect(() => {
-        setNotificationsCopie(notifications)
-        notificationsOriginales.current = [...notifications]        
+        setNotificationsCopie(notificationsVisibles)
+        notificationsOriginales.current = [...notificationsVisibles]
     }, [notifications, nonLues])
-    
+
     useFocusEffect(useCallback(() => {
-        notifRefresh?.forceRefresh()        
-        
-        notificationsOriginales.current = [...notifications] 
+        notifRefresh?.forceRefresh()
+
+        notificationsOriginales.current = [...notificationsVisibles]
         return()=>{
             notifRefresh?.setPostRequest(undefined)
         }
@@ -129,15 +162,39 @@ export default function NotificationsList({}){
             marginHorizontal:4,
             height:'100%',
             width:40,
-            borderRadius:100, 
-            borderWidth:1, 
-            alignItems:'center', 
+            borderRadius:100,
+            borderWidth:1,
+            alignItems:'center',
             justifyContent:'center'
+        },
+        lienRefusees:{
+            position:'absolute',
+            top:4,
+            left:4,
+            zIndex:3,
+            flexDirection:'row',
+            alignItems:'center',
+            gap:4,
+            paddingHorizontal:8,
+            paddingVertical:2,
+            borderRadius:12,
+            borderWidth:1,
         }
     })
 
     return(
         <View style={{position:'relative', flex:1, height:'100%', width:'100%'}}> 
+            {/* User story 9: link to the refused invitations page, always reachable
+                (the page also lists refusals whose notification was deleted). */}
+            <TouchableOpacity
+                style={[s.lienRefusees, { borderColor: colors.border, backgroundColor: colors.primary }]}
+                onPress={() => router.push('/feed/refusees' as unknown as '/')}
+            >
+                <Icon name="close-circle-outline" color={colors.muted} size={16} />
+                <Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 14 }}>
+                    {nbRefusees > 0 ? t('refused.linkCount', { count: nbRefusees }) : t('refused.link')}
+                </Text>
+            </TouchableOpacity>
             <TouchableOpacity style={{position:'absolute',  top:5, right:4, zIndex:3}}
                 onPress={()=>{
                     setNotificationsSelec([])                    
@@ -162,7 +219,7 @@ export default function NotificationsList({}){
             <FlatList
                 ref={flatListRef}
                 data={notificationsCopie}
-                style={{flex:1, height:'100%', width:'100%', marginTop:16, marginBottom:32}}
+                style={{flex:1, height:'100%', width:'100%', marginTop:36, marginBottom:32}} // room for the refused-invitations link (user story 9)
                 contentContainerStyle={{paddingBottom:48}}
                 keyExtractor={(item)=>item.id}  
                 nestedScrollEnabled={true}  
@@ -181,7 +238,7 @@ export default function NotificationsList({}){
                     />}
                 renderItem={({item, index}) => {
                     return(
-                        <NotificationItem item={item} index={index} vu={item.statut}/>
+                        <NotificationItem item={item} index={index} vu={item.statut_notification}/>
                     )
                 }}
             />

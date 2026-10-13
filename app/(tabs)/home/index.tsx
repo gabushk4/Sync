@@ -21,6 +21,7 @@ import formaterDatePourServeur from '@/functions/formaterDatePourServeur';
 import log from '@/functions/log';
 
 
+import CalendarMonthView from '@/components/calendarMonthView';
 import EventsList from '@/components/eventsList';
 import ProfilPic from '@/components/pfp';
 import Timeline from '@/components/timeline';
@@ -43,11 +44,66 @@ const HEIGHT_DATE = 56;
 const HEIGHT_TIMELINE = 32;
 const AnimatedStyleMinVal = 0.1
 const LIST_HEIGHT = 104
-const { width: WIN_W, height: WIN_H } = Dimensions.get('window') 
+const { width: WIN_W, height: WIN_H } = Dimensions.get('window')
+// Max events per request in the month view (the API defaults to 20, too few for a month).
+const LIMITE_MOIS = 300
+
+/** Formats the displayed local day as the UTC date range expected by the events API. */
+function getEventDateRangeParams(date: DateTime) {
+  return {
+    debut: formaterDatePourServeur(convertLocalToUTC(date.startOf('day'))),
+    fin: formaterDatePourServeur(convertLocalToUTC(date.endOf('day'))),
+  }
+}
 
 /**
- * 
- * @returns 
+ * Query params for GET /evenements and /evenements/amis covering [debut, fin].
+ * The API reads `debut`/`fin` as UTC SQL datetimes; the app used to send
+ * `start`/`end` (sometimes as raw DateTime objects), which the API ignored —
+ * it always answered with today's events, whatever day or month was shown.
+ * Part of user story 9 (accepted invitations must show up on the right day).
+ * SUBJECT TO CHANGE: may be revised depending on how teammates implement their own user stories.
+ *
+ * @param {DateTime} debut - Local start of the range.
+ * @param {DateTime} fin - Local end of the range.
+ * @param {number} [limite] - Max number of events (non-recurring) to return.
+ * @returns {{ debut: string | null, fin: string | null, limite?: number }}
+ */
+const paramsPlage = (debut: DateTime, fin: DateTime, limite?: number) => ({
+  debut: formaterDatePourServeur(convertLocalToUTC(debut)),
+  fin: formaterDatePourServeur(convertLocalToUTC(fin)),
+  ...(limite ? { limite } : {}),
+})
+
+/**
+ * Query params for one local day (timeline view). See {@link paramsPlage}.
+ * Part of user story 9. SUBJECT TO CHANGE: may be revised depending on how
+ * teammates implement their own user stories.
+ *
+ * @param {DateTime} jour - Any moment of the day to fetch.
+ * @returns {{ debut: string | null, fin: string | null }}
+ */
+const paramsJour = (jour: DateTime) => paramsPlage(jour.startOf('day'), jour.endOf('day'))
+
+/**
+ * Query params for one local month (calendar view's day dots), with a higher
+ * event limit. See {@link paramsPlage}.
+ * Part of user stories 5 and 9. SUBJECT TO CHANGE: may be revised depending on
+ * how teammates implement their own user stories.
+ *
+ * @param {DateTime} mois - Any moment of the month to fetch.
+ * @returns {{ debut: string | null, fin: string | null, limite: number }}
+ */
+const paramsMois = (mois: DateTime) => paramsPlage(mois.startOf('month'), mois.endOf('month'), LIMITE_MOIS)
+
+/**
+ * Home screen. Shows the displayed day as horizontal timeline rows: one per
+ * friend (their events + free slots shared with the member), and the member's
+ * own row at the bottom. Can switch to a month calendar (user story 5). Both
+ * views poll the API (AutoRefresh) for the displayed day or month, so an
+ * accepted invitation shows up on both members' rows (user story 9).
+ *
+ * @returns {JSX.Element}
  */
 export default function Home() {
   const { t } = useTranslation('home')
@@ -73,6 +129,7 @@ export default function Home() {
     deconnecte:colorScheme === 'dark'?require('@/assets/icones/dark-deconnecte-icon.png'):require('@/assets/icones/light-deconnecte-icon.png'),
     rafraichir: colorScheme === 'dark' ? require('@/assets/icones/rafraichir-dark-icon.png') : require('@/assets/icones/rafraichir-light-icon.png'),
     ajouterAmi:colorScheme === 'dark'?require('@/assets/icones/ajouter-ami-dark-icon.png'):require('@/assets/icones/ajouter-ami-dark-icon.png'),
+    calendrier: colorScheme === 'dark' ? require('@/assets/icones/calendrier-dark-icon.png') : require('@/assets/icones/calendrier-light-icon.png'),
   }
   
   //Refs
@@ -89,6 +146,24 @@ export default function Home() {
   const [chargementEchec, setChargementEchec] = useState(false)
   const [chargementEvenements, setChargementEvenements] = useState(false)
   const [afficherRetour, setAfficherRetour] = useState({afficher:afficherRetourMaintenant.value.afficher, left:afficherRetourMaintenant.value.left})
+  // User story 5: whether the month calendar replaces the timeline, and which month it shows.
+  const [vueCalendrier, setVueCalendrier] = useState(false)
+  const [moisCalendrier, setMoisCalendrier] = useState<DateTime>()
+
+  // Pre-fills the create screen with the day currently displayed, at the
+  // next full hour of the current time (create.tsx still bumps it to at
+  // least 1h from now when needed).
+  const maintenantFab = DateTime.now()
+  const debutCreation = todayDateTime
+    ?.startOf('day')
+    .plus({ hours: maintenantFab.hour + 1 })
+
+  useNavFab({
+    href: '/home/create',
+    params: debutCreation ? { start: debutCreation.toISO() } : undefined,
+    icon: null,
+    visible: !vueCalendrier, // user story 5: would otherwise catch taps meant for the calendar
+  })
 
   //SharedValues
   const evAmisOffset = useSharedValue(0)
@@ -122,13 +197,26 @@ export default function Home() {
     }
   })
 
+  /**
+   * AutoRefresh callback for GET /evenements: converts the member's events to
+   * local DateTimes, sorts them earliest first and stores them for the member's
+   * row and the calendar's day dots.
+   * Updated for user story 9. SUBJECT TO CHANGE: may be revised depending on how
+   * teammates implement their own user stories.
+   *
+   * @param {{ evenements?: Array<Object> }} data - API response body.
+   * @returns {void}
+   */
   const modifierEvenementsMembreFetched = (data: any)=>{
     try {
       const events = data.evenements
       log("modifierEvenementsMembreFetched data.length", data)
-      if (events) { 
-        const dataLocale = events.map((evenement: any) => {
-          if (!evenement.id_publique.includes('factice')) {
+      if (events) {
+        // User story 9: placeholders ('factice') are dropped here instead of becoming
+        // `undefined` entries, which crashed the sort below and the list rendering.
+        const dataLocale = events
+          .filter((evenement: any) => evenement && !evenement.id_publique?.includes('factice'))
+          .map((evenement: any) => {
             const startLocalMs = convertUTCToLocal(evenement.debut, membre.timezone)?.toMillis()
             const endLocalMs = convertUTCToLocal(evenement.fin, membre.timezone)?.toMillis()
 
@@ -139,21 +227,19 @@ export default function Home() {
               fin: endLocalMs,
               fuseauHoraire: membre.timezone
             }
-          }
-        })
+          })
 
-        const evenementsTries = dataLocale.sort((a: any, b: any) => a.debut - b.debut)
+        // Earliest first (was `a.debut - b.fin`, which doesn't sort anything consistently).
+        const evenementsTries = dataLocale.sort((a: any, b: any) => (a.debut ?? 0) - (b.debut ?? 0))
 
         const evenementsFinal = evenementsTries.map((ev: any) => {
-          if (ev) {
-            const start = DateTime.fromMillis(ev.debut ?? 0)
-            const end = DateTime.fromMillis(ev.fin ?? 0)
+          const start = DateTime.fromMillis(ev.debut ?? 0)
+          const end = DateTime.fromMillis(ev.fin ?? 0)
 
-            return {
-              ...ev,
-              debut: start,
-              fin: end
-            }
+          return {
+            ...ev,
+            debut: start,
+            fin: end
           }
         })
         //log('evenements membre local', evenementsFinal)
@@ -164,26 +250,42 @@ export default function Home() {
     }
   }
 
+  /**
+   * AutoRefresh callback for GET /evenements/amis: converts each friend's events
+   * to local DateTimes (title hidden for private events), sorts them, and merges
+   * the friends into the list shown as rows (replacing a friend already there).
+   * Updated for user story 9. SUBJECT TO CHANGE: may be revised depending on how
+   * teammates implement their own user stories.
+   *
+   * @param {{ resultat?: Friend[] }} data - API response body.
+   * @returns {void}
+   */
   const modifierEvenementsAmisFetched = (data: any) => {
     const events = data.resultat ?? []
     log("modifier evenements amis data: ", data)
     try {
       const amisFinal = events?.map((ami: Friend) => {
           //log('ami evenements', ami.evenements)
+          // User story 9: the API now sends formatted events (public id, titre hidden
+          // when private). This used `ev.id` (the private numeric id, so details
+          // couldn't open), stored the title as `title` while ListItem reads `titre`
+          // (friends' events showed no title), and sorted on a missing `start` field.
           const evenements = (ami.evenements || [])
                 .map((ev: any) => {
-                  const start = convertUTCToLocal(ev.debut, membre.timezone) 
+                  const start = convertUTCToLocal(ev.debut, membre.timezone)
                   const end = convertUTCToLocal(ev.fin, membre.timezone)
                   return {
-                    id: ev.id,
+                    id: ev.id_publique ?? ev.id,
                     url: ev.url,
-                    ...(ev.prive ? {} : { title: ev.titre }),
+                    type: ev.type,
+                    titre: ev.prive ? undefined : ev.titre,
+                    prive: ev.prive,
                     debut: start?.toMillis(),
                     fin: end?.toMillis()
                   }
                 })
             // Sort from earliest to latest
-            .sort((a:any, b: any) => a.debut - b.debut)
+            .sort((a:any, b: any) => (a.debut ?? 0) - (b.debut ?? 0))
             // Conversion from ms to DateTime (luxon)
             .map((ev: any) => (
               {
@@ -217,6 +319,13 @@ export default function Home() {
   }
 
   // ── Handlers ──
+  /**
+   * Shows the floating "back to now" button when `datetime` isn't now, on the
+   * side pointing toward now.
+   *
+   * @param {DateTime} datetime - The day/time now displayed.
+   * @returns {void}
+   */
   const toggleBackToNow = (datetime: DateTime) => {
     const diffFromNow = DateTime.now().diff(datetime, 'minutes').minutes
     log('diff from now', diffFromNow)
@@ -341,10 +450,7 @@ export default function Home() {
       //chargerEvenements(now, now)
 
       userEventsRefresh.current = new AutoRefresh(api, '/evenements/', {        
-        extraParams: {
-          start: formaterDatePourServeur(convertLocalToUTC(now.startOf('day'))),
-          end: formaterDatePourServeur(convertLocalToUTC(now.endOf('day')))
-        },
+        extraParams: getEventDateRangeParams(now),
         onData: modifierEvenementsMembreFetched,
         onError: (error) => {
           log("impossible de charger les évènements du membre", error)
@@ -353,10 +459,7 @@ export default function Home() {
       })
 
       friendsEventsRefresh.current = new AutoRefresh(api, '/evenements/amis', {
-        extraParams: {
-          start: formaterDatePourServeur(convertLocalToUTC(now.startOf('day'))),
-          end: formaterDatePourServeur(convertLocalToUTC(now.endOf('day')))
-        },
+        extraParams: getEventDateRangeParams(now),
         onData: modifierEvenementsAmisFetched,
         onError: (error) => {
           log("impossible de charger les évènements d'amis", error)
@@ -408,6 +511,7 @@ export default function Home() {
       width: '100%',
       flexDirection: 'row',
       borderTopWidth: 1,
+      borderColor: colors.border, // was unset, so the separator line rendered black
       alignItems:'center'
     },
     friendList: {
@@ -453,6 +557,27 @@ export default function Home() {
       height: 32,
       width:'auto'
     },
+    // Date pill in the bottom bar: calendar icon + displayed date, opens the month view (user story 5).
+    boutonDate: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      height: 44,
+      paddingHorizontal: 16,
+      backgroundColor: colors.primary,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 10,
+    },
+    iconeDate: {
+      height: 22,
+      width: 22,
+    },
+    texteDate: {
+      color: colors.text,
+      fontFamily: fonts.title,
+      fontSize: 16,
+    },
     backToNow: {
       position: 'absolute',
       bottom: HEIGHT_BOT_BAR + 16,
@@ -496,12 +621,26 @@ export default function Home() {
       <View style={s.container}>
 
         {/* ── Timeline (heures) ── */}
-        <View style={s.timeline}>
-          <View style={ s.column} />
-          <Timeline horizontal={true}/>
-        </View>
+        {!vueCalendrier && (
+          <View style={s.timeline}>
+            <View style={ s.column} />
+            <Timeline horizontal={true}/>
+          </View>
+        )}
 
-        {/* ── Zone principale (3/4) — horaire amis ── */}
+        {/* ── Calendar view (month grid) — user story 5 ── */}
+        {vueCalendrier ? (
+          <CalendarMonthView
+            monthDate={moisCalendrier ?? todayDateTime ?? DateTime.now()}
+            selectedDate={todayDateTime}
+            events={userEvents}
+            onSelectDay={selectionnerJourCalendrier}
+            onChangeMonth={changerMoisCalendrier}
+            onDismiss={toggleVueCalendrier}
+            onSelectRange={selectionnerPlageCalendrier}
+          />
+        ) : (
+        /* ── Zone principale (3/4) — horaire amis ── */
         <GestureDetector gesture={panGesture}>
           <View style={s.calendarContainer}>
           <Animated.View style={[loadingAnimated, s.friendsZone]}>
@@ -539,12 +678,18 @@ export default function Home() {
                       return(
                         <View key={friend.id} style={[s.friendList]}>
                           {/* Photo de profil */}
+                          <TouchableOpacity
+                            accessibilityRole="button"
+                            accessibilityLabel={t('viewFriendProfile', { name: friend.pseudo })}
+                            onPress={() => router.push({ pathname: '/(tabs)/profile/[membreId]', params: { membreId: friend.id } })}
+                          >
                           <BlurView tint='dark' style={[s.column,{ backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' }]}>
                             <ProfilPic
                               pfp={friend.fp_url}
                               size={64}
                             />
                           </BlurView>
+                          </TouchableOpacity>
                           {/* Événements horizontaux */}
                           <EventsList
                             owner={friend}
@@ -586,31 +731,40 @@ export default function Home() {
             </Animated.View>
         </View>
         </GestureDetector>
+        )}
 
-        {/* ── Barre du bas (flèches + date) ── */}
+        {/* ── Bottom bar (arrows + date + calendar toggle) — hidden in calendar view, closed via onDismiss instead ── */}
+        {!vueCalendrier && (
         <View style={[s.botBar]}>
-           <TouchableOpacity style={s.arrow} onPress={reculerDate}>
-            <Image
-              source={icones.arrowL}
-              style={{height:'100%'}}
-              resizeMode='contain'
-            />
-          </TouchableOpacity>
-          <View style={{padding:8, backgroundColor:colors.primary, borderWidth:1, borderColor:colors.border, borderRadius:8}}>
-            <Text style={{ color: colors.text, fontFamily:fonts.title }}>
-              {todayDateTime?.toFormat('d MMM')}
-            </Text>
-          </View>
-          <TouchableOpacity style={s.arrow} onPress={avancerDate}>
-            <Image
-              source={icones.arrowR}
-              style={{height:'100%'}}
-              resizeMode='contain'
-            />
-          </TouchableOpacity>
+              <TouchableOpacity style={s.arrow} onPress={reculerDate}>
+                <Image
+                  source={icones.arrowL}
+                  style={{height:'100%'}}
+                  resizeMode='contain'
+                />
+              </TouchableOpacity>
+              <TouchableOpacity style={s.boutonDate} onPress={toggleVueCalendrier}>
+                <Image
+                  source={icones.calendrier}
+                  style={s.iconeDate}
+                  resizeMode='contain'
+                />
+                <Text style={s.texteDate}>
+                  {todayDateTime?.toFormat('d MMM')}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.arrow} onPress={avancerDate}>
+                <Image
+                  source={icones.arrowR}
+                  style={{height:'100%'}}
+                  resizeMode='contain'
+                />
+              </TouchableOpacity>
         </View>
+        )}
 
         {/* ── Bouton retour maintenant (flottant) ── */}
+        {!vueCalendrier && (
         <Animated.View
           style={[
             retourMaintenantAnime,
@@ -626,6 +780,7 @@ export default function Home() {
             </Text>
           </TouchableOpacity>
         </Animated.View>
+        )}
 
       </View>
     </GestureHandlerRootView>
