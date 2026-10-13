@@ -11,12 +11,12 @@ import Animated, { cancelAnimation, scrollTo, useAnimatedReaction, useAnimatedRe
 
 import { DateTime } from 'luxon';
 
-import { Easing, Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Dimensions, Easing, Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { getCommonFreeSlots } from '@/functions/availability';
 import catcher from '@/functions/catcher';
-import { convertUTCToLocal } from '@/functions/convertirUTCenLocal';
+import { convertLocalToUTC, convertUTCToLocal } from '@/functions/convertirUTCenLocal';
 import log from '@/functions/log';
 
 
@@ -37,6 +37,8 @@ import { formaterEvenementsMembre, paramsJour } from '@/functions/evenementsMemb
 import { debutCreationPourJour, estJourPasse } from '@/functions/jourCreation';
 import { calendrierEvents } from '@/events/calendrierEvents';
 import { Friend } from '@/types/calendar';
+import formaterDatePourServeur from '@/functions/formaterDatePourServeur';
+import { scheduleOnRN } from 'react-native-worklets';
 
 //Constants
 const WIDTH_COL = 80;
@@ -48,36 +50,8 @@ const LIST_HEIGHT = 104
 // Height of the floating back-to-now button.
 const HAUTEUR_RETOUR = 34
 // Max events per request in the month view (the API defaults to 20, too few for a month).
-const LIMITE_MOIS = 300
 
-/**
- * Query params for GET /evenements and /evenements/amis covering [debut, fin].
- * The API reads `debut`/`fin` as UTC SQL datetimes; the app used to send
- * `start`/`end` (sometimes as raw DateTime objects), which the API ignored —
- * it always answered with today's events, whatever day or month was shown.
- * Part of user story 9 (accepted invitations must show up on the right day).
- * SUBJECT TO CHANGE: may be revised depending on how teammates implement their own user stories.
- *
- * @param {DateTime} debut - Local start of the range.
- * @param {DateTime} fin - Local end of the range.
- * @param {number} [limite] - Max number of events (non-recurring) to return.
- * @returns {{ debut: string | null, fin: string | null, limite?: number }}
- */
-const paramsPlage = (debut: DateTime, fin: DateTime, limite?: number) => ({
-  debut: formaterDatePourServeur(convertLocalToUTC(debut)),
-  fin: formaterDatePourServeur(convertLocalToUTC(fin)),
-  ...(limite ? { limite } : {}),
-})
 
-/**
- * Query params for one local day (timeline view). See {@link paramsPlage}.
- * Part of user story 9. SUBJECT TO CHANGE: may be revised depending on how
- * teammates implement their own user stories.
- *
- * @param {DateTime} jour - Any moment of the day to fetch.
- * @returns {{ debut: string | null, fin: string | null }}
- */
-const paramsJour = (jour: DateTime) => paramsPlage(jour.startOf('day'), jour.endOf('day'))
 // "Back to today" tab in the bottom bar (against the screen's edge): width and
 // corner radius.
 const LARGEUR_ONGLET = 40
@@ -124,10 +98,8 @@ export default function Home() {
   const { fonts } = useFont()
   const { api } = useAPI()
   const colorScheme = useColorScheme()
-  const { initialiserOffset, afficherRetourMaintenant, onPan, offset: offsetX, LEFT_GO_TO_BEFORE, LEFT_GO_TO_AFTER, clampOffset, maxOffset } = useGestionScroll()
-  const { pxHeures, L_HEURES } = useTimeline();
   const { initialiserOffset, afficherRetourMaintenant, onPan, offset: offsetX, LEFT_GO_TO_AFTER, clampOffset, maxOffset } = useGestionScroll()
-  const { pxHeures, pxHeuresShared, L_HEURES } = useTimeline();
+  const { pxHeures, L_HEURES } = useTimeline();
   const { membre } = useMembre()
 
   const icones = {

@@ -112,11 +112,12 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         if (fp) {
-            formData.append("image", {
-                uri: (fp as any).uri,
-                type: (fp as any).mimeType || "image/jpeg", // important pour multer
-                name: (fp as any).fileName ? (fp as any).fileName : `${pseudo ?? 'image'}.jpg`, // un vrai nom avec extension
-            } as any);
+            const obj = typeof fp === 'string' ? { uri: fp } : fp as any;
+            let type = obj.mimeType ?? obj.type ?? 'image/jpeg';
+            if (type === 'image') type = 'image/jpeg';
+            const name = obj.fileName ?? obj.uri?.split('/').pop() ?? `${pseudo ?? 'image'}.jpg`;
+            if (!obj.uri) throw new Error('uri image manquante');
+            formData.append('image', { uri: obj.uri, type, name } as any);
             setMembre((prev) => ({ ...prev, fp }));
         }
 
@@ -133,7 +134,6 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
                 const response = await api.patch(url, formData, {
                     headers:{
                         'Authorization':`Bearer ${token}`,
-                        'Content-Type':'multipart/form-data'
                     }
                 })                
 
@@ -147,7 +147,7 @@ export const MembreProvider = ({ children }: { children: React.ReactNode }) => {
                 }
 
             } catch (error: any) {
-                log('erreur en modifiant le profil', error.message)  
+                log('erreur en modifiant le profil', error.message, error.response?.data)  
                 throw error
             }
         }
