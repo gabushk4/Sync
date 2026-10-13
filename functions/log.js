@@ -4,4 +4,4 @@ export default function log(...args){
     }else
         
     return;
-}
+}    
