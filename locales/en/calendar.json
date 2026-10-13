@@ -22,5 +22,14 @@
 		"nothingToImport": "No upcoming events were found in this period.",
 		"failed": "Could not import events. Try again.",
 		"untitled": "Untitled event"
+	},
+	"month": {
+		"pickDay": "Tap a day to see its events.",
+		"noEvents": "No events that day.",
+		"noEventsRange": "No events during these days.",
+		"untitled": "Event",
+		"allDay": "All day",
+		"today": "Today",
+		"dayOf": "Day {{n}} of {{total}}"
 	}
 }

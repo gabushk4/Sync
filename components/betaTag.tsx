@@ -1,11 +1,10 @@
 import React from "react"
-import { View, Text, useColorScheme, StyleSheet } from "react-native"
+import { View, Text, StyleSheet } from "react-native"
 import { usePalette } from '@/contextes/contextePalette'
 import { useFont } from '@/contextes/contexteFont' 
 
 export default function BetaTag({ }) {
     
-    const colorScheme = useColorScheme()
     const { colors } = usePalette()
     const { fonts } = useFont()  
     

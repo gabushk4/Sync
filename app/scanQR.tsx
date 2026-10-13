@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Camera, CameraView, } from 'expo-camera';
-import { useFocusEffect, useIsFocused, useNavigation, } from "expo-router/react-navigation";
+import { useFocusEffect, useNavigation, } from "expo-router/react-navigation";
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Image, Linking, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
@@ -34,7 +34,6 @@ export default function ScannerQRCode(): React.ReactElement {
   const { t } = useTranslation('scanQR')
     const { colors } = usePalette();
     const { fonts } = useFont();
-    const isFocused = useIsFocused();
     const navigation = useNavigation();
     const [hasPermission, setHasPermission] = useState<boolean | null>(false);
     const { getToken } = useAccessToken();
@@ -52,7 +51,6 @@ export default function ScannerQRCode(): React.ReactElement {
     const cScan = useRef<boolean>(false);
     const timeoutScan = useRef<number>(null);
     const intervalPermission = useRef<number>(null);
-    const secondesRef = useRef<number>(0);
 
     const [secondes, setSecondes] = useState<number>(0);
     const [scanne, setScanne] = useState<boolean>(false);

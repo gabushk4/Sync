@@ -2,7 +2,6 @@ import ModalBase from "@/components/modalBase";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useFont } from '@/contextes/contexteFont';
 import { useMembre } from "@/contextes/contexteMembre";
@@ -37,8 +36,6 @@ export default function ajouterAmi() {
     const { colors } = usePalette();
     const { fonts } = useFont();    
     const { membre, getMembre } = useMembre();
-    const insets = useSafeAreaInsets();
-    
 
     const { contexte } = useLocalSearchParams()    
 
@@ -50,7 +47,6 @@ export default function ajouterAmi() {
     const [pages, setPages] = useState<Array<any>>(PAGES_DEF)
     
     const contentOffset = useSharedValue(0)
-    const tabIndex = useSharedValue(0)
 
     const animatedTab = useAnimatedStyle(() => {
         return {

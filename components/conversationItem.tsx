@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View, useColorScheme } from 'react-native'
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 import { usePalette } from '@/contextes/contextePalette'
 import { useFont } from '@/contextes/contexteFont'
@@ -17,7 +17,6 @@ type Props = {
 export default function ConversationItem({ conversation, onPress }: Props) {
     const { colors } = usePalette()
     const { fonts } = useFont()
-    const colorScheme = useColorScheme()
 
     const { ami, dernierMessage, nonLus } = conversation
 

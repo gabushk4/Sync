@@ -2,7 +2,9 @@
   "navigation": {
     "create": "créer un évènement",
     "details": "détails",
-    "edit": "éditer"
+    "edit": "éditer",
+    "calendar": "Calendrier",
+    "invitationReview": "Horaires de l'invitation"
   },
   "details": {
     "recurringEditTitle": "édition d'une récurrence",
@@ -23,7 +25,11 @@
     "unknownError": "Erreur inconnue",
     "titleTooShort": "Le titre doit avoir plus de 4 caractères ; titre : {{title}}",
     "createdTitle": "Évènement ajouté",
-    "createdMessage": "Tu peux te détendre, c'est enregistré"
+    "createdMessage": "Tu peux te détendre, c'est enregistré",
+    "pastDate": "Impossible de créer dans le passé.",
+    "pastRange": "La sélection commence avant aujourd'hui.",
+    "pastStart": "Le début est déjà passé.",
+    "titleRequired": "L'évènement doit avoir un nom."
   },
   "form": {
     "titlePlaceholder": "titre...",
@@ -71,7 +77,31 @@
     "adjust": "Modifier mon horaire",
     "newDiscarded": "Le nouvel évènement n'a pas été créé",
     "anotherConflict": "Un autre évènement chevauche encore ce créneau",
-    "removeFailed": "Impossible de retirer l'évènement existant"
+    "removeFailed": "Impossible de retirer l'évènement existant",
+    "messageList_one": "Un évènement chevauche celui que tu crées. Il sera retiré de ton horaire.",
+    "messageList_other": "{{count}} évènements chevauchent celui que tu crées. Ils seront retirés de ton horaire.",
+    "existingList_one": "Évènement en conflit",
+    "existingList_other": "{{count}} évènements en conflit",
+    "willDelete": "Sera supprimé",
+    "willCancelOccurrence": "Cette occurrence sera annulée",
+    "willLeave": "Tu quitteras cet évènement",
+    "removeAndCreate_one": "Retirer 1 évènement et créer",
+    "removeAndCreate_other": "Retirer {{count}} évènements et créer",
+    "discardNew": "Ne pas créer le nouvel évènement",
+    "backToForm": "Retour à la création de l'évènement",
+    "invitation": "Invitation",
+    "messageListInvitation_one": "Un évènement de ton horaire chevauche cette invitation. Il sera retiré si tu acceptes.",
+    "messageListInvitation_other": "{{count}} évènements de ton horaire chevauchent cette invitation. Ils seront retirés si tu acceptes.",
+    "removeAndAccept_one": "Retirer 1 évènement et accepter",
+    "removeAndAccept_other": "Retirer {{count}} évènements et accepter",
+    "back": "Retour",
+    "acceptedTitle": "Invitation acceptée",
+    "acceptFailed": "Impossible d'accepter l'invitation",
+    "confirmTitle": "Attention",
+    "confirmMessage_one": "Veux-tu vraiment retirer cet évènement ?\n{{titres}}",
+    "confirmMessage_other": "Veux-tu vraiment retirer ces {{count}} évènements ?\n{{titres}}",
+    "confirmCancel": "Annuler",
+    "confirmRemove": "Retirer"
   },
   "errors": {
     "deleteFailed": "erreur en supprimant l'évènement",
@@ -81,5 +111,19 @@
     "createFailed": "erreur lors de la création de l'évènement",
     "participantLoadFailed": "impossible de charger le participant {{id}}",
     "participantsLoadFailed": "erreur au chargement des participants"
+  },
+  "invitationReview": {
+    "hint": "Touche l'évènement de {{pseudo}} ou le tien pour répondre.",
+    "leader": "Organisateur",
+    "me": "Moi",
+    "loadFailed": "Impossible de charger les horaires de l'invitation",
+    "retry": "Impossible de charger les horaires. Touche pour réessayer.",
+    "private": "Privé"
+  },
+  "invitationDecision": {
+    "accept": "Accepter",
+    "refuse": "Refuser",
+    "refuseFailed": "Impossible de refuser l'invitation",
+    "invitedBy": "Invité par"
   }
 }

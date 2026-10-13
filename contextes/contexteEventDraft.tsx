@@ -22,7 +22,6 @@ type EventDraftContextType = {
     setEnd: Dispatch<SetStateAction<DateTime<boolean>>>;
     slotSuggestions: Array<Interval>;
     friendsSuggestions: Array<FriendIntervals>;
-    loadingStatus: LoadingStatus;
     friendsHasMore: boolean;
     setRequestsEnabled: Dispatch<SetStateAction<boolean>>;
 }
@@ -58,10 +57,11 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
     const [friendsSuggestions, setFriendsSuggestions] = useState<Array<FriendIntervals>>([])
     const [friendsHasMore, setFriendsHasMore] = useState(false)
 
-    const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>('idle')
+    //Gab hot fix: loading status has to be a ref 
+    const loadingStatus = useRef<LoadingStatus>('idle')
 
     const getCommonAvail = async () => {
-        setLoadingStatus('loading')
+        loadingStatus.current = 'loading'
         try {
             //cant proceed if interval between start and end is invalid
             if (start.toMillis() > end.toMillis()) return
@@ -76,23 +76,25 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
                 signal: commonAvailController.current.signal
             })            
 
-            setLoadingStatus('idle')
+            loadingStatus.current = 'idle'
             suggestionsOffset.current = res.data.offset
-            //log("getCommonAvail:", res.data.disponibilites)
-            setSlotSuggestions(res.data.disponibilites.map((d: Interval) => ({
-                ...d,
-                debut: convertUTCToLocal(d.debut),
-                fin: convertUTCToLocal(d.fin)
-            })))
+            log("getCommonAvail:", res.data)
+            if (res.data.disponibilites && res.status === 200) {
+                setSlotSuggestions(res.data.disponibilites.map((d: Interval) => ({
+                    ...d,
+                    debut: convertUTCToLocal(d.debut),
+                    fin: convertUTCToLocal(d.fin)
+                })))
+            }
         } catch (err) {
-            setLoadingStatus('error')
+            loadingStatus.current = 'error'
             catcher(err, "Impossible de suggérer des crénaux")
         }
     } 
 
     const getFriendsAvail = useCallback(async (append = false) => {
         try {
-            setLoadingStatus('loading')
+            loadingStatus.current = 'loading'
             if (!start || !end || start.toMillis() > end.toMillis()) {
                 return { append, hasMore: false, friendIds: [] }
             }
@@ -111,7 +113,7 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
                     signal: friendsAvailController.current.signal
                 }
             )
-            setLoadingStatus('idle')
+            loadingStatus.current = 'idle'
             //log("getFriendsAvail", res.data)
 
             const fetchedFriends = ((res.data.amis ?? []) as Array<{
@@ -141,7 +143,7 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
             return page
         } catch (error) {
             if (axios.isCancel(error)) return { append, hasMore: true, friendIds: [] }
-            setLoadingStatus('error')
+            loadingStatus.current = 'error'
             catcher(error, "Impossible de suggérer des amis")
             return { append, hasMore: true, friendIds: [] }
         }
@@ -155,8 +157,11 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
 
             let timeout: number
             if (invites.length > 0) {
+                log("timeout set")
                 timeout = setTimeout(() => {
-                    if (loadingStatus != 'idle') {
+                    log("timeout entered")
+                    if (loadingStatus.current != 'idle') {
+                        log("request aborted")
                         commonAvailController.current.abort()                        
                     }
 
@@ -183,7 +188,7 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
             friendsAvailabilityEvents.publishPage({ append: false, hasMore: false, friendIds: [] })
 
             const timeout = setTimeout(() => {
-                if (loadingStatus != 'idle') {
+                if (loadingStatus.current != 'idle') {
                     friendsAvailController.current.abort()
                 }
 
@@ -203,7 +208,7 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
     }, [getFriendsAvail, requestsEnabled])
 
     return (
-        <EventDraftContext.Provider value={{invites, start, setStart, end, setEnd, slotSuggestions, friendsSuggestions, friendsHasMore, loadingStatus, setRequestsEnabled}}>
+        <EventDraftContext.Provider value={{invites, start, setStart, end, setEnd, slotSuggestions, friendsSuggestions, friendsHasMore, setRequestsEnabled}}>
             {children}
         </EventDraftContext.Provider>
     )

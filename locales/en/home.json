@@ -2,11 +2,14 @@
   "friendsListEmptyState": "Add friends here:",
   "commonFreeSlot": "Common free time",
   "viewFriendProfile": "View {{name}}'s profile",
-  "backToNow": "Back to now",
   "errors": {
     "formatMemberEvents": "Error formatting the member's events",
     "formatFriendEvents": "Error formatting friends' events",
     "loadMemberEvents": "Unable to load the member's events",
     "loadFriendEvents": "Unable to load friends' events"
-  }
+  },
+  "backToToday": "Back to today",
+  "fullyBooked": "Fully booked",
+  "untitledEvent": "Event",
+  "backToNow": "Back to now"
 }

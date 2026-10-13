@@ -1,7 +1,6 @@
-import React, { useEffect, useRef } from "react"
+import React, { useEffect } from "react"
 import { Text, View } from "react-native"
 import Animated, { scrollTo, useAnimatedReaction, useAnimatedRef } from "react-native-reanimated"
-import { runOnJS } from "react-native-worklets"
 
 import { useFont } from "@/contextes/contexteFont"
 import { usePalette } from '@/contextes/contextePalette'
@@ -44,7 +43,7 @@ export default function Timeline({ horizontal } : TimelineProps){
     const { colors } = usePalette()
     const {fonts} = useFont()
     const {pxHeures, L_HEURES, H_HEURES} = useTimeline()
-    const { abonnerRef, offset } = useGestionScroll()
+    const { offset } = useGestionScroll()
 
     const scrollViewRef = useAnimatedRef<Animated.ScrollView>()
 

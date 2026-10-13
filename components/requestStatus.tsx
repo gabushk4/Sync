@@ -1,7 +1,5 @@
-import { useAPI } from "@/contextes/contexteAPI";
-import { useFont } from "@/contextes/contexteFont";
 import { usePalette } from "@/contextes/contextePalette";
-import { useEffect, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { requestListener } from "@/events/requestEvents";

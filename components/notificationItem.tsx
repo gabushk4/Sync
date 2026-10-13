@@ -24,7 +24,11 @@ import { withSpringConfig, withTimingConfig } from "@/constants/ReanimatedConfs"
 import { toastTypes } from "@/constants/toastConfig";
 import AppIcon from "@/svgs/appIcon";
 import Icon from "@react-native-vector-icons/ionicons";
-import { Gesture } from "react-native-gesture-handler";
+
+import ouvrirRevueInvitation, { ouvrirDecisionInvitation } from "@/functions/ouvrirRevueInvitation";
+import Spinner from "@/components/spinner";
+import useDecisionInvitation from "@/hooks/useDecisionInvitation";
+import { invitationDepuisDetails } from "@/types/invitation";
 
 type ItemProps = {
     item: Notification
@@ -51,6 +55,15 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
     const { getToken } = useAccessToken()
     const { APIBaseURL } = useAPI()
     const { notifRefresh } = useNotifications()
+
+    // An event invitation: accepting goes through the shared decision logic, which
+    // checks the member's schedule (conflict screen, review of the schedules).
+    // Philip Kvaratshelya — user story 8.
+    const invitation = item.type === 'invitation_evenement' ? invitationDepuisDetails(item.details) : null
+    const decision = useDecisionInvitation(invitation, {
+        onRepondu: () => notifRefresh?.forceRefresh(),
+        onVoirHoraire: () => invitation && ouvrirRevueInvitation(invitation),
+    })
 
     // User story 9: the API sends type/actions/statuses at the notification's top
     // level; there's no `payload` anymore.
@@ -97,11 +110,6 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
     const expirationOpacity = useSharedValue(1)
     const expirationExplicationOpacity = useSharedValue(0)
 
-    const panGesture = Gesture.Pan()
-        .onChange((e) => {
-            
-        })
-
     /**
      * Runs one of the notification's actions (e.g. accept/refuse an event
      * invitation via PATCH /evenements/invitations/:id), then refreshes the
@@ -113,19 +121,14 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
      * @param {Object} [body] - Request body (e.g. `{ statut: 'acceptee' }`).
      * @returns {Promise<void>}
      */
-    const actionnerNotif = async (method: string, url: string, body = undefined) => {
+    const actionnerNotif = async (method: string, url: string, body: any = undefined) => {
         log("actionner notif", {method, url, body})
+        // Invitations: both answers go through the decision logic (conflict check on
+        // accept, spinner, no double sending). Philip Kvaratshelya — user story 8.
+        if (invitation && body?.statut === 'acceptee') return decision.accepter()
+        if (invitation && body?.statut === 'refusee') return decision.refuser()
         try {
-            const token = await getToken()
-            const response = await axios({
-                baseURL: APIBaseURL,
-                method,
-                url,
-                data: body,
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            })
+            const response = await requeteAction(method, url, body)
 
             log("reponse en actionnant la notif", response.data)
 
@@ -136,10 +139,31 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                     text2: response.data.message,
                 })
             }
-        } catch (error) {
+        } catch (error: any) {
             log("une erreur en actionnant la notif", error)
             catcher(error, t('errors.actionFailed'))
         }
+    }
+
+    /**
+     * Sends one of the notification's actions to the API, with the member's token.
+     *
+     * @param {string} method - HTTP method of the action.
+     * @param {string} url - API path of the action.
+     * @param {Object} [body] - Request body.
+     * @returns {Promise<import('axios').AxiosResponse>}
+     */
+    const requeteAction = async (method: string, url: string, body: any = undefined) => {
+        const token = await getToken()
+        return axios({
+            baseURL: APIBaseURL,
+            method,
+            url,
+            data: body,
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        })
     }
 
     /**
@@ -350,10 +374,14 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                 onPress={() => {
                     actionnerNotif(action.method, action.url, action.body)
                 }}
+                disabled={!!decision.enCours}
             >
-                {action.label === "accepter"
-                    ? <Icon name="checkmark" color={buttonColor} size={28} />
-                    : <Icon name='close' color={buttonColor} size={28}/>
+                {/* Spinner on the answer being sent. Philip Kvaratshelya — user story 8. */}
+                {decision.enCours && decision.enCours === action.body?.statut
+                    ? <Spinner size={22} color={buttonColor} />
+                    : action.label === "accepter"
+                        ? <Icon name="checkmark" color={buttonColor} size={28} />
+                        : <Icon name='close' color={buttonColor} size={28}/>
                 }
                 
             </TouchableOpacity>
@@ -362,6 +390,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
 
     return (
         <View style={s.container}>
+            {decision.conflit}
             <Animated.View style={[notifAnime, s.notif]}>
                 <View
                     style={{
@@ -380,11 +409,21 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                         </Text>
                     </View>
                     <Text style={s.timestamp}>
-                        {convertToWhen(convertUTCToLocal(item.date_envoie) ?? DateTime.now().toLocal()) as string}
+                        {/* convertUTCToLocal throws without a date, so the `??` fallback never
+                            ran and one notification without date crashed the whole feed.
+                            Rectification (Philip Kvaratshelya). */}
+                        {convertToWhen(item.date_envoie ? convertUTCToLocal(item.date_envoie) : DateTime.now().toLocal()) as string}
                     </Text>
                 </View>
                 <TouchableOpacity
                     onPress={() => {
+                        // A pending invitation opens its decision page (event, organizer,
+                        // participants, accept / refuse / adjust my schedule).
+                        // Philip Kvaratshelya — user story 8.
+                        if (!selectionner && invitation && item.statut_metier === 'en_attente' && !expired) {
+                            ouvrirDecisionInvitation(invitation)
+                            return
+                        }
                         if (!selectionner) {
                             setMontrerDetails(!montrerDetails)
                             setMontrerExplExpiration(true)

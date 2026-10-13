@@ -133,7 +133,7 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
             }
 
             return api(requeteOriginale); //continue la requete originale
-          } catch (refreshError) { // si une erreur a lieu au moment du refresh
+          } catch { // si une erreur a lieu au moment du refresh
             await SecureStore.deleteItemAsync('refresh_token'); // c'est souvent parce que le refresh token est invalide
             // TODO: avoir une erreur spécifique pour un refresh token invalide pour ne pas l'invalider par une erreur qui n'a pas rapport
             await emptyTokens()

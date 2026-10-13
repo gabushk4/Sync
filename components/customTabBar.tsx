@@ -2,12 +2,13 @@ import { usePalette } from "@/contextes/contextePalette";
 import Icon from "@react-native-vector-icons/ionicons";
 import { BottomTabBar, type BottomTabBarProps } from 'expo-router/js-tabs';
 import { useRouter } from "expo-router";
-import React, { useMemo, useRef, useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useFabActions, useFabState, FabConfig } from "@/contextes/contexteFAB";
 import log from "@/functions/log";
+import ToastAbs from "@/abstractions/toastAbs";
+import { toastTypes } from "@/constants/toastConfig";
 import Animated, { useAnimatedStyle, withTiming, useSharedValue } from "react-native-reanimated";
-import { runOnJS } from "react-native-worklets";
 import { withTimingConfig } from "@/constants/ReanimatedConfs";
 
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
@@ -45,11 +46,29 @@ const Fab = React.memo(function Fab() {
     const shown = !!config && config.visible !== false;    
 
     const progress = useSharedValue(0);
+    // Whether the FAB is currently hidden (no config), and the pending swap timer.
+    const cacheRef = useRef(true);
+    const swapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
     useEffect(() => {
+        if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
+        swapTimerRef.current = null;
+
         // Plus de config, ou masqué : fade-out, on garde `display` pour l'animation
         if (!config || config.visible === false) {
+        cacheRef.current = true;
         progress.value = withTiming(0, withTimingConfig);
+        return;
+        }
+
+        // Coming back from hidden (e.g. closing the conflict screen over the create
+        // form): nothing to fade out, show the new content right away. It used to
+        // wait for a fade-out of the hidden button first, so it appeared late.
+        // Rectification (Philip Kvaratshelya) for a more conventional display.
+        if (cacheRef.current) {
+        cacheRef.current = false;
+        setDisplay(config);
+        progress.value = withTiming(1, { duration: 150 });
         return;
         }
 
@@ -60,7 +79,7 @@ const Fab = React.memo(function Fab() {
 
         // Fade-out
         progress.value = withTiming(0.3, { duration: FADE_OUT_T })                        
-        setTimeout(() => {
+        swapTimerRef.current = setTimeout(() => {
             //swap
             swap();
             //fade-in
@@ -77,6 +96,11 @@ const Fab = React.memo(function Fab() {
     if (!display) return null;
 
     const onPress = () => {
+        // Blocked FAB (e.g. a past day): explain why instead of navigating.
+        if (display.bloque) {
+        ToastAbs.show({ type: toastTypes.error, text2: display.bloque });
+        return;
+        }
         if (display.href) {
         router.push(
             display.params

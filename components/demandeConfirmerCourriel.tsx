@@ -8,7 +8,7 @@ import { usePalette } from '@/contextes/contextePalette'
 import { useAccessToken } from '@/contextes/contexteToken'
 import catcher from '@/functions/catcher'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 type Props = {
     intro: string;
@@ -18,7 +18,6 @@ export default function DemandeConfirmerCourriel({intro} : Props){
     const { t } = useTranslation('friends')
     const { colors } = usePalette()
     const { fonts } = useFont()
-    const colorScheme = useColorScheme()
     
     const {api} = useAPI()
     const {membre} = useMembre()

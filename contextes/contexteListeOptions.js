@@ -4,7 +4,6 @@ import { useState, createContext, useContext, useEffect, } from "react";
 import { useMembre } from "./contexteMembre";
 import { useTheme } from "./contexteTheme";
 import { useAPI } from "./contexteAPI";
-import log from "../fonctions/log";
 
 export const ListeOptionsContexte = createContext()
 

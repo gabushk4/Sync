@@ -26,7 +26,7 @@ type GestionScrollContextType = {
   LEFT_GO_TO_AFTER: number;
 
   // Functions
-  initialiserOffset: (offsetDefault: number) => void;
+  initialiserOffset: (offsetDefault: number, anime?: boolean) => void;
   onPan: (offset: number) => void;
   abonnerRef: (ref: ScrollView | null, index: number) => void;
   viderRefs: () => void;
@@ -35,7 +35,7 @@ type GestionScrollContextType = {
 const GestionScrollContext = createContext<GestionScrollContextType | null>(null);
 
 export const GestionScrollProvider = ({ children }: { children: ReactNode }) => {
-  const { pxHeures, L_HEURES, H_HEURES } = useTimeline();
+  const { pxHeures, L_HEURES } = useTimeline();
   const {width: WIN_W } = Dimensions.get('window');
 
   const LEFT_GO_TO_BEFORE = 96
@@ -62,12 +62,25 @@ export const GestionScrollProvider = ({ children }: { children: ReactNode }) => 
   // Zoom state — utilisable pour appliquer des styles pendant le pinch
   const [enZoom, setEnZoom] = useState(false);
 
-  // Initialise toutes les listes à un offset donné
-  const initialiserOffset = (offsetDefault: number) => {
+  /**
+   * Scrolls every row to `offsetDefault` (the current hour) and records it as
+   * "now", the reference of the "back to today / now" tab.
+   *
+   * @author Philip Kvaratshelya — rectification for a more conventional display:
+   *   `anime: false` for the rows' first layout, which used to set the offset
+   *   without recording "now" (it stayed at midnight, so the tab showed up while
+   *   already on the current hour, on the wrong side)
+   * @param {number} offsetDefault - Offset of the current hour.
+   * @param {boolean} [anime=true] - Slide there (false: jump, e.g. on first layout).
+   * @returns {void}
+   */
+  const initialiserOffset = (offsetDefault: number, anime = true) => {
     const boundedOffset = clampOffset(offsetDefault);
     log("offset init", boundedOffset)
     offsetMaintenant.value = boundedOffset;
-    offset.value = withTiming(boundedOffset, {duration:300, easing:Easing.inOut(Easing.linear)});
+    offset.value = anime
+      ? withTiming(boundedOffset, {duration:300, easing:Easing.inOut(Easing.linear)})
+      : boundedOffset;
   };
 
   const derniereHapticsOffset = useSharedValue(0);
@@ -90,7 +103,10 @@ export const GestionScrollProvider = ({ children }: { children: ReactNode }) => 
         ? LEFT_GO_TO_AFTER
         : LEFT_GO_TO_BEFORE;
 
-    if (afficherRetourMaintenant.value.afficher !== afficher) {
+    // Also on a side change: scrolling from one side of now to the other in one
+    // drag kept the old side (the "back to today" tab then pointed the wrong way).
+    // Rectification (Philip Kvaratshelya) for a more conventional display.
+    if (afficherRetourMaintenant.value.afficher !== afficher || afficherRetourMaintenant.value.left !== left) {
       afficherRetourMaintenant.value = { afficher, left };
     }
   };

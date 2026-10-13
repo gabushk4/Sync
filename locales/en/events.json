@@ -2,7 +2,9 @@
   "navigation": {
     "create": "Create an event",
     "details": "Details",
-    "edit": "Edit"
+    "edit": "Edit",
+    "calendar": "Calendar",
+    "invitationReview": "Invitation schedules"
   },
   "details": {
     "recurringEditTitle": "Edit recurring event",
@@ -23,7 +25,11 @@
     "unknownError": "Unknown error",
     "titleTooShort": "The title must be more than 4 characters long; title: {{title}}",
     "createdTitle": "Event added",
-    "createdMessage": "You can relax, it has been saved"
+    "createdMessage": "You can relax, it has been saved",
+    "pastDate": "Can't create an event in the past.",
+    "pastRange": "The selection starts before today.",
+    "pastStart": "The start time has already passed.",
+    "titleRequired": "The event must have a name."
   },
   "form": {
     "titlePlaceholder": "title...",
@@ -71,7 +77,31 @@
     "adjust": "Adjust my schedule",
     "newDiscarded": "The new event was not created",
     "anotherConflict": "Another event still overlaps this time slot",
-    "removeFailed": "Unable to remove the existing event"
+    "removeFailed": "Unable to remove the existing event",
+    "messageList_one": "One event overlaps the one you're creating. It will be removed from your schedule.",
+    "messageList_other": "{{count}} events overlap the one you're creating. They will be removed from your schedule.",
+    "existingList_one": "Conflicting event",
+    "existingList_other": "{{count}} conflicting events",
+    "willDelete": "Will be deleted",
+    "willCancelOccurrence": "This occurrence will be cancelled",
+    "willLeave": "You will leave this event",
+    "removeAndCreate_one": "Remove 1 event and create",
+    "removeAndCreate_other": "Remove {{count}} events and create",
+    "discardNew": "Don't create the new event",
+    "backToForm": "Back to the event form",
+    "invitation": "Invitation",
+    "messageListInvitation_one": "One event of your schedule overlaps this invitation. It will be removed if you accept.",
+    "messageListInvitation_other": "{{count}} events of your schedule overlap this invitation. They will be removed if you accept.",
+    "removeAndAccept_one": "Remove 1 event and accept",
+    "removeAndAccept_other": "Remove {{count}} events and accept",
+    "back": "Back",
+    "acceptedTitle": "Invitation accepted",
+    "acceptFailed": "Unable to accept the invitation",
+    "confirmTitle": "Warning",
+    "confirmMessage_one": "Do you really want to remove this event?\n{{titres}}",
+    "confirmMessage_other": "Do you really want to remove these {{count}} events?\n{{titres}}",
+    "confirmCancel": "Cancel",
+    "confirmRemove": "Remove"
   },
   "errors": {
     "deleteFailed": "Error deleting the event",
@@ -81,5 +111,19 @@
     "createFailed": "Error while creating the event",
     "participantLoadFailed": "Unable to load participant {{id}}",
     "participantsLoadFailed": "Error loading participants"
+  },
+  "invitationReview": {
+    "hint": "Tap {{pseudo}}'s event or yours to answer.",
+    "leader": "Organizer",
+    "me": "Me",
+    "loadFailed": "Unable to load the invitation's schedules",
+    "retry": "Couldn't load the schedules. Tap to try again.",
+    "private": "Private"
+  },
+  "invitationDecision": {
+    "accept": "Accept",
+    "refuse": "Refuse",
+    "refuseFailed": "Unable to refuse the invitation",
+    "invitedBy": "Invited by"
   }
 }

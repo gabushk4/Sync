@@ -44,7 +44,8 @@
         {
           "calendarPermission": "Sync doit accéder à vos calendriers pour importer vos événements."
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

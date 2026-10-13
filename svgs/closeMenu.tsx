@@ -8,7 +8,7 @@ export const path3 = "M128 128 L128 128"
 const path = [path1, path2,  path3].join(' ')
 
 const CloseMenu = (props: SvgProps) => (
-  <Svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" {...props}>
+  <Svg viewBox="0 0 256 256" {...props}>
     <Path
       stroke={props.stroke}
       strokeLinecap="round"

@@ -1,24 +1,16 @@
 // components/EvenementsListe.tsx
 import { DateTime } from 'luxon'
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import Animated, { scrollTo, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue } from 'react-native-reanimated'
+import { StyleSheet, View } from 'react-native'
+import Animated, { scrollTo, useAnimatedReaction, useAnimatedRef } from 'react-native-reanimated'
 
 import { Event } from '@/types/calendar'
 
 import ListItem from './listItem'
 
-import { useAPI } from '@/contextes/contexteAPI'
-import { useFont } from '@/contextes/contexteFont'
 import { useGestionScroll } from '@/contextes/contexteGestionListes'
-import { useModal } from '@/contextes/contexteModals'
-import { usePalette } from '@/contextes/contextePalette'
 import { useTimeline } from '@/contextes/contexteTimeline'
-import { useAccessToken } from '@/contextes/contexteToken'
 
-import { findWidth, findLeft } from '@/functions/calculerDimensionsEvenements'
-
-import log from '@/functions/log'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import FreeSlotItem from './freeSlotItem'
 
 /** Inset of a horizontal row's blocks (top and bottom); the home screen's profile column uses it too. */
@@ -35,6 +27,11 @@ export type EventsListProps = {
     displayedDate?: DateTime;
     commonFreeSlots: any[] | undefined;
     owner: any
+    /** Replaces the default tap on an event (open its details). */
+    onPressEvenement?: (event: Event) => void;
+    /** Scroll every row to the current hour on first layout (default). The
+     * invitation review screen scrolls to the event's hour itself. */
+    defilerMaintenant?: boolean;
 }
 
 /**
@@ -56,6 +53,10 @@ export type EventsListProps = {
  * @param {DateTime} [props.displayedDate] - Day the row shows.
  * @param {any[] | undefined} props.commonFreeSlots - Free slots shared with the member (friends' rows).
  * @param {any} props.owner - Member whose events these are.
+ * @param {(event: Event) => void} [props.onPressEvenement] - Replaces the default tap on an event.
+ * @param {boolean} [props.defilerMaintenant=true] - Scroll to the current hour on first layout.
+ * @author Philip Kvaratshelya — user story 8: onPressEvenement / defilerMaintenant
+ *   (invitation review screen)
  * @returns {JSX.Element}
  */
 export default function EventsList({
@@ -68,14 +69,14 @@ export default function EventsList({
     getEvenements,
     displayedDate,
     commonFreeSlots,
-    owner
+    owner,
+    onPressEvenement,
+    defilerMaintenant = true,
 }: EventsListProps) {
-    const { offset } = useGestionScroll()
+    const { offset, initialiserOffset } = useGestionScroll()
     const { pxHeures, L_HEURES, H_HEURES } = useTimeline()
-    const { colors } = usePalette()
 
     const scrollViewRef = useAnimatedRef<Animated.ScrollView>()
-    const listOffset = useSharedValue(0)
 
     useAnimatedReaction(
         () => offset.value,
@@ -125,8 +126,11 @@ export default function EventsList({
             scrollEventThrottle={16}
             ref={scrollViewRef}
             onLayout={() => {
+                if (!defilerMaintenant) return
                 const now = DateTime.now()
-                offset.value = now.hour * (pxHeures + L_HEURES)
+                // Also records "now" for the "back to today / now" tab (it stayed at
+                // midnight). Rectification (Philip Kvaratshelya) for a more conventional display.
+                initialiserOffset(now.hour * (pxHeures + L_HEURES), false)
             }}
         >
             <View
@@ -145,7 +149,8 @@ export default function EventsList({
                         horizontal={horizontal}
                         displayedDate={displayedDate}
                         listOffset={offset}
-                        eventsColor={eventsColor}                        
+                        eventsColor={eventsColor}
+                        onPress={onPressEvenement}
                     />
                 )}
                 {commonFreeSlots?.map((freeSlot, index) => 

@@ -1,10 +1,7 @@
 import ModalBase from './modalBase'
 import { useModal } from '../contextes/contexteModals'
-import ModalDetailsEv from './modalDetailsEvenement';
-import ModalAjouterEvenement from './modalAjouterEv';
 import { Modal,View } from 'react-native';
 import ModalAjouterAmi from './modalAjouterAmi';
-import ModalImporterCalendrier from './modalImporterCalendrier';
 import ModalNotification from './modalNotifications';
 import ListeAmis from './listeAmis';
 import ModalSignalementRapide from './modalSignalementRapide';
@@ -12,8 +9,6 @@ import ModalMdpOublie from './modalMdpOublie';
 import { useRouteAbs } from '../contextes/contexteRoute';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
-import log from '../fonctions/log';
-import ModalAjouterConversation from './modalAjouterConv';
 
 export default function ModalManager(){
   const { modal, fermerModal } = useModal()

@@ -1,7 +1,7 @@
 import { useFocusEffect } from 'expo-router/react-navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { useAPI } from '@/contextes/contexteAPI';
 import { useInvites } from '@/contextes/contexteInvites';
@@ -36,7 +36,6 @@ type Props = {
 }
 
 const LINE_HEIGHT = 56
-const INVITER_HEIGHT = 40
 const TITLE_HEIGHT = 32
 const MAX_COUNT = 3
 const DATA_RENDERER_KEY = "ParticipantsListe"
@@ -74,12 +73,8 @@ export default function ParticipantsListe({ participantsUrl, listType, peutGerer
     const { colors } = usePalette();
     const {fonts} = useFont()
     const { api } = useAPI()
-    const {ajouterInvite} = useInvites()
     const { setDataRendererContent, setDismissButton, removeDataRenderContent, resetDismissButton } = useModal()
 
-    const colorScheme = useColorScheme()
-
-    const inviterIcone = colorScheme === 'dark' ? require('@/assets/icones/croix-dark-icon.png') : require('@/assets/icones/croix-light-icon.png')
     const { invites } = useInvites()
     const { friendsSuggestions, friendsHasMore } = useEventDraft()
     const availableFriendIds = useMemo(
@@ -212,7 +207,11 @@ export default function ParticipantsListe({ participantsUrl, listType, peutGerer
                         pathname: '/(modals)/listeAmis',
                         params: {
                             type: listType,
-                            inviterUrl: participantsUrl,
+                            // Only for an existing event (invite right away). While creating
+                            // one there's no URL: the friends are only added to the draft,
+                            // and invited when the event is created (POST /evenements).
+                            // Philip Kvaratshelya — user story 8.
+                            ...(participantsUrl ? { inviterUrl: participantsUrl } : {}),
                             availableFriendIds: JSON.stringify(availableFriendIds),
                             hasMoreFriends: String(friendsHasMore),
                         },

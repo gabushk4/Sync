@@ -1,9 +1,9 @@
-import { Image, ImageProps, ImageSourcePropType, StyleSheet, useColorScheme, View, ViewStyle } from "react-native";
+import { Image, ImageSourcePropType, StyleSheet, useColorScheme, View, ViewStyle } from "react-native";
 import { FPType } from "@/types/pfp";
 import { usePalette } from "@/contextes/contextePalette";
 import { useEffect, useState } from "react";
-import log from "@/functions/log";
 import { useAPI } from "@/contextes/contexteAPI";
+import log from "@/functions/log";
 
 
 type Props = {
@@ -24,6 +24,7 @@ export default function ProfilPic({ size, pfp, style}: Props) {
     const [source, setSource] = useState<ImageSourcePropType>()
 
     useEffect(() => {
+        log(pfp)
     if (!pfp || pfp === 'null' || pfp === 'undefined') {
         setSource(icones.pfpDefault)
     }

@@ -68,6 +68,22 @@ const minutesToTime = (date, minutes) => {
   return dt
 }
 
+/**
+ * Free slots shared by the member and a friend on `date`: the minutes where
+ * neither has an event (nor a do-not-disturb rule), grouped into slots of at
+ * least `minDuration` minutes.
+ *
+ * @author Philip Kvaratshelya — rectification for a more conventional display: today's elapsed hours are kept, marked
+ *   `passe` (shown greyed out) instead of disappearing; a slot crossing the
+ *   current hour is split in two
+ * @param {Array} userEvents - Member's events (local DateTimes).
+ * @param {Array} friendEvents - Friend's events (local DateTimes).
+ * @param {DateTime} date - Day to compute.
+ * @param {Array | null} [userDndRules] - Member's do-not-disturb rules.
+ * @param {Array | null} [friendDndRules] - Friend's do-not-disturb rules.
+ * @param {number} [minDuration=60] - Shortest slot kept, in minutes.
+ * @returns {Array<{ start: DateTime, end: DateTime, duration: number, passe?: boolean }>}
+ */
 export const getCommonFreeSlots = (
   userEvents,
   friendEvents,
@@ -82,12 +98,6 @@ export const getCommonFreeSlots = (
   const total = Math.round(dayStart.plus({ days: 1 }).diff(dayStart, 'minutes').minutes)
   const bitmap = new Uint8Array(total).fill(1)
 
-  // Nathan (common availabilities): today's already elapsed minutes can't be
-  // offered as a new meeting slot.
-  const now = DateTime.now()
-  if (date?.hasSame(now, 'day')) {
-    bitmap.fill(0, 0, Math.min(total, minutesSinceStartOfDay(now, dayStart)))
-  }
 
   applyBusyTimes(bitmap, userEvents, date)
   applyBusyTimes(bitmap, friendEvents, date)
@@ -116,5 +126,28 @@ export const getCommonFreeSlots = (
     }
   }
 
-  return slots
+  // Today: the hours already elapsed (before the current hour, which stays
+  // bookable) are kept but marked `passe`, so they show greyed out instead of
+  // disappearing. A slot crossing that limit is split in two.
+  const now = DateTime.now()
+  if (!date.hasSame(now, 'day')) return slots
+
+  const coupure = minutesSinceStartOfDay(now.startOf('hour'), dayStart)
+  const MIN_MORCEAU = 15 // a past / current piece shorter than this isn't worth a block
+  const resultat = []
+  for (const slot of slots) {
+    const debut = minutesSinceStartOfDay(slot.start, dayStart)
+    const fin = debut + slot.duration
+    if (fin <= coupure) {
+      resultat.push({ ...slot, passe: true })
+    } else if (debut >= coupure) {
+      resultat.push(slot)
+    } else {
+      if (coupure - debut >= MIN_MORCEAU)
+        resultat.push({ start: slot.start, end: minutesToTime(date, coupure), duration: coupure - debut, passe: true })
+      if (fin - coupure >= MIN_MORCEAU)
+        resultat.push({ start: minutesToTime(date, coupure), end: slot.end, duration: fin - coupure })
+    }
+  }
+  return resultat
 }

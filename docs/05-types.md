@@ -2,7 +2,9 @@
 
 ## Fichiers de cette catégorie :
 - `availabilities.ts` - Types disponibilités (créneaux, conflits, suggestions)
-- `calendar.ts` - Types événements (création, modification, suppression)
+- `calendar.ts` - Types événements (création, modification, suppression ; `couleur` / `cliquable` pour la revue d'invitation)
+- `conflit.ts` - Types de la fenêtre de conflit + `conflitsDeLaReponse` (réponse 409) — Philip, US8
+- `invitation.ts` - `InvitationInfo`, `StatutInvitation`, `invitationDepuisDetails`, `bornesLocales` — Philip, US8
 - `invites.ts` - Types invitations (liste, privilèges)
 - `listener.ts` - Types listeners (événements, gestionnaires)
 - `pfp.ts` - Types photos de profil (URL, placeholder)

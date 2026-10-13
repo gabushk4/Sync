@@ -1,7 +1,6 @@
 import * as DocumentPicker from 'expo-document-picker'
 import { File } from 'expo-file-system'
 
-import parseIcs from './parseIcs'
 import log from './log'
 
 /**

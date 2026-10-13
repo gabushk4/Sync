@@ -1,5 +1,4 @@
 import { AxiosInstance, AxiosResponse } from 'axios'
-import { DateTime } from 'luxon'
 import log from './log'
 import { AppState, AppStateStatus, NativeEventSubscription } from 'react-native'
 

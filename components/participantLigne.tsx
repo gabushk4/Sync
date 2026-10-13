@@ -2,7 +2,6 @@ import Radius from '@/constants/Radius';
 import { useAPI } from '@/contextes/contexteAPI';
 import { useInvites } from '@/contextes/contexteInvites';
 import { useMembre } from '@/contextes/contexteMembre';
-import { useMockMode } from '@/contextes/contexteMockMode';
 import { usePalette } from '@/contextes/contextePalette';
 import catcher from '@/functions/catcher';
 import log from '@/functions/log';
@@ -38,10 +37,9 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
     const { t } = useTranslation('events')
     const { colors } = usePalette()
     const colorScheme = useColorScheme()
-    const {api, APIBaseURL} = useAPI()
+    const {api} = useAPI()
     const {membre} = useMembre()
     const { supprimerInvite } = useInvites()
-    const {isMockMode} = useMockMode()
 
     const icone = {
         admin: colorScheme === "dark" ? require('@/assets/icones/admin-dark-icon.png'):require('@/assets/icones/admin-light-icon.png'),
@@ -107,15 +105,6 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
     }, [])
 
     const peutSupprimer = p ? (peutGererParticipants && p.id !== membre.idPublique) : false
-
-    /**
-     * Color of a participant's answer label (user story 9).
-     *
-     * @param {string} statut - 'en_attente' | 'acceptee' | 'refusee'
-     * @returns {string}
-     */
-    const couleurStatut = (statut: string) =>
-        statut === 'acceptee' ? colors.success : statut === 'refusee' ? colors.error : colors.warning
 
     const s = StyleSheet.create({
         conteneur:{

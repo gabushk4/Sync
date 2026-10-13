@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { useFocusEffect, useIsFocused } from "expo-router/react-navigation";
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Dimensions, DimensionValue, FlexAlignType, Image, ImageSourcePropType, ImageStyle, Pressable, StyleSheet, Text, TouchableOpacity, useColorScheme, View, ViewStyle } from 'react-native';
+import { Alert, Dimensions, FlexAlignType, ImageSourcePropType, Pressable, StyleSheet, Text, TouchableOpacity, useColorScheme, View, ViewStyle } from 'react-native';
 import Animated, { createAnimatedComponent, interpolate, useAnimatedProps, useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
 import { interpolatePath, parse } from 'react-native-redash';
 import Svg, { Path } from 'react-native-svg';
@@ -27,7 +27,7 @@ import { FPType, isFpObject } from '@/types/pfp';
 import Haptics from '@/abstractions/haptics';
 import MemberCode from '@/components/memberCode';
 import { withSpringConfig, withTimingConfig } from '@/constants/ReanimatedConfs';
-import { convertirTimestampDateCourte, convertirTimestampDateLongue } from "@/functions/convertirTimestamp";
+import { convertirTimestampDateCourte } from "@/functions/convertirTimestamp";
 import ProfilPic from "@/components/pfp";
 
 const MENU_OPTIONS_GAP = 8
@@ -42,7 +42,7 @@ export default function ProfilEcran(){
     const isFocused = useIsFocused()
     const { APIBaseURL } = useAPI()
     const { ajouterEcran } = useRouteAbs()
-    const { membre, patchProfil, getMembre } = useMembre()
+    const { membre, getMembre } = useMembre()
 
     const {height: WIN_H} = Dimensions.get('window') 
     const icones = {        
@@ -54,20 +54,14 @@ export default function ProfilEcran(){
     const oldBrightness = useRef<number>(0)
     
     const [avertissementVisible, setAvertissementVisible] = useState(false)
-    const [fpSource, setFpSource] = useState<ImageSourcePropType>(icones.profilDef)
+    const [, setFpSource] = useState<ImageSourcePropType>(icones.profilDef)
     const [hamburgerMenuOpen, setHamburgerMenuOpen] = useState<boolean>(false)
 
 //#region ValeursAnimé
     const defBanniereH = 228
-    const defPhotoProfilTop = 0
-    const defPhotoProfilTaille = 120
 
     const opaciteAvertissement = useSharedValue(0)
-    const modeEditShared = useSharedValue(false)
     const banniereH = useSharedValue(defBanniereH)
-    const banniereImageOpacity = useSharedValue(1)
-    const banniereImageWidth = useSharedValue<DimensionValue>('70%')
-    const banniereImageHeight = useSharedValue(defBanniereH)
 
     const hamburgerMenuOpenShared = useSharedValue<number>(0) 
     const hamburgerMenuBg = useSharedValue(colors.primary)
@@ -80,43 +74,14 @@ export default function ProfilEcran(){
 
     const opaciteAnime = useSharedValue(1)
 
-    const photoProfilTop = useSharedValue(0)
-    const photoProfilTaille = useSharedValue(defPhotoProfilTaille)
-
     const infosMembreAlignItems = useSharedValue<FlexAlignType>('flex-start')
     const opaciteInfosMembre = useSharedValue(1)  
 
-    const opaciteFlatListWidgets = useSharedValue(0.3)
-
-    const flatListWidgetsAnime = useAnimatedStyle(()=>{
-        "worklet"
-        return{
-            opacity:opaciteFlatListWidgets.value
-        }
-    })
-    
     const banniereAnimee = useAnimatedStyle(() => {
         "worklet"
         return{
             height: banniereH.value,
             opacity: opaciteAnime.value,
-        }
-    })
-    const banniereImageAnime = useAnimatedStyle<ImageStyle>(()=>{
-        "worklet"
-        return{
-            opacity: banniereImageOpacity.value,
-            width: banniereImageWidth.value,
-            height: banniereImageHeight.value
-        }
-    })
-    const photoProfilAnime = useAnimatedStyle(() => {
-        "worklet"
-        return{
-            top: photoProfilTop.value,
-            opacity: opaciteAnime.value,
-            height: photoProfilTaille.value,
-            width: photoProfilTaille.value
         }
     })
     const infosMembreAnime = useAnimatedStyle<ViewStyle>(()=>{
@@ -126,12 +91,6 @@ export default function ProfilEcran(){
             opacity: opaciteInfosMembre.value
         }
     })
-    const cameraStyle = useAnimatedStyle(() =>{
-        "worklet"
-        return{
-        top: photoProfilTop.value + photoProfilTaille.value / 1.16
-        }
-    });
 
     //Utils for animating hamburger menu to close icon - Path 1 (top line → top-left diagonal)
     const hamburgerMenuP1 = parse(hamburgerMenuPath1)

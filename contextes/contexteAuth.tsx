@@ -6,7 +6,6 @@ import { emptyTokens, setToken } from '@/functions/tokenStore';
 import * as SecureStore from 'expo-secure-store';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { useMembre } from './contexteMembre';
-import { useMockMode } from './contexteMockMode';
 
 type AuthState = 'loading' | 'authenticated' | 'unauthenticated';
 
@@ -25,8 +24,7 @@ const AuthContexte = createContext<AuthContextType | undefined>(undefined);
  * @returns
  */
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const { getMembre, resetMembre, setMockMembre } = useMembre();
-    const { isMockMode } = useMockMode()    
+    const { getMembre, resetMembre } = useMembre();
 
     const [state, setState] = useState<AuthState>('loading');
 

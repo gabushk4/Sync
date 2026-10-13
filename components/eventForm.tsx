@@ -1,6 +1,5 @@
 import TextInputAbs from '@/abstractions/textInputAbs'
 import { useFont } from '@/contextes/contexteFont'
-import { useMembre } from '@/contextes/contexteMembre'
 import { usePalette } from '@/contextes/contextePalette'
 
 import { Event, Recurrence } from '@/types/calendar'
@@ -16,7 +15,7 @@ import { useFocusEffect } from 'expo-router'
 import { DateTime } from 'luxon'
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native'
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 
 import SwitchAbs from '@/abstractions/switchAbs'
 import { useEventDraft } from '@/contextes/contexteEventDraft'
@@ -61,6 +60,8 @@ type Props = {
         maximumStart?: DateTime;
         minimumStart?: DateTime;
     }
+    /** Hides the participants section (the invitation decision page shows its own list). */
+    masquerParticipants?: boolean
     // setEvent n'est plus utilisé pour la synchronisation continue.
     // Garde-le seulement si un autre écran en dépend pour un aperçu readonly.
     setEvent?: React.Dispatch<React.SetStateAction<Event>>
@@ -82,13 +83,11 @@ const dtNow = DateTime.now()
  */
 const EventForm = forwardRef<EventFormHandle, Props>(
 
-function EventForm({ event, prefills, constraints, mode }, ref) {
+function EventForm({ event, prefills, constraints, mode, masquerParticipants = false }, ref) {
     const { t } = useTranslation('events')
     const { colors } = usePalette()
     const { fonts } = useFont()
-    const { membre } = useMembre()
-    const colorScheme = useColorScheme()
-    const { ajouterInvite, invites } = useInvites()    
+    const { ajouterInvite } = useInvites()    
     const {start, end, setStart, setEnd, setRequestsEnabled} = useEventDraft()
         
     // Parenthesized explicitly: `? :` binds looser than `||`, so without the
@@ -458,13 +457,14 @@ function EventForm({ event, prefills, constraints, mode }, ref) {
                 
             </View>
 
-            <View style={[s.champ, {height:'auto', paddingBottom:0}]}>
+            {/* masquerParticipants: invitation decision page (Philip Kvaratshelya — user story 8). */}
+            {!masquerParticipants && <View style={[s.champ, {height:'auto', paddingBottom:0}]}>
                 <ParticipantsListe
                     participantsUrl={eventParticipantsControlUrl}
                     listType='event'
                     peutGererParticipants={mode === 'details' && event.privilege_membre === 'editeur' || mode === 'create'}
                 />                
-            </View>
+            </View>}
 
             <Modal visible={showTextModal} transparent={true} backdropColor="transparent">
                 <Pressable />

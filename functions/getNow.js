@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import {DateTime} from 'luxon'
 import log from "./log"
 

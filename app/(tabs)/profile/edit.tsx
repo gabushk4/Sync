@@ -8,7 +8,8 @@ import catcher from "@/functions/catcher";
 import ChooseImage from '@/functions/choisirImage';
 import log from "@/functions/log";
 import { useActionFab } from "@/hooks/useActionFAB";
-import { FPType } from "@/types/pfp";
+import { FPType, isFpObject } from "@/types/pfp";
+import Ionicons from "@react-native-vector-icons/ionicons";
 import { useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
@@ -18,8 +19,7 @@ export default function EditProfil() {
     const { colors } = usePalette()
     const { fonts } = useFont()
     const colorScheme = useColorScheme()
-    const { patchProfil, membre } = useMembre()
-    const { APIBaseURL } = useAPI()
+    const { patchProfil, membre } = useMembre()    
 
     const icones = {
         camera:colorScheme === 'dark' ?require('@/assets/icones/camera-dark-icon.png'):require('@/assets/icones/camera-light-icon.png'),        
@@ -29,7 +29,7 @@ export default function EditProfil() {
     const [pseudo, setPseudo] = useState<string>(membre.pseudo ?? '')
     const [bio, setBio] = useState<string>(membre.bio ?? '')
     const [etatAme, setEtatAme] = useState<string>(membre.etatAme ?? '')
-    const [fpSource, setFpSource] = useState<FPType>(membre.fp ? { uri: `${membre.fp}` } : icones.profilDef)
+    const [fpSource, setFpSource] = useState<FPType>(membre.fp ? membre.fp : icones.profilDef)
 
     const verifierAvantPatch = async () =>{
         log('verif avant patch: fpSource' , fpSource)
@@ -42,10 +42,11 @@ export default function EditProfil() {
         if(bio !== membre.bio) bioNouv = bio
         if(etatAme !== (membre.etatAme ?? '')) etatAmeNouv = etatAme
 
-        // determine if fpSource is an object with uri
-        const maybeUri = (fpSource as any)?.uri
-        if(maybeUri && maybeUri !== `${APIBaseURL}${membre.fp}`) fpNouv = fpSource as FPType
-        else if (fpSource !== icones.profilDef && typeof fpSource === 'string') fpNouv = fpSource as FPType
+        // fpSource est un objet {uri, mimeType, fileName} uniquement quand une nouvelle image vient d'être choisie
+        if (isFpObject(fpSource)) fpNouv = fpSource;
+        
+        log("nouvFp", fpNouv, membre.fp)
+
         try {
             await patchProfil(pseudoNouv, bioNouv, fpNouv, etatAmeNouv)
         } catch (err) {
@@ -55,13 +56,16 @@ export default function EditProfil() {
 
     const pickImage = async () => {
         await ChooseImage((img) => {
-            setFpSource({ uri: img.uri, mimeType: img.type, fileName: img.fileName })
+            setFpSource({ uri: img.uri, mimeType: img.mimeType ?? "image/jpeg", fileName: img.fileName ?? img.uri.split('/').pop() })
         })
     }
 
-    useActionFab({
+    useActionFab("profil-edit", {
         action: verifierAvantPatch,
-        icon: undefined
+        config: {
+            icon: <Ionicons name='checkmark' color={colors.text} size={24}/>,
+            visible: true
+        }
     })
 
     const s = StyleSheet.create({
