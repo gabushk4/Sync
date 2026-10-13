@@ -15,7 +15,7 @@ import parseIcs from './parseIcs'
  *
  * Les deux sources produisent le même format d'évènement, puis passent par le même traitement
  * (doublons, conflits, envoi au serveur) :
- *   { source: 'telephone' | 'ics', source_id, titre, description, debut: DateTime, fin: DateTime }
+ *   { source: 'telephone' | 'ics', source_id, titre, description, debut: DateTime, fin: DateTime, jourFerie }
  *
  * source_id identifie l'évènement dans sa source d'origine (UID du .ics, identifiant du téléphone) :
  * le serveur s'en sert pour mettre à jour un évènement déjà importé au lieu de le dupliquer.
@@ -26,6 +26,27 @@ const JOURS_AVANT = 7
 const ANS_APRES = 5
 
 export class FichierNonIcsErreur extends Error {}
+
+/* ------------------------------------------------------------------ */
+/* Jours fériés                                                        */
+/* ------------------------------------------------------------------ */
+
+// Noms usuels des calendriers de jours fériés : "Jours fériés au Canada", "Holidays in Canada",
+// "Canadian Holidays", "Feriados en...", "Feiertage in..."
+const MOTS_FERIES = /holiday|f[ée]ri[ée]|feriado|festivo|feiertag/i
+// Description des jours fériés dans les calendriers Google ("Public holiday", "Jour férié")
+const DESCRIPTION_FERIE = /public holiday|jour f[ée]ri[ée]/i
+
+/**
+ * Un jour férié : un évènement toute la journée qui vient d'un calendrier de jours fériés
+ * (ou qui se décrit lui-même comme tel). Les autres évènements toute la journée ne sont pas concernés.
+ */
+function estJourFerie({ jourEntier, nomCalendrier, categories, description }){
+    if (!jourEntier) return false
+    return MOTS_FERIES.test(nomCalendrier ?? '')
+        || MOTS_FERIES.test(categories ?? '')
+        || DESCRIPTION_FERIE.test(description ?? '')
+}
 
 /* ------------------------------------------------------------------ */
 /* Sources                                                             */
@@ -63,6 +84,7 @@ export function evenementsDepuisIcs(texteIcs, titreParDefaut = 'Évènement'){
             description: ev.description?.trim() ?? '',
             debut: ev.debut,
             fin: ev.fin,
+            jourFerie: estJourFerie(ev),
         }))
 }
 
@@ -77,6 +99,8 @@ export async function evenementsDepuisTelephone(calendriers, titreParDefaut = '�
     fin.setFullYear(fin.getFullYear() + ANS_APRES)
 
     const evenements = await Calendar.getEventsAsync(calendriers.map((c) => c.id), debut, fin)
+    // nom de chaque calendrier (et de son compte), pour reconnaître un calendrier de jours fériés
+    const nomsCalendriers = new Map(calendriers.map((c) => [c.id, `${c.title ?? ''} ${c.source?.name ?? ''}`]))
 
     return evenements.flatMap((event) => {
         const debutEv = DateTime.fromJSDate(new Date(event.startDate)).toUTC()
@@ -97,6 +121,11 @@ export async function evenementsDepuisTelephone(calendriers, titreParDefaut = '�
             description: details.join('\n'),
             debut: debutEv,
             fin: finEv,
+            jourFerie: estJourFerie({
+                jourEntier: Boolean(event.allDay),
+                nomCalendrier: nomsCalendriers.get(event.calendarId),
+                description: event.notes,
+            }),
         }]
     })
 }
@@ -112,10 +141,17 @@ const memeTitre = (a, b) => (a ?? '').trim().toLowerCase() === (b ?? '').trim().
  * (par exemple parce que le même fichier a déjà été importé) → ignoré.
  */
 function estDoublon(importe, existant){
+    // un jour férié déjà importé avant d'être reconnu comme tel est renvoyé au serveur,
+    // qui le marque comme jour férié au lieu de le dupliquer
+    if (importe.jourFerie && existant.jour_ferie === false) return false
     return memeCreneau(importe, existant) && memeTitre(importe.titre, existant.titre)
 }
 
-/** Un "conflit" : deux évènements différents qui ont exactement le même début ET la même fin. */
+/**
+ * Un "conflit" : deux évènements différents qui ont exactement le même début ET la même fin.
+ * Les jours fériés ne causent jamais de conflit : plusieurs le même jour n'ont rien d'anormal,
+ * et ils n'empêchent pas d'avoir d'autres évènements ce jour-là.
+ */
 function memeCreneau(a, b){
     return a.debut?.toMillis?.() === b.debut?.toMillis?.() && a.fin?.toMillis?.() === b.fin?.toMillis?.()
 }
@@ -139,8 +175,10 @@ export function dedupliquerEtDetecterConflits(evenementsImportes, evenementsExis
             continue
         }
 
-        const conflit = evenementsExistants.find((existant) => memeCreneau(importe, existant))
-            ?? dejaVus.find((autre) => memeCreneau(importe, autre))
+        const conflit = importe.jourFerie
+            ? undefined
+            : evenementsExistants.find((existant) => !existant.jour_ferie && memeCreneau(importe, existant))
+                ?? dejaVus.find((autre) => !autre.jourFerie && memeCreneau(importe, autre))
 
         if (conflit) conflits.push({ importe, existant: conflit })
         else aImporter.push(importe)
@@ -201,6 +239,7 @@ export async function envoyerEvenements(api, evenements){
             description: ev.description ?? '',
             debut: ev.debut.toUTC().toISO(),
             fin: ev.fin.toUTC().toISO(),
+            jour_ferie: Boolean(ev.jourFerie),
         }))
 
         const { data } = await api.post('/evenements/import', { evenements: lot })

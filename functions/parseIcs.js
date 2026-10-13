@@ -48,14 +48,21 @@ function parserLigne(ligne){
  *   - "20250614T170000Z"               → UTC explicite
  *   - "20250614T170000" + TZID=Zone    → heure locale dans cette zone, puis convertie en UTC
  *   - "20250614T170000" (sans TZID)    → supposée locale au fuseau du membre (fallback)
- *   - "20250614" (VALUE=DATE)          → évènement toute la journée, minuit UTC
+ *   - "20250614" (VALUE=DATE)          → évènement toute la journée (ex. jour férié), minuit
+ *                                        dans le fuseau du membre, pour qu'il reste sur le bon jour
  */
+
+/** true si la valeur est une date seule (évènement toute la journée, ex. un jour férié) */
+function estDateSeule(champ){
+    return champ.params.VALUE === 'DATE' || /^\d{8}$/.test(champ.valeur)
+}
 
 function parserDateIcs(champ,timezoneParDefault = 'UTC'){
     const {valeur,params} = champ
 
-    if(params.VALUE === 'DATE' || /^\d{8}$/.test(valeur) ){
-        return DateTime.fromFormat(valeur,'yyyyMMdd',{zone:'utc'})
+    if(estDateSeule(champ)){
+        // minuit UTC décalerait le jour (ex. 20 h la veille à Montréal) : minuit local
+        return DateTime.fromFormat(valeur,'yyyyMMdd',{zone: timezoneParDefault}).toUTC()
     }
     if(valeur.endsWith('Z')){
         return DateTime.fromFormat(valeur.slice(0,-1),"yyyyMMdd'T'HHmmss",{zone:'utc'})
@@ -68,7 +75,7 @@ function parserDateIcs(champ,timezoneParDefault = 'UTC'){
 /**
   @param {string} texteIcs contenu brut du fichier .ics
  * @param {string} timezoneParDefaut fuseau à utiliser si DTSTART/DTEND n'a pas de TZID
- * @returns {Array<{uid, titre, description, debut, fin}>} évènements, debut/fin en DateTime UTC
+ * @returns {Array<{uid, titre, description, categories, nomCalendrier, debut, fin, jourEntier}>} évènements, debut/fin en DateTime UTC
  */
 
 
@@ -77,24 +84,38 @@ function parserDateIcs(champ,timezoneParDefault = 'UTC'){
 
     const evenements = []
     let courant = null
+    let dansAlarme = false
+    // nom du calendrier exporté (ex. "Jours fériés au Canada"), sert à reconnaître les jours fériés
+    let nomCalendrier = ''
     
     for(const ligne of lignes){
         if(ligne === 'BEGIN:VEVENT'){
             courant = {}
             continue
         }
+        // un rappel (VALARM) a son propre DESCRIPTION, qui écraserait celui de l'évènement
+        if(ligne === 'BEGIN:VALARM'){ dansAlarme = true; continue }
+        if(ligne === 'END:VALARM'){ dansAlarme = false; continue }
+        if(dansAlarme) continue
         if(ligne === 'END:VEVENT'){
+            // un évènement toute la journée peut ne pas avoir de DTEND : il dure alors 1 jour
+            if(courant?.jourEntier && courant?.debut && !courant?.fin){
+                courant.fin = courant.debut.setZone(timezoneParDefault).plus({ days: 1 }).toUTC()
+            }
             if(courant?.uid && courant?.debut && courant?.fin){
-                evenements.push(courant)
+                evenements.push({ ...courant, nomCalendrier })
             } else{
                 log('parseIcs: VEVENT ignoré (champs requis manquants', courant)
             }
             courant = null
             continue
         }
-        if(!courant) continue
         const champ = parserLigne(ligne)
         if(!champ) continue
+        if(!courant){
+            if(champ.nom === 'X-WR-CALNAME') nomCalendrier = deechapper(champ.valeur).trim()
+            continue
+        }
         try{
             switch (champ.nom){
                 case 'UID' :
@@ -106,8 +127,12 @@ function parserDateIcs(champ,timezoneParDefault = 'UTC'){
                 case 'DESCRIPTION':
                     courant.description = deechapper(champ.valeur)
                     break
+                case 'CATEGORIES':
+                    courant.categories = deechapper(champ.valeur)
+                    break
                 case 'DTSTART':
                     courant.debut = parserDateIcs(champ,timezoneParDefault)
+                    courant.jourEntier = estDateSeule(champ)
                     break
                 case 'DTEND':
                     courant.fin = parserDateIcs(champ,timezoneParDefault)
