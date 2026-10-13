@@ -9,7 +9,7 @@ export type ResolutionConflit = 'garder_existant' | 'garder_importe' | 'garder_l
 
 
 type Props = {
-    importe: { uid: string; titre?: string; debut: any; fin?: any }
+    importe: { source_id?: string; titre?: string; debut: any; fin?: any }
     existant: { id_publique?: string; titre?: string; debut?: any; fin?: any }
     resolution : ResolutionConflit | undefined
     onChoisir: (resolution: ResolutionConflit) => void
