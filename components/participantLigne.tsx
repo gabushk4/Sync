@@ -9,6 +9,7 @@ import { Participant } from '@/types/invites';
 import { useEffect, useState, } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { iconeStatutInvitation } from './legendeStatutsInvitation';
 import ProfilPic from './pfp';
 
 type Props = {
@@ -44,9 +45,6 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
     const icone = {
         admin: colorScheme === "dark" ? require('@/assets/icones/admin-dark-icon.png'):require('@/assets/icones/admin-light-icon.png'),
         fpDef: colorScheme === "dark" ? require('@/assets/icones/profil-dark-icon.png'):require('@/assets/icones/profil-light-icon.png'),
-        en_attente: colorScheme === "dark" ? require('@/assets/icones/horloge-dark-icon.png'):require('@/assets/icones/horloge-light-icon.png'),
-        accepte:require('@/assets/icones/icon-succes-checkmark.png'),
-        refuse:require('@/assets/icones/icon-erreur.png'),
         croix:colorScheme === "dark" ? require('@/assets/icones/croix-dark-icon.png'):require('@/assets/icones/croix-light-icon.png')
     }
 
@@ -208,7 +206,7 @@ export default function ParticipantLigne({participant, participantsUrl = undefin
                     <View style={s.status}>
                         {p.statut && (                            
                             <Image
-                                source={p.statut === 'refusee' ? icone.refuse : p.statut === 'acceptee' ? icone.accepte : icone.en_attente}
+                                source={iconeStatutInvitation(p.statut, colorScheme)}
                                 style={{height:18, width:18}}
                                 resizeMode='contain'
                             />

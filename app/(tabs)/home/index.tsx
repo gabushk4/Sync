@@ -33,7 +33,7 @@ import { useTimeline } from '@/contextes/contexteTimeline';
 //import {seedData} from '@/seed'
 import { withSpringConfig } from '@/constants/ReanimatedConfs';
 import AutoRefresh from '@/functions/autoRefresh';
-import { formaterEvenementsMembre, paramsJour } from '@/functions/evenementsMembre';
+import { estJourFerie, formaterEvenementsMembre, joursFeriesDuJour, paramsJour } from '@/functions/evenementsMembre';
 import { debutCreationPourJour, estJourPasse } from '@/functions/jourCreation';
 import { calendrierEvents } from '@/events/calendrierEvents';
 import { Friend } from '@/types/calendar';
@@ -54,7 +54,7 @@ const HAUTEUR_RETOUR = 34
 
 // "Back to today" tab in the bottom bar (against the screen's edge): width and
 // corner radius.
-const LARGEUR_ONGLET = 40
+const LARGEUR_ONGLET = 52
 const RAYON_ONGLET = 10
 const { width: WIN_W, height: WIN_H } = Dimensions.get('window')
 
@@ -141,6 +141,12 @@ export default function Home() {
   const jourAfficheRef = useRef<DateTime | undefined>(undefined)
   useEffect(() => { jourAfficheRef.current = todayDateTime }, [todayDateTime])
 
+  // Holidays (imported, see estJourFerie) are shown under the date in the bottom bar,
+  // but they don't occupy the day: no block on the timeline, no "fully booked" card,
+  // and they don't remove common free slots.
+  const evenementsHoraire = useMemo(() => userEvents.filter((ev: any) => !estJourFerie(ev)), [userEvents])
+  const feriesDuJour = useMemo(() => joursFeriesDuJour(userEvents, todayDateTime), [userEvents, todayDateTime])
+
   // Whether the loaded events are the displayed day's (see jourMembre / jourAmis).
   const evenementsMembreAJour = !!todayDateTime && !!jourMembre?.hasSame(todayDateTime, 'day')
   const evenementsAmisAJour = !!todayDateTime && !!jourAmis?.hasSame(todayDateTime, 'day')
@@ -152,8 +158,8 @@ export default function Home() {
     const debutJour = todayDateTime.startOf('day')
     // One minute of slack: a whole-day event often ends at 23:59(:59).
     const finJour = debutJour.plus({ days: 1 }).minus({ minutes: 1 })
-    return userEvents.find((ev: any) => ev?.debut && ev?.fin && ev.debut <= debutJour && ev.fin >= finJour)
-  }, [userEvents, todayDateTime, evenementsMembreAJour])
+    return evenementsHoraire.find((ev: any) => ev?.debut && ev?.fin && ev.debut <= debutJour && ev.fin >= finJour)
+  }, [evenementsHoraire, todayDateTime, evenementsMembreAJour])
 
   // Common free slots only once both rows hold the displayed day's events, and
   // none on a fully booked day.
@@ -300,6 +306,8 @@ export default function Home() {
           // couldn't open), stored the title as `title` while ListItem reads `titre`
           // (friends' events showed no title), and sorted on a missing `start` field.
           const evenements = (ami.evenements || [])
+                // a friend's holidays don't occupy their row either
+                .filter((ev: any) => !estJourFerie(ev))
                 .map((ev: any) => {
                   const start = convertUTCToLocal(ev.debut, membre.timezone)
                   const end = convertUTCToLocal(ev.fin, membre.timezone)
@@ -755,12 +763,12 @@ export default function Home() {
     texteAujourdhui: {
       color: colors.background,
       fontFamily: fonts.title,
-      fontSize: 13,
+      fontSize: 16,
     },
     // The time ("14:37") and a month ("sept") are wider than a day number: smaller
     // so they fit the tab.
     texteMaintenant: {
-      fontSize: 10,
+      fontSize: 13,
     },
     // Member's timeline + the fixed "fully booked" card laid over it.
     zoneTimelineMembre: {
@@ -807,6 +815,16 @@ export default function Home() {
       color: colors.text,
       fontFamily: fonts.title,
       fontSize: 16,
+    },
+    // Date + holiday name, stacked in the date pill.
+    colonneDate: {
+      alignItems: 'center',
+      maxWidth: 150,
+    },
+    texteFerie: {
+      color: colors.secondary,
+      fontFamily: fonts.body,
+      fontSize: 11,
     },
     placeholder: {
       flex: 1,
@@ -874,7 +892,7 @@ export default function Home() {
                   >
                     {friends.map((friend) => {
                       const commonFreeSlots = dispoCommunesPossibles
-                        ? getCommonFreeSlots(userEvents, friend.evenements, todayDateTime)
+                        ? getCommonFreeSlots(evenementsHoraire, friend.evenements, todayDateTime)
                         : []
                       return(
                         <View key={friend.id} style={[s.friendList]}>
@@ -926,7 +944,7 @@ export default function Home() {
                 <EventsList
                   owner={membre}
                   commonFreeSlots={undefined}
-                  events={userEvents}
+                  events={evenementsHoraire}
                   offsetSnap={L_HEURES + pxHeures}
                   eventsColor={colors.primary}
                   textColor={colors.text}
@@ -997,9 +1015,17 @@ export default function Home() {
                   style={s.iconeDate}
                   resizeMode='contain'
                 />
-                <Text style={s.texteDate}>
-                  {todayDateTime?.toFormat('d MMM')}
-                </Text>
+                <View style={s.colonneDate}>
+                  <Text style={s.texteDate}>
+                    {todayDateTime?.toFormat('d MMM')}
+                  </Text>
+                  {/* Holiday(s) of the displayed day: shown here instead of on the timeline */}
+                  {feriesDuJour.length > 0 && (
+                    <Text style={s.texteFerie} numberOfLines={1}>
+                      {feriesDuJour.join(', ')}
+                    </Text>
+                  )}
+                </View>
               </TouchableOpacity>
               <TouchableOpacity style={s.arrow} onPress={avancerDate}>
                 <Image

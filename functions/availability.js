@@ -14,6 +14,8 @@ const applyBusyTimes = (bitmap, events, date) => {
   const dayEnd = date?.endOf('day')
 
   for (const ev of events ?? []) {
+    // un jour férié ne rend pas la personne occupée
+    if (ev?.jour_ferie) continue
     const debut = ev?.debut
     const fin = ev?.fin
     if (!debut || !fin) continue

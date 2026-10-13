@@ -5,9 +5,9 @@
 		"ends": "finit"
 	},
 	"import": {
-		"title": "Importer le calendrier système",
+		"title": "Importer un calendrier",
 		"chooseCalendars": "Calendriers à importer",
-		"description": "Choisissez les calendriers à importer. Sync enregistrera les titres, horaires, notes et lieux des événements à venir (jusqu’à 5 ans) dans votre compte.",
+		"description": "Ajoutez à Sync les événements d’un autre calendrier. Ceux déjà présents sont ignorés, et on vous demandera quoi faire en cas de conflit d’horaire.",
 		"permissionTitle": "Autoriser l’accès au calendrier",
 		"permissionDescription": "Sync a besoin d’un accès en lecture pour trouver les événements à importer.",
 		"grantPermission": "Autoriser l’accès",
@@ -21,7 +21,20 @@
 		"success": "{{imported}} événement(s) importé(s), {{duplicates}} déjà présent(s).",
 		"nothingToImport": "Aucun événement à venir trouvé dans cette période.",
 		"failed": "Impossible d’importer les événements. Réessayez.",
-		"untitled": "Événement sans titre"
+		"untitled": "Événement sans titre",
+		"phoneSection": "Depuis votre téléphone",
+		"phoneDescription": "Sync enregistrera les titres, horaires, notes et lieux des événements à venir (jusqu’à 5 ans) des calendriers choisis.",
+		"icsSection": "Depuis un fichier .ics",
+		"icsDescription": "Un fichier exporté depuis Google Agenda, Outlook, Apple Calendar ou toute autre plateforme.",
+		"chooseFile": "Choisir un fichier .ics",
+		"icsEmpty": "Aucun événement trouvé dans ce fichier.",
+		"icsInvalid": "Choisissez un fichier .ics.",
+		"conflictsTitle_one": "{{count}} conflit d’horaire détecté",
+		"conflictsTitle_other": "{{count}} conflits d’horaire détectés",
+		"conflictsDescription": "Ces événements importés occupent le même créneau qu’un événement déjà présent dans Sync.",
+		"confirmImport": "Confirmer l’import",
+		"chooseEachConflict": "Choisissez une option pour chaque conflit",
+		"cancelImport": "Annuler l’import"
 	},
 	"month": {
 		"pickDay": "Touche un jour pour voir ses événements.",

@@ -5,8 +5,8 @@
   "scripts": {
     "prestart": "node scripts/update-api-base-url.js",
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "test": "jest --ci --runInBand"
@@ -15,6 +15,7 @@
     "@expo-google-fonts/inter": "^0.2.3",
     "@expo-google-fonts/karla": "^0.2.3",
     "@expo-google-fonts/nunito": "^0.2.3",
+    "@expo/cli": "^57.0.25",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "^9.1.0",
     "@react-native-picker/picker": "2.11.4",
@@ -73,6 +74,7 @@
     "react-native-screens": "~4.26.0",
     "react-native-svg": "15.15.4",
     "react-native-toast-message": "^2.3.3",
+    "react-native-web": "^0.21.2",
     "react-native-worklets": "0.10.1",
     "redash": "^0.23.0",
     "tinycolor2": "^1.6.0",

@@ -5,9 +5,9 @@
 		"ends": "ends"
 	},
 	"import": {
-		"title": "Import system calendar",
+		"title": "Import a calendar",
 		"chooseCalendars": "Calendars to import",
-		"description": "Choose which calendars to import. Sync will save upcoming event titles, times, notes, and locations to your account (up to 5 years).",
+		"description": "Add events from another calendar to Sync. Events already in Sync are skipped, and you’ll be asked what to do about schedule conflicts.",
 		"permissionTitle": "Allow calendar access",
 		"permissionDescription": "Sync needs read access to find events to import.",
 		"grantPermission": "Allow access",
@@ -21,7 +21,20 @@
 		"success": "{{imported}} event(s) imported, {{duplicates}} already existed.",
 		"nothingToImport": "No upcoming events were found in this period.",
 		"failed": "Could not import events. Try again.",
-		"untitled": "Untitled event"
+		"untitled": "Untitled event",
+		"phoneSection": "From your phone",
+		"phoneDescription": "Sync will save upcoming event titles, times, notes, and locations (up to 5 years) from the calendars you choose.",
+		"icsSection": "From an .ics file",
+		"icsDescription": "A file exported from Google Calendar, Outlook, Apple Calendar, or any other platform.",
+		"chooseFile": "Choose an .ics file",
+		"icsEmpty": "No events were found in this file.",
+		"icsInvalid": "Choose an .ics file.",
+		"conflictsTitle_one": "{{count}} schedule conflict found",
+		"conflictsTitle_other": "{{count}} schedule conflicts found",
+		"conflictsDescription": "These imported events take the same time slot as an event already in Sync.",
+		"confirmImport": "Confirm import",
+		"chooseEachConflict": "Choose an option for each conflict",
+		"cancelImport": "Cancel import"
 	},
 	"month": {
 		"pickDay": "Tap a day to see its events.",

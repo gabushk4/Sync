@@ -52,6 +52,7 @@ export default function CreateEvent({ }) {
     const {api} = useAPI()
     const {invites, resetInvites} = useInvites()
     const {membre, getMembre} = useMembre()
+    
     const formRef = useRef<EventFormHandle>(null)
 
     const { start, end, friend } = useLocalSearchParams<{ start?: string, end?: string, friend?: string }>()

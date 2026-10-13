@@ -69,7 +69,7 @@ export default function ProfilEcran(){
     const paramsOptionBottom = useSharedValue(0)
     const editOptionBottom = useSharedValue(0)
     const logOutOptionBottom = useSharedValue(0)
-    const importOptionBottom = useSharedValue(0) // story #7 : importer un calendrier .ics
+    const importOptionBottom = useSharedValue(0) // stories #4 et #7 : importer un calendrier
     const optionOpacity = useSharedValue(0)
 
     const opaciteAnime = useSharedValue(1)
@@ -450,12 +450,12 @@ export default function ProfilEcran(){
                         >
                             <Icon name='log-out' color={colors.error} size={28} />
                         </AnimatedTouchableOpacity>
-                        {/* Story #7 : importer un calendrier .ics */}
+                        {/* Stories #4 et #7 : importer un calendrier (téléphone ou .ics) */}
                         <AnimatedTouchableOpacity
                             style={[s.floatingButton, s.floatingOption, importOptionAnimated]}
                             onPress={() => {
                                 toggleHamburgerMenu()
-                                router.push('/(tabs)/profile/importCalendrier')
+                                router.push('/(tabs)/profile/importCalendar')
                             }}
                         >
                             <Icon name='calendar' color={colors.text} size={28} />

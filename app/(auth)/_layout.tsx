@@ -11,6 +11,17 @@ export default function AuthLayout() {
     >
       <Stack.Screen name="login" options={{ headerTitle: t('navigation.login'), }} />
       <Stack.Screen name="register" options={{ headerTitle: t('navigation.register')}} />
+      {/* "Forgot password" sheet (ModalBase) over the login screen. Philip Kvaratshelya — rectification. */}
+      <Stack.Screen
+        name="mdpOublie"
+        options={{
+          presentation: 'transparentModal',
+          animation: 'fade',
+          animationDuration: 50,
+          headerShown: false,
+          contentStyle: { backgroundColor: 'transparent' },
+        }}
+      />
     </Stack>
   );
 }

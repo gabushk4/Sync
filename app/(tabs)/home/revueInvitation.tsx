@@ -1,5 +1,5 @@
 import Ionicons from '@react-native-vector-icons/ionicons'
-import { useFocusEffect, useLocalSearchParams } from 'expo-router'
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router'
 import { DateTime } from 'luxon'
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -53,7 +53,8 @@ type Horaires = { leader: PersonneHoraire | null, invites: PersonneHoraire[], mo
  * rows, colored by each person's answer (accepted green, pending yellow, refused
  * red; darker green for the leader's). The invited event in the leader's row and
  * in the member's own can be tapped: it opens the decision page (the event,
- * read-only, to accept or refuse). The leader's row and friends' rows also show
+ * read-only, to accept or refuse); the member's other events open their details,
+ * to move or delete one in conflict. The leader's row and friends' rows also show
  * the free slots shared with the member. The rows scroll together, starting on the
  * event's hour.
  *
@@ -89,8 +90,9 @@ export default function RevueInvitation() {
      * Converts a row's events to the timeline's format, with this screen's
      * display: the invited event colored by its answer (couleurStatutInvitation) —
      * a darker green in the leader's row — and tappable in the leader's row and the
-     * member's own (both open the decision page); every other event is a plain
-     * block that can't be tapped — with its title for a friend, or grey and
+     * member's own (both open the decision page); the member's other events are
+     * tappable too (their details); every other event is a plain block that
+     * can't be tapped — with its title for a friend, or grey and
      * "private" for someone who isn't a friend (`masque`, the API sends no title).
      *
      * @author Philip Kvaratshelya — user story 8 (answering an invitation)
@@ -112,8 +114,31 @@ export default function RevueInvitation() {
                     : couleurStatutInvitation(ev.statut_invitation, colors)
                 : ev.masque ? colors.muted : undefined,
 
-            cliquable: !!ev.est_invitation && role !== 'invite'
+            // The member's own events too: they open their details, to move or
+            // delete one in conflict (Philip Kvaratshelya — user story 8).
+            cliquable: role === 'moi' || (!!ev.est_invitation && role === 'leader')
         }) as Event))
+
+    /**
+     * Tap on an event of the review: the invited event opens the decision page;
+     * one of the member's own events opens its details (edit / delete / leave),
+     * pushed over this screen so going back returns here (reloaded on focus).
+     *
+     * @author Philip Kvaratshelya — user story 8 (adjusting my schedule)
+     * @param {Event} ev
+     * @returns {void}
+     */
+    const ouvrirEvenement = (ev: Event) => {
+        if ((ev as any).est_invitation) {
+            if (invitation) ouvrirDecisionInvitation(invitation, { depuisRevue: true })
+            return
+        }
+        if (!ev.id || !ev.debut) return
+        router.push({
+            pathname: '/(tabs)/home/details/[eventId]',
+            params: { eventId: ev.id, start: ev.debut.toISO(), end: (ev.fin ?? ev.debut).toISO() },
+        } as any)
+    }
 
     /**
      * Events that make a person busy, for the common free slots: everything but the
@@ -225,8 +250,9 @@ export default function RevueInvitation() {
                 horizontal
                 commonFreeSlots={dispoCommunes}
                 getEvenements={() => {}}
-                // The invited event tapped (the leader's or the member's): the decision page.
-                onPressEvenement={() => invitation && ouvrirDecisionInvitation(invitation, { depuisRevue: true })}
+                // The invited event (leader's or member's row): the decision page; the
+                // member's own events: their details.
+                onPressEvenement={ouvrirEvenement}
                 defilerMaintenant={false}
             />
         </View>

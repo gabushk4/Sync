@@ -463,6 +463,8 @@ function EventForm({ event, prefills, constraints, mode, masquerParticipants = f
                     participantsUrl={eventParticipantsControlUrl}
                     listType='event'
                     peutGererParticipants={mode === 'details' && event.privilege_membre === 'editeur' || mode === 'create'}
+                    // Invited member (not an editor): reminder of the status icons.
+                    afficherLegende={mode === 'details' && event.privilege_membre !== 'editeur'}
                 />                
             </View>}
 
