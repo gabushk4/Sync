@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { useFocusEffect } from "expo-router/react-navigation";
 import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -8,7 +9,6 @@ import { createLinkStyles, LinkAbs } from '@/abstractions/linkAbs';
 import TextInputAbs from '@/abstractions/textInputAbs';
 import ToastAbs from '@/abstractions/toastAbs';
 
-import MotDePasseOublie from '@/components/motDePasseOublie';
 import ServerStatus from '@/components/serverStatus';
 
 import { toastTypes } from '@/constants/toastConfig';
@@ -47,8 +47,6 @@ export default function ConnexionEcran(){
     const [masquerMdp, setMasquerMdp] = useState(true)
     const [estDesactive, setEstDesactive] = useState(true)
     const [enChargement, setEnChargement] = useState(false)
-    // "Forgot password" window (Philip Kvaratshelya — rectification).
-    const [montrerMdpOublie, setMontrerMdpOublie] = useState(false)
 
     const connecter = async () => {
         setEstDesactive(true);
@@ -204,8 +202,8 @@ export default function ConnexionEcran(){
                             {t('login.noAccount')}
                         </LinkAbs>
                         <TouchableOpacity
-                            // Opened the reset flow nowhere before (it only logged).
-                            onPress={() => setMontrerMdpOublie(true)}
+                            // "Forgot password" sheet, in ModalBase (Philip Kvaratshelya — rectification).
+                            onPress={() => router.push('/(auth)/mdpOublie' as any)}
                         >
                             <Text style={linkStyle.link}>
                                 {t('login.forgotPassword')}
@@ -215,7 +213,6 @@ export default function ConnexionEcran(){
                     
             </KeyboardAvoidingView>    
         </Pressable>
-        <MotDePasseOublie visible={montrerMdpOublie} onFermer={() => setMontrerMdpOublie(false)} />        
         </View>              
     )
     

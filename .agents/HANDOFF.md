@@ -436,8 +436,9 @@ Non corrigé (noté) :
 
 ### Mot de passe oublié + journal des erreurs (2026-10-11)
 - App : le bouton « mot de passe oublié » de `login.tsx` ne faisait qu'un log.
-  `components/motDePasseOublie.tsx` (Modal RN : les routes (modals) exigent d'être
-  connecté) → `POST /recuperation/demande` (API user story 14 déjà prête), spinner,
+  `components/motDePasseOublie.tsx`, affiché dans `ModalBase` par la route
+  `app/(auth)/mdpOublie.tsx` (transparentModal dans (auth) : les routes (modals) exigent
+  d'être connecté ; 2026-10-13, avant c'était un Modal RN) → `POST /recuperation/demande` (API user story 14 déjà prête), spinner,
   erreur affichée dans la fenêtre, toast de succès. Textes `forgot.*` dans `auth.json`.
   Testé : courriel inconnu → 400 « Adresse courriel introuvable ». Envoi réel pas testé
   (pour ne pas envoyer de courriel).
@@ -487,3 +488,13 @@ Non corrigé (noté) :
   (`20260928000000_conversations_couverture_optionnelle.js`) ; bugs hors sujet listés
   plus haut (exceptions récurrentes, fenêtre récurrente de `verifierDisponibilite`,
   énumération de comptes sur `/recuperation/demande`, erreurs de l'app non journalisées).
+
+## « Jour entier » : dates d'une plage du calendrier conservées (13/10/2026) — Philip Kvaratshelya
+- `components/datetimeSelecteurs.tsx` (`basculerJourEntier`) : désactiver Jour entier sur une
+  plage du calendrier gardait « aujourd'hui + 1 h → début + 1 h » ; les jours sont maintenant
+  conservés (début = 1er jour à l'heure suivante, fin = dernier jour une heure plus tard).
+- `create.tsx` : retrait de `useRouter` / `useAccessToken` utilisés sans import (reste de la
+  fusion `fix/T6-dead-code` dans `main` → la création plantait).
+- Doc : `docs/12-jour-entier.md` (lien dans `docs/README.md`).
+- Bug hors sujet noté (non corrigé, T13) : `app/(tabs)/home/edit/[event].tsx:161` appelle
+  `useActionFab` avec l'ancienne signature → l'écran de modification devrait planter.

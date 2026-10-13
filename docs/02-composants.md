@@ -9,7 +9,7 @@
 - `chargementEcran.js` - Écran de chargement (skeleton, spinner)
 - `calendarMonthView.tsx` - Grille du calendrier mensuel + liste des évènements par jour — Philip, US5
 - `commonSlotsSuggestions.tsx` - Suggestions de créneaux communs
-- `conflitEvenement.tsx` - Fenêtre de conflit (création ou acceptation d'invitation) : retirer et créer / accepter, modifier mon horaire — Philip, US8
+- `conflitEvenement.tsx` - Fenêtre de conflit (création ou acceptation d'invitation) : retirer et créer / accepter, modifier mon horaire, ne rien faire (invitation : reste en attente) — Philip, US8
 - `customTabBar.tsx` - Barre d'onglets personnalisée
 - `datetimeSelecteurs.tsx` - Sélecteurs de date/heure (date, heure, fuseau)
 - `demandeConfirmerCourriel.tsx` - Demande de confirmation d'email
@@ -24,10 +24,11 @@
 - `memberCode.tsx` - Code public du membre (hexadécimal, copie presse-pouce)
 - `menuDeroulant.tsx` - Menu déroulant (dropdown, options)
 - `modalBase.js` - Modal de base (overlay, contenu, actions)
-- `motDePasseOublie.tsx` - Fenêtre « mot de passe oublié » de l'écran de connexion (POST /recuperation/demande) — Philip
+- `motDePasseOublie.tsx` - Contenu « mot de passe oublié » (POST /recuperation/demande), affiché dans `ModalBase` par la route `(auth)/mdpOublie` — Philip
 - `modalManager.js` - Gestionnaire de modals (pile, ouverture, fermeture)
 - `notificationItem.tsx` - Élément de notification
 - `panneauDecisionInvitation.tsx` - Panneau de la page de décision : organisateur, participants + statut, accepter / refuser / modifier mon horaire — Philip, US8
+- `legendeStatutsInvitation.tsx` - Légende des icônes accepté / en attente / refusé sous les participants (membre invité) — Philip, US9, voir [13](./13-legende-statuts-invitation.md)
 - `participantLigne.tsx` - Ligne de participant dans un événement
 - `participantsListe.tsx` - Liste des participants d'un événement
 - `pfp.tsx` - Photo de profil (chargement lazy, URLs externes, placeholder)

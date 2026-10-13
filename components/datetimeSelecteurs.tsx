@@ -2,7 +2,7 @@ import { useFont } from '@/contextes/contexteFont';
 import { usePalette } from "@/contextes/contextePalette";
 
 import ceilBy5 from '@/functions/ceilBy5';
-import { estJourneeEntiere } from '@/functions/jourCreation';
+import { debutCreationPourJour, estJourneeEntiere } from '@/functions/jourCreation';
 import { convertirTimestampDateLongue, convertirTimestampHeure } from "@/functions/convertirTimestamp";
 import log from "@/functions/log";
 
@@ -204,12 +204,14 @@ export default function DateTimeSelecteur({timezone, disabled=false, minimumStar
 
     /**
      * "All day" switch. On: keeps the current times, then covers the start day's
-     * midnight to the end day's 23:59:59. Off: brings the kept times back, or (none
-     * kept, or they're past) the next 5-minute mark for an hour.
-     * It used to run on mount too (resetting the pre-filled dates), and switching
-     * off could restore a past start the form then refused.
+     * midnight to the end day's 23:59:59. Off: brings the kept times back; with none
+     * kept (a range pre-filled from the calendar, "all day" turned on by itself) or
+     * past ones, keeps the event's DAYS and only suggests times: the start day at the
+     * next hour (not before now), the end day an hour after that time. Switching off
+     * a calendar range used to drop its dates (back to now + 1h → start + 1h).
      *
      * @author Philip Kvaratshelya — rectification for a more conventional display
+     *   (user story 5: ranges selected in the month calendar)
      * @param {boolean} active - New value of the switch.
      * @returns {void}
      */
@@ -223,11 +225,17 @@ export default function DateTimeSelecteur({timezone, disabled=false, minimumStar
             return
         }
         const maintenant = ceilBy5(DateTime.now())
-        let debut = startRef.current && startRef.current >= maintenant
-            ? startRef.current
-            // Same day as the all-day event, at the current time at the earliest.
-            : DateTime.max(maintenant, ceilBy5(start.set({ hour: maintenant.hour, minute: maintenant.minute })))
-        let fin = endRef.current && endRef.current > debut ? endRef.current : debut.plus({ minutes: END_DELAY_FROM_START })
+        const heuresGardees = !!startRef.current && startRef.current >= maintenant
+        const debut = heuresGardees
+            ? startRef.current as DateTime
+            : DateTime.max(maintenant, debutCreationPourJour(start))
+        let fin = heuresGardees && endRef.current && endRef.current > debut
+            ? endRef.current
+            // Same end DAY as the all-day event, an hour after the start's time.
+            : end.startOf('day').set({ hour: debut.hour, minute: debut.minute }).plus({ minutes: END_DELAY_FROM_START })
+        // Never past the event's last day (e.g. a start at 23:00 on a one-day range).
+        if (!heuresGardees && fin > end.endOf('day')) fin = end.endOf('day')
+        if (fin <= debut) fin = debut.plus({ minutes: END_DELAY_FROM_START })
         startRef.current = null
         endRef.current = null
         setStart(debut)

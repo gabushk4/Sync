@@ -294,6 +294,18 @@ export default function ConflitEvenement({ existants: existantsInitiaux, eveneme
     }
 
     /**
+     * "Do nothing" (invitation): nothing is removed or answered, the invitation
+     * stays pending; back to the screen under this one (feed or decision page).
+     *
+     * @author Philip Kvaratshelya — user story 8 (answering an invitation in conflict)
+     * @returns {void}
+     */
+    const neRienFaire = () => {
+        ToastAbs.show({ type: toastTypes.success, text2: t('conflict.stillPending') })
+        fermer('formulaire')
+    }
+
+    /**
      * Formats an event's time range in the member's timezone: one date with its
      * hours, or both dates when it spans several days.
      *
@@ -541,7 +553,11 @@ export default function ConflitEvenement({ existants: existantsInitiaux, eveneme
                         <Text style={s.text}>{t('conflict.adjust')}</Text>
                         <Ionicons name="time-outline" color={colors.text} size={20} />
                     </TouchableOpacity>
-                    {!invitation && (
+                    {invitation ? (
+                        <TouchableOpacity onPress={neRienFaire} disabled={enCours || fermeture}>
+                            <Text style={s.lienSecondaire}>{t('conflict.doNothing')}</Text>
+                        </TouchableOpacity>
+                    ) : (
                         <TouchableOpacity onPress={abandonnerNouveau} disabled={enCours || fermeture}>
                             <Text style={s.lienSecondaire}>{t('conflict.discardNew')}</Text>
                         </TouchableOpacity>

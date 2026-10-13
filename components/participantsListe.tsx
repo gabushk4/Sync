@@ -7,6 +7,7 @@ import { useAPI } from '@/contextes/contexteAPI';
 import { useInvites } from '@/contextes/contexteInvites';
 import { usePalette } from '@/contextes/contextePalette';
 
+import LegendeStatutsInvitation, { HAUTEUR_LEGENDE } from '@/components/legendeStatutsInvitation';
 import ParticipantLigne from '@/components/participantLigne';
 
 import catcher from '@/functions/catcher';
@@ -33,6 +34,8 @@ type Props = {
     listType: ListType
     /** Shows each participant's remove button (event details, member is an editor). */
     peutGererParticipants?: boolean
+    /** Reminder of the status icons under the list (event the member was invited to). */
+    afficherLegende?: boolean
 }
 
 const LINE_HEIGHT = 56
@@ -68,7 +71,7 @@ const s = StyleSheet.create({
     },
 })
 
-export default function ParticipantsListe({ participantsUrl, listType, peutGererParticipants = false } : Props){
+export default function ParticipantsListe({ participantsUrl, listType, peutGererParticipants = false, afficherLegende = false } : Props){
     const { t } = useTranslation()
     const { colors } = usePalette();
     const {fonts} = useFont()
@@ -113,7 +116,7 @@ export default function ParticipantsListe({ participantsUrl, listType, peutGerer
         Math.min(
             LINE_HEIGHT * (MAX_COUNT + (includeShowMore ? 2 : 1) + TITLE_HEIGHT),
             Math.max(LINE_HEIGHT, LINE_HEIGHT * (count + 1 + Number(includeShowMore)) + TITLE_HEIGHT)
-        )
+        ) + (afficherLegende ? HAUTEUR_LEGENDE : 0)
 
     const containerHeight = useSharedValue(computeHeight(participantsTruncated.length, showMore))
 
@@ -187,7 +190,7 @@ export default function ParticipantsListe({ participantsUrl, listType, peutGerer
             computeHeight(participantsTruncated.length, showMore),
             withTimingConfig
         )
-    }, [participantsTruncated, participants])
+    }, [participantsTruncated, participants, afficherLegende])
 
 
     return(
@@ -201,6 +204,8 @@ export default function ParticipantsListe({ participantsUrl, listType, peutGerer
                     {t('common:showMore')}
                 </LinkAbs>
             }
+            {/* Philip Kvaratshelya — user story 9: what the status icons mean. */}
+            {afficherLegende && <LegendeStatutsInvitation />}
             <TouchableOpacity style={[s.inviter]}
                 onPress={() => {
                     router.push({

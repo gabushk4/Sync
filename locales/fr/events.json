@@ -95,6 +95,8 @@
     "removeAndAccept_one": "Retirer 1 évènement et accepter",
     "removeAndAccept_other": "Retirer {{count}} évènements et accepter",
     "back": "Retour",
+    "doNothing": "Ne rien faire pour l'instant",
+    "stillPending": "L'invitation reste en attente",
     "acceptedTitle": "Invitation acceptée",
     "acceptFailed": "Impossible d'accepter l'invitation",
     "confirmTitle": "Attention",
