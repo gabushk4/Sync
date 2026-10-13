@@ -9,7 +9,6 @@ import { useAPI } from "@/contextes/contexteAPI";
 import { useFont } from "@/contextes/contexteFont";
 import { Notification, NotificationAction, useNotifications } from "@/contextes/contexteNotifications";
 import { usePalette } from "@/contextes/contextePalette";
-import { useAccessToken } from "@/contextes/contexteToken";
 
 import catcher from "@/functions/catcher";
 import categorieNotification from "@/functions/categorieNotification";
@@ -49,11 +48,11 @@ type ItemProps = {
  */
 export default function NotificationItem({ item, index, vu }: ItemProps) {
     const { t } = useTranslation('notifications')
+    const { t: tFriends } = useTranslation('friends')
     const { colors } = usePalette()
     const { fonts } = useFont()
     const colorScheme = useColorScheme()
-    const { getToken } = useAccessToken()
-    const { APIBaseURL } = useAPI()
+    const { api, APIBaseURL } = useAPI()
     const { notifRefresh } = useNotifications()
 
     // An event invitation: accepting goes through the shared decision logic, which
@@ -68,6 +67,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
     // User story 9: the API sends type/actions/statuses at the notification's top
     // level; there's no `payload` anymore.
     const categorie = categorieNotification(item.type)
+    const demandeAmiEnAttente = item.type === 'demande_ami' && item.statut_metier === 'en_attente'
     const nonLue = item.statut_notification === "non_lue"
 
     const [selectionner, setSelectionner] = useState(false)
@@ -96,8 +96,8 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                 : require("@/assets/icones/horloge-light-icon.png"),
     }
 
-    const heightMaxNotif = 124
-    const heightMinNotif = 64
+    const heightMaxNotif = demandeAmiEnAttente ? 152 : 124
+    const heightMinNotif = demandeAmiEnAttente ? 142 : 64
 
     const backgroundDef = selectionner ? colors.primary : colors.card
 
@@ -146,7 +146,8 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
     }
 
     /**
-     * Sends one of the notification's actions to the API, with the member's token.
+     * Sends one of the notification's actions through the shared API instance so
+     * its response interceptor can refresh an expired access token and retry.
      *
      * @param {string} method - HTTP method of the action.
      * @param {string} url - API path of the action.
@@ -154,15 +155,10 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
      * @returns {Promise<import('axios').AxiosResponse>}
      */
     const requeteAction = async (method: string, url: string, body: any = undefined) => {
-        const token = await getToken()
-        return axios({
-            baseURL: APIBaseURL,
+        return api.request({
             method,
             url,
             data: body,
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
         })
     }
 
@@ -266,6 +262,9 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
     }
 
     const typeIcon = () => {
+        if (item.icon) {
+            return <Icon name={item.icon as any} color={colors.muted} size={20} />
+        }
         switch (categorie) {
             case "amis":
                 return <Icon name="person-outline" color={colors.muted} size={20} />
@@ -379,7 +378,9 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                 {/* Spinner on the answer being sent. Philip Kvaratshelya — user story 8. */}
                 {decision.enCours && decision.enCours === action.body?.statut
                     ? <Spinner size={22} color={buttonColor} />
-                    : action.label === "accepter"
+                    : action.icon
+                        ? <Icon name={action.icon as any} color={buttonColor} size={24} />
+                        : action.label === "accepter"
                         ? <Icon name="checkmark" color={buttonColor} size={28} />
                         : <Icon name='close' color={buttonColor} size={28}/>
                 }
@@ -387,6 +388,43 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
             </TouchableOpacity>
         )
     })
+
+    const actionsDemandeAmi = demandeAmiEnAttente
+        ? (item.actions ?? []).filter((action) => action.label === 'accepter' || action.label === 'refuser').map((action) => {
+            const accepter = action.label === 'accepter'
+            const couleur = accepter ? colors.success : colors.error
+            return (
+                <TouchableOpacity
+                    key={`${item.id}-${action.label}-inline`}
+                    accessibilityRole="button"
+                    accessibilityLabel={accepter ? tFriends('requests.accept') : tFriends('requests.decline')}
+                    style={{
+                        flex: 1,
+                        minHeight: 40,
+                        borderRadius: 14,
+                        borderWidth: 1,
+                        borderColor: couleur,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 6,
+                        backgroundColor: colors.card,
+                    }}
+                    onPress={() => actionnerNotif(action.method, action.url, action.body)}
+                    disabled={!!decision.enCours}
+                >
+                    {action.icon
+                        ? <Icon name={action.icon as any} color={couleur} size={20} />
+                        : accepter
+                            ? <Icon name="checkmark" color={couleur} size={20} />
+                            : <Icon name="close" color={couleur} size={20} />}
+                    <Text style={{ color: couleur, fontFamily: fonts.body, fontSize: 15 }}>
+                        {accepter ? tFriends('requests.accept') : tFriends('requests.decline')}
+                    </Text>
+                </TouchableOpacity>
+            )
+        })
+        : null
 
     return (
         <View style={s.container}>
@@ -441,7 +479,12 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                         setSelectionner(true)
                         selectNotif()
                     }}
-                    style={{ flex: 1, flexDirection: "row", justifyContent: "space-between", height: "80%" }}
+                    style={{
+                        flex: demandeAmiEnAttente ? 0 : 1,
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        height: demandeAmiEnAttente ? 48 : "80%",
+                    }}
                 >
                     <View style={{ paddingVertical: 4, paddingHorizontal: 8, height: "100%" }}>
                         <Text style={{ color: colors.text, fontSize: 16, fontFamily: fonts.body, fontWeight: nonLue ? "bold" : "100" }} numberOfLines={lines}>
@@ -455,6 +498,11 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                         </Animated.View>
                     )}
                 </TouchableOpacity>
+                {demandeAmiEnAttente && (
+                    <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 10, paddingBottom: 6 }}>
+                        {actionsDemandeAmi}
+                    </View>
+                )}
             </Animated.View>
             <Animated.View
                 style={[
@@ -529,7 +577,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                             {t(`answer.${item.statut_metier}`)}
                         </Text>
                     )}
-                    {options}
+                    {!demandeAmiEnAttente && options}
                     <TouchableOpacity onPress={() => supprNotif([item.id])} style={[{ position: "relative", right: 0, backgroundColor: colors.error, borderColor: colors.border }]}> 
                         <Image source={icones.corbeille} style={{ width: "80%", height: "80%" }} resizeMode="contain" />
                     </TouchableOpacity>
