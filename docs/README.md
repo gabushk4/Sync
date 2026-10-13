@@ -12,6 +12,7 @@
 - Logique métier → [09-logique-metier.md](./09-logique-metier.md)
 - Authentification → [10-authentification.md](./10-authentification.md)
 - Spécificités Expo → [11-specificites-expo.md](./11-specificites-expo.md)
+- Jour entier (création) → [12-jour-entier.md](./12-jour-entier.md)
 - Paramètres → [settings.md](./settings.md)
 
 
