@@ -89,3 +89,32 @@ export function dernierInstant(evenement: { debut?: DateTime, fin?: DateTime }):
     const fin = evenement.fin
     return fin && fin > debut ? fin.minus({ milliseconds: 1 }) : debut
 }
+
+/**
+ * Jour férié importé (stories #4 et #7) : il est affiché (nom sous la date, étiquette dans le
+ * calendrier du mois), mais il n'occupe pas la journée : ni bloc dans l'horaire, ni "journée
+ * complète", et il ne réduit pas les disponibilités.
+ *
+ * @param {any} evenement - Event from the API (`jour_ferie` set by the server).
+ * @returns {boolean}
+ */
+export const estJourFerie = (evenement: any): boolean => Boolean(evenement?.jour_ferie)
+
+/**
+ * Names of the holidays falling on `jour`, without duplicates (two imported holiday
+ * calendars often contain the same holiday).
+ *
+ * @param {any[]} evenements - Events with local DateTime `debut`/`fin`.
+ * @param {DateTime} [jour] - Day to look at.
+ * @returns {string[]}
+ */
+export function joursFeriesDuJour(evenements: any[], jour?: DateTime): string[] {
+    if (!jour) return []
+    const debutJour = jour.startOf('day')
+    const finJour = jour.endOf('day')
+    const noms = evenements
+        .filter((ev) => estJourFerie(ev) && ev?.debut && ev.debut <= finJour && dernierInstant(ev) >= debutJour)
+        .map((ev) => (ev.titre ?? '').trim())
+        .filter(Boolean)
+    return Array.from(new Set(noms))
+}

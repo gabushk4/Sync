@@ -1,7 +1,7 @@
 import { useFont } from '@/contextes/contexteFont'
 import { usePalette } from '@/contextes/contextePalette'
 import { convertirTimestampHeure } from '@/functions/convertirTimestamp'
-import { dernierInstant } from '@/functions/evenementsMembre'
+import { dernierInstant, estJourFerie } from '@/functions/evenementsMembre'
 import ouvrirDetailsEvenement from '@/functions/ouvrirDetailsEvenement'
 import { Event } from '@/types/calendar'
 import Spinner from '@/components/spinner'
@@ -21,8 +21,8 @@ import Animated, { scrollTo, useAnimatedReaction, useAnimatedRef, useAnimatedScr
  * @author Philip Kvaratshelya — user story 5 (month calendar)
  */
 
-/** One day of the list under the grid: the day and the events it shows. */
-type JourListe = { jour: DateTime; evenements: Event[] }
+/** One day of the list under the grid: the day, the events it shows and its holidays' names. */
+type JourListe = { jour: DateTime; evenements: Event[]; feries: string[] }
 
 /** A range of days selected with a long-press-and-drag, earliest day first. */
 export type PlageJours = { debut: DateTime; fin: DateTime }
@@ -242,11 +242,19 @@ export default function CalendarMonthView({
         for (let jour = debutSelection, n = 0; jour <= finSelection && n < 62; jour = jour.plus({ days: 1 }), n++) {
             const debutJour = jour.startOf('day')
             const finJour = jour.endOf('day')
-            const evenementsJour = events
+            const duJour = events
                 .filter((evenement) => evenement?.debut && evenement.debut <= finJour
                     && dernierInstant(evenement) >= debutJour)
                 .sort((a, b) => (a.debut?.toMillis() ?? 0) - (b.debut?.toMillis() ?? 0))
-            if (evenementsJour.length > 0 || !plageSelectionnee) jours.push({ jour: debutJour, evenements: evenementsJour })
+            // Holidays are a label next to the day's title, not event cards (they don't occupy the day).
+            const evenementsJour = duJour.filter((evenement) => !estJourFerie(evenement))
+            const feries = Array.from(new Set(duJour
+                .filter(estJourFerie)
+                .map((evenement) => evenement.titre?.trim())
+                .filter((titre): titre is string => !!titre)))
+            if (evenementsJour.length > 0 || feries.length > 0 || !plageSelectionnee) {
+                jours.push({ jour: debutJour, evenements: evenementsJour, feries })
+            }
         }
         return jours
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -682,6 +690,18 @@ export default function CalendarMonthView({
             fontFamily: fonts.title,
             fontSize: 16,
         },
+        // Holiday(s) of the day, under its title.
+        ligneFerie: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+        },
+        texteFerie: {
+            flex: 1,
+            color: colors.secondary,
+            fontFamily: fonts.body,
+            fontSize: 13,
+        },
         compteJour: {
             minWidth: 22,
             paddingHorizontal: 7,
@@ -947,12 +967,18 @@ export default function CalendarMonthView({
                 {!debutSelection && <Text style={s.texteVide}>{t('month.pickDay')}</Text>}
                 {debutSelection && chargement && <Spinner size={24} color={colors.muted} style={{ alignSelf: 'center' }} />}
                 {debutSelection && !chargement && joursListe.length === 0 && <Text style={s.texteVide}>{t('month.noEventsRange')}</Text>}
-                {joursListe.map(({ jour, evenements: evenementsJour }) => (
+                {joursListe.map(({ jour, evenements: evenementsJour, feries }) => (
                     <View key={jour.toISODate()} style={s.sectionJour}>
                         <View style={s.enteteJour}>
                             <Text style={s.titreJour}>{titreJour(jour)}</Text>
                             {evenementsJour.length > 0 && <Text style={s.compteJour}>{evenementsJour.length}</Text>}
                         </View>
+                        {feries.length > 0 && (
+                            <View style={s.ligneFerie}>
+                                <Ionicons name="flag-outline" size={13} color={colors.secondary} />
+                                <Text style={s.texteFerie} numberOfLines={2}>{feries.join(', ')}</Text>
+                            </View>
+                        )}
                         {!chargement && evenementsJour.length === 0 && <Text style={s.texteVide}>{t('month.noEvents')}</Text>}
                         {evenementsJour.map((evenement) => {
                             const heures = heuresPourJour(evenement, jour)
