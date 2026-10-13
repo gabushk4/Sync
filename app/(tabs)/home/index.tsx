@@ -54,7 +54,7 @@ const HAUTEUR_RETOUR = 34
 
 // "Back to today" tab in the bottom bar (against the screen's edge): width and
 // corner radius.
-const LARGEUR_ONGLET = 40
+const LARGEUR_ONGLET = 52
 const RAYON_ONGLET = 10
 const { width: WIN_W, height: WIN_H } = Dimensions.get('window')
 
@@ -755,12 +755,12 @@ export default function Home() {
     texteAujourdhui: {
       color: colors.background,
       fontFamily: fonts.title,
-      fontSize: 13,
+      fontSize: 16,
     },
     // The time ("14:37") and a month ("sept") are wider than a day number: smaller
     // so they fit the tab.
     texteMaintenant: {
-      fontSize: 10,
+      fontSize: 13,
     },
     // Member's timeline + the fixed "fully booked" card laid over it.
     zoneTimelineMembre: {

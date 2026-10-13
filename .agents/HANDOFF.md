@@ -436,8 +436,9 @@ Non corrigé (noté) :
 
 ### Mot de passe oublié + journal des erreurs (2026-10-11)
 - App : le bouton « mot de passe oublié » de `login.tsx` ne faisait qu'un log.
-  `components/motDePasseOublie.tsx` (Modal RN : les routes (modals) exigent d'être
-  connecté) → `POST /recuperation/demande` (API user story 14 déjà prête), spinner,
+  `components/motDePasseOublie.tsx`, affiché dans `ModalBase` par la route
+  `app/(auth)/mdpOublie.tsx` (transparentModal dans (auth) : les routes (modals) exigent
+  d'être connecté ; 2026-10-13, avant c'était un Modal RN) → `POST /recuperation/demande` (API user story 14 déjà prête), spinner,
   erreur affichée dans la fenêtre, toast de succès. Textes `forgot.*` dans `auth.json`.
   Testé : courriel inconnu → 400 « Adresse courriel introuvable ». Envoi réel pas testé
   (pour ne pas envoyer de courriel).
