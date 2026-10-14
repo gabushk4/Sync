@@ -54,14 +54,18 @@ export default function ListItem({ event, horizontal, displayedDate, listOffset,
     const windowEnd = windowStart?.plus({ days: timelineDays })
     const visibleStart = windowStart && debut ? (debut > windowStart ? debut : windowStart) : undefined
     const visibleEnd = windowEnd && fin ? (fin < windowEnd ? fin : windowEnd) : undefined
+    const positionHeures = (date: DateTime) => {
+        const jour = Math.round(date.startOf('day').diff(windowStart!.startOf('day'), 'days').days)
+        return jour * 24 + date.hour + date.minute / 60 + date.second / 3600 + date.millisecond / 3600000
+    }
     const left = valide && horizontal && visibleStart
-        ? ((visibleStart.toMillis() - windowStart!.toMillis()) / 3600000) * heureOffset : 0
+        ? positionHeures(visibleStart) * heureOffset : 0
     const top = valide && !horizontal && visibleStart
-        ? ((visibleStart.toMillis() - windowStart!.toMillis()) / 3600000) * heureOffset : 0
+        ? positionHeures(visibleStart) * heureOffset : 0
     // Clip event blocks at the loaded window edges while preserving their actual
     // timestamps for labels and event details.
     const taille = valide && visibleStart && visibleEnd
-        ? Math.max(((visibleEnd.toMillis() - visibleStart.toMillis()) / 3600000) * heureOffset, pxHeures) : 0
+        ? Math.max((positionHeures(visibleEnd) - positionHeures(visibleStart)) * heureOffset, pxHeures) : 0
     const longueurTimeline = timelineDays * 24 * heureOffset
 
     // Label size along the scroll axis: at most 3 hours wide, never wider than the block.

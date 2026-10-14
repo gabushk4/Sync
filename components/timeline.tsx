@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useRef } from "react"
 import { Text, View } from "react-native"
 import Animated, { scrollTo, useAnimatedReaction, useAnimatedRef } from "react-native-reanimated"
 
@@ -49,6 +49,7 @@ export default function Timeline({ horizontal, windowStart, selectedDate, timeli
     const { offset } = useGestionScroll()
 
     const scrollViewRef = useAnimatedRef<Animated.ScrollView>()
+    const initialisationFaite = useRef(false)
 
     useAnimatedReaction(
         () => offset.value,
@@ -60,7 +61,7 @@ export default function Timeline({ horizontal, windowStart, selectedDate, timeli
 
     return(
         <Animated.ScrollView
-            style={{ zIndex: 2, pointerEvents: 'none', ...(horizontal ? { paddingLeft: 4 } : { paddingTop: 16 }) }}
+            style={{ zIndex: 2, pointerEvents: 'none', ...(horizontal ? {} : { paddingTop: 16 }) }}
             contentContainerStyle={{ backgroundColor: 'transparent', flexDirection: horizontal ? 'row' : 'column' }}
             ref={scrollViewRef}
             horizontal={horizontal}
@@ -68,6 +69,8 @@ export default function Timeline({ horizontal, windowStart, selectedDate, timeli
             showsVerticalScrollIndicator={false}
             scrollEnabled={true}
             onLayout={() => {
+                if (initialisationFaite.current) return
+                initialisationFaite.current = true
                 const cible = selectedDate ?? DateTime.now()
                 const heureDansLaFenetre = windowStart
                     ? cible.diff(windowStart.startOf('day'), 'hours').hours
@@ -76,9 +79,12 @@ export default function Timeline({ horizontal, windowStart, selectedDate, timeli
             }}
             >
             {Array.from({ length: timelineDays * 24 }, (_, index) => {
-                const now = (windowStart ?? DateTime.now().startOf('day').minus({ days: 3 })).plus({ hours: index })
-                const item = heures[index % 24]
-                const minuit = now.hour === 0
+                const dateBase = windowStart ?? DateTime.now().startOf('day').minus({ days: 3 })
+                const jour = Math.floor(index / 24)
+                const heure = index % 24
+                const now = dateBase.startOf('day').plus({ days: jour, hours: heure })
+                const item = heures[heure]
+                const minuit = heure === 0
                 return (
                 <View
                 key={`h-${index}`}
