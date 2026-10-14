@@ -10,7 +10,6 @@ import ListItem from './listItem'
 import { useGestionScroll } from '@/contextes/contexteGestionListes'
 import { useTimeline } from '@/contextes/contexteTimeline'
 
-import { useEffect } from 'react'
 import FreeSlotItem from './freeSlotItem'
 
 /** Inset of a horizontal row's blocks (top and bottom); the home screen's profile column uses it too. */
@@ -32,10 +31,11 @@ export type EventsListProps = {
     /** Scroll every row to the current hour on first layout (default). The
      * invitation review screen scrolls to the event's hour itself. */
     defilerMaintenant?: boolean;
+    timelineDays?: number;
 }
 
 /**
- * One timeline row: a horizontal (or vertical) strip 24 hours long holding the
+ * One timeline row: a horizontal (or vertical) strip holding the loaded timeline
  * owner's events (ListItem) and, for a friend's row, the free slots shared
  * with the member. The strip isn't scrolled directly: it follows the shared
  * scroll offset of the home screen, so every row stays aligned on the hours.
@@ -71,9 +71,9 @@ export default function EventsList({
     commonFreeSlots,
     owner,
     onPressEvenement,
-    defilerMaintenant = true,
+    timelineDays = 1,
 }: EventsListProps) {
-    const { offset, initialiserOffset } = useGestionScroll()
+    const { offset } = useGestionScroll()
     const { pxHeures, L_HEURES, H_HEURES } = useTimeline()
 
     const scrollViewRef = useAnimatedRef<Animated.ScrollView>()
@@ -84,10 +84,6 @@ export default function EventsList({
             scrollTo(scrollViewRef, horizontal ? offset : 0, horizontal ? 0 : offset, false)
         }
     )
-
-    useEffect(() => {
-        
-    }, [events])
 
     const s = StyleSheet.create({
         styleListe: {
@@ -125,19 +121,12 @@ export default function EventsList({
             snapToInterval={offsetSnap}
             scrollEventThrottle={16}
             ref={scrollViewRef}
-            onLayout={() => {
-                if (!defilerMaintenant) return
-                const now = DateTime.now()
-                // Also records "now" for the "back to today / now" tab (it stayed at
-                // midnight). Rectification (Philip Kvaratshelya) for a more conventional display.
-                initialiserOffset(now.hour * (pxHeures + L_HEURES), false)
-            }}
         >
             <View
             style={{
                 position: 'relative',
-                width: horizontal ? 24 * (pxHeures + L_HEURES) : '100%',
-                height: horizontal ? '100%' : 24 * (pxHeures + H_HEURES),
+                width: horizontal ? timelineDays * 24 * (pxHeures + L_HEURES) : '100%',
+                height: horizontal ? '100%' : timelineDays * 24 * (pxHeures + H_HEURES),
             }}
             >
                 {events.filter(Boolean).map((item) =>
@@ -148,13 +137,14 @@ export default function EventsList({
                         event={item}
                         horizontal={horizontal}
                         displayedDate={displayedDate}
+                        timelineDays={timelineDays}
                         listOffset={offset}
                         eventsColor={eventsColor}
                         onPress={onPressEvenement}
                     />
                 )}
                 {commonFreeSlots?.map((freeSlot, index) => 
-                    <FreeSlotItem key={`${freeSlot.start}-${freeSlot.end}`} freeSlot={freeSlot} displayedDate={displayedDate} horizontal={horizontal} listOffset={offset} owner={owner}/>
+                    <FreeSlotItem key={`${freeSlot.start}-${freeSlot.end}`} freeSlot={freeSlot} displayedDate={displayedDate} horizontal={horizontal} listOffset={offset} owner={owner} timelineDays={timelineDays}/>
                 )}
             </View>
         </Animated.ScrollView>

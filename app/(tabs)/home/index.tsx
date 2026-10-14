@@ -33,7 +33,7 @@ import { useTimeline } from '@/contextes/contexteTimeline';
 //import {seedData} from '@/seed'
 import { withSpringConfig } from '@/constants/ReanimatedConfs';
 import AutoRefresh from '@/functions/autoRefresh';
-import { estJourFerie, formaterEvenementsMembre, joursFeriesDuJour, paramsJour } from '@/functions/evenementsMembre';
+import { estJourFerie, formaterEvenementsMembre, joursFeriesDuJour, paramsPlage } from '@/functions/evenementsMembre';
 import { debutCreationPourJour, estJourPasse } from '@/functions/jourCreation';
 import { calendrierEvents } from '@/events/calendrierEvents';
 import { Friend } from '@/types/calendar';
@@ -56,6 +56,7 @@ const HAUTEUR_RETOUR = 34
 // corner radius.
 const LARGEUR_ONGLET = 52
 const RAYON_ONGLET = 10
+const JOURS_FENETRE = 7
 const { width: WIN_W, height: WIN_H } = Dimensions.get('window')
 
 /**
@@ -124,6 +125,10 @@ export default function Home() {
   const [friends, setFriends] = useState<Array<any>>([])
   const [userEvents, setUserEvents] = useState<Array<any>>([])
   const [todayDateTime, setTodayDateTime] = useState<DateTime>()
+  const [windowStart, setWindowStart] = useState<DateTime>(() => DateTime.now().startOf('day').minus({ days: 3 }))
+  const windowStartRef = useRef(windowStart)
+  const windowStartMillis = useSharedValue(windowStart.toMillis())
+  const fenetreEnCoursRef = useRef('')
   // Day the member's / friends' loaded events belong to. Until both match the
   // displayed day, the previous day's events are still on screen: the common free
   // slots were computed from them for a moment, then vanished once loaded.
@@ -135,7 +140,6 @@ export default function Home() {
   // being prefetched. A day in the cache shows at once when switching to it, so a
   // fully booked day no longer shows the previous day's timeline for a second.
   const cacheJoursRef = useRef<Map<string, any[]>>(new Map())
-  const prechargementsRef = useRef<Set<string>>(new Set())
   // The displayed day, readable from the focus effect (created once), so coming
   // back to this screen keeps it instead of resetting to today.
   const jourAfficheRef = useRef<DateTime | undefined>(undefined)
@@ -148,8 +152,8 @@ export default function Home() {
   const feriesDuJour = useMemo(() => joursFeriesDuJour(userEvents, todayDateTime), [userEvents, todayDateTime])
 
   // Whether the loaded events are the displayed day's (see jourMembre / jourAmis).
-  const evenementsMembreAJour = !!todayDateTime && !!jourMembre?.hasSame(todayDateTime, 'day')
-  const evenementsAmisAJour = !!todayDateTime && !!jourAmis?.hasSame(todayDateTime, 'day')
+  const evenementsMembreAJour = !!windowStart && !!jourMembre?.hasSame(windowStart, 'day')
+  const evenementsAmisAJour = !!windowStart && !!jourAmis?.hasSame(windowStart, 'day')
 
   // An event of the member's covering the whole displayed day: the member's row
   // then shows a fixed "fully booked" card instead of the scrolling timeline.
@@ -172,7 +176,6 @@ export default function Home() {
 
 
   //SharedValues
-  const evAmisOffset = useSharedValue(0)
   const dateAujShared = useSharedValue<number>(0)
   const chargementShared = useSharedValue(chargementEvenements)
   const offsetXBase = useSharedValue(0)
@@ -274,10 +277,9 @@ export default function Home() {
       log("modifierEvenementsMembreFetched", data && true)
       if (data.evenements) {
         const evenements = formaterEvenementsMembre(data.evenements, membre.timezone)
-        const cle = jourDemandeRef.current?.toISODate()
-        if (cle) cacheJoursRef.current.set(cle, evenements)
+        if (fenetreEnCoursRef.current) cacheJoursRef.current.set(fenetreEnCoursRef.current, evenements)
         setUserEvents(evenements)
-        setJourMembre(jourDemandeRef.current)
+        setJourMembre(windowStartRef.current)
       }
     } catch (error) {
       catcher(error, t('errors.formatMemberEvents'))
@@ -337,19 +339,8 @@ export default function Home() {
           }
         })
 
-      setJourAmis(jourDemandeRef.current)
-      if(amisFinal.length > 0){
-        setFriends(prev => {
-            const map = new Map(prev.map(a => [a.id, a]));
-            amisFinal.forEach((a: Friend) => map.set(a.id, a)); // remplace les doublons
-            const amisSansDoublons = Array.from(map.values())
-            //log("modifierEvenementsAmisFetched amisendal", amisendalSansDoublons[0].evenements)
-            return amisSansDoublons;
-          }
-        );
-      }
-      else if (evAmisOffset.value > 0)
-        evAmisOffset.value -= 1
+      setJourAmis(windowStartRef.current)
+      setFriends(amisFinal)
     } catch (error) {
       setChargementEchec(true)
       catcher(error, t('errors.formatFriendEvents'))
@@ -359,21 +350,45 @@ export default function Home() {
   // ── Handlers ──
   /**
    * Reloads the member's and friends' events for the given day. setParams cancels
-   * the request still in flight for the previous day. Sends `debut`/`fin`
-   * (paramsJour), the names the events API reads. Shows the cached day at once and
-   * prefetches its neighbours.
+   * the request still in flight for the previous range. Sends `debut`/`fin`
+   * for the active seven-day sliding window.
    *
    * @author Philip Kvaratshelya — rectification for a more conventional display (cache + prefetch)
    * @param {DateTime} dt - Any moment of the day to load.
    * @returns {void}
    */
+  const chargerFenetre = (start: DateTime) => {
+    const debut = start.startOf('day')
+    const fin = debut.plus({ days: JOURS_FENETRE })
+    const cle = `${debut.toISODate()}/${fin.toISODate()}`
+    if (fenetreEnCoursRef.current === cle) return
+    windowStartRef.current = debut
+    windowStartMillis.value = debut.toMillis()
+    fenetreEnCoursRef.current = cle
+    setWindowStart(debut)
+    jourDemandeRef.current = debut
+    const finExclue = fin
+    cacheJoursRef.current.clear()
+    setUserEvents((precedents) => precedents.filter((ev: any) => ev.fin >= debut && ev.debut < finExclue))
+    setFriends((precedents) => precedents.map((ami) => ({
+      ...ami,
+      evenements: (ami.evenements ?? []).filter((ev: any) => ev.fin >= debut && ev.debut < finExclue),
+    })))
+    const extraParams = paramsPlage(debut, fin)
+    userEventsRefresh.current?.setParams(extraParams)
+    friendsEventsRefresh.current?.setParams(extraParams)
+  }
+
   const refreshAt = (dt: DateTime) => {
-    jourDemandeRef.current = dt.startOf('day');
+    const start = dt.startOf('day').minus({ days: 3 })
+    const fin = start.plus({ days: JOURS_FENETRE })
+    if (fenetreEnCoursRef.current === `${start.toISODate()}/${fin.toISODate()}`) {
+      userEventsRefresh.current?.refresh(true)
+      friendsEventsRefresh.current?.refresh(true)
+      return
+    }
     afficherDepuisCache(dt);
-    const extraParams = paramsJour(dt);
-    userEventsRefresh.current?.setParams(extraParams);
-    friendsEventsRefresh.current?.setParams(extraParams);
-    prechargerJours(dt);
+    chargerFenetre(start)
   };
 
   /**
@@ -386,40 +401,12 @@ export default function Home() {
    * @returns {void}
    */
   const afficherDepuisCache = (dt: DateTime) => {
-    const enCache = cacheJoursRef.current.get(dt.toISODate() ?? '')
+    const start = dt.startOf('day').minus({ days: 3 })
+    const fin = start.plus({ days: JOURS_FENETRE })
+    const enCache = cacheJoursRef.current.get(`${start.toISODate()}/${fin.toISODate()}`)
     if (!enCache) return
     setUserEvents(enCache);
-    setJourMembre(dt.startOf('day'));
-  };
-
-  /**
-   * Loads the member's events of the day before and after `dt` (and of `dt`
-   * itself with `avecJour`) into the cache, so the arrows switch days without
-   * waiting. A prefetched day that is the displayed one is shown at once. Errors
-   * are ignored: the day then simply loads when shown.
-   *
-   * @author Philip Kvaratshelya — rectification for a more conventional display
-   * @param {DateTime} dt - Displayed (or about to be displayed) day.
-   * @param {boolean} [avecJour=false] - Also load `dt` (the AutoRefresh isn't
-   *   running, e.g. while the calendar page covers this screen).
-   * @returns {void}
-   */
-  const prechargerJours = (dt: DateTime, avecJour = false) => {
-    const jours = [dt.minus({ days: 1 }), ...(avecJour ? [dt] : []), dt.plus({ days: 1 })]
-    for (const jour of jours) {
-      const cle = jour.toISODate() ?? ''
-      if (cacheJoursRef.current.has(cle) || prechargementsRef.current.has(cle)) continue
-      prechargementsRef.current.add(cle)
-      api.get('/evenements/', { params: { ...paramsJour(jour), force_refresh: true } })
-        .then((reponse) => {
-          // A fresher answer from the AutoRefresh wins.
-          if (!reponse.data?.evenements || cacheJoursRef.current.has(cle)) return
-          cacheJoursRef.current.set(cle, formaterEvenementsMembre(reponse.data.evenements, membre.timezone))
-          if (jourDemandeRef.current?.toISODate() === cle) afficherDepuisCache(jour)
-        })
-        .catch(() => {})
-        .finally(() => prechargementsRef.current.delete(cle))
-    }
+      setJourMembre(start);
   };
 
   /**
@@ -439,7 +426,8 @@ export default function Home() {
     dateAujShared.value = jour.toMillis();
     jourDemandeRef.current = jour.startOf('day');
     afficherDepuisCache(jour);
-    prechargerJours(jour, true);
+    chargerFenetre(jour.startOf('day').minus({ days: 3 }))
+    offsetX.value = (3 * 24 + (todayDateTime?.hour ?? DateTime.now().hour)) * (pxHeures + L_HEURES)
   };
 
   // Follows the calendar page's selection (created once: the handler only uses
@@ -460,7 +448,47 @@ export default function Home() {
     setTodayDateTime(newDt);
     dateAujShared.value = newDt.toMillis();
     refreshAt(newDt);
+    offsetX.value = (3 * 24 + DateTime.now().hour) * (pxHeures + L_HEURES)
   };
+
+  const traiterDefilementTimeline = (offset: number, startMillis: number) => {
+    // Reanimated can queue callbacks while JS is busy. Ignore offsets produced
+    // against a window that has already been recentered.
+    if (windowStartRef.current.toMillis() !== startMillis) return
+    const cellule = pxHeures + L_HEURES
+    const heures = offset / cellule
+    const debut = windowStartRef.current
+    const dateVue = debut.plus({ hours: Math.max(0, heures) })
+    if (!todayDateTime?.hasSame(dateVue, 'day')) {
+      setTodayDateTime(dateVue.startOf('day'))
+      dateAujShared.value = dateVue.toMillis()
+    }
+    // Keep several days available on both sides. Rebase by three days so the
+    // visible instant stays at exactly the same pixel while the seven-day window
+    // and its query range slide underneath it.
+    if (heures < 24 || heures > 6 * 24) {
+      const deltaJours = heures < 24 ? -3 : 3
+      const nouveauDebut = debut.plus({ days: deltaJours })
+      windowStartRef.current = nouveauDebut
+      windowStartMillis.value = nouveauDebut.toMillis()
+      const nouvelleCle = `${nouveauDebut.toISODate()}/${nouveauDebut.plus({ days: JOURS_FENETRE }).toISODate()}`
+      if (fenetreEnCoursRef.current === nouvelleCle) return
+      fenetreEnCoursRef.current = nouvelleCle
+      setWindowStart(nouveauDebut)
+      offsetX.value = offset - deltaJours * 24 * cellule
+      jourDemandeRef.current = nouveauDebut
+      const nouvelleFin = nouveauDebut.plus({ days: JOURS_FENETRE })
+      cacheJoursRef.current.clear()
+      setUserEvents((precedents) => precedents.filter((ev: any) => ev.fin >= nouveauDebut && ev.debut < nouvelleFin))
+      setFriends((precedents) => precedents.map((ami) => ({
+        ...ami,
+        evenements: (ami.evenements ?? []).filter((ev: any) => ev.fin >= nouveauDebut && ev.debut < nouvelleFin),
+      })))
+      const params = paramsPlage(nouveauDebut, nouvelleFin)
+      userEventsRefresh.current?.setParams(params)
+      friendsEventsRefresh.current?.setParams(params)
+    }
+  }
 
   const reculerDate = () => changerJour(-1);
   const avancerDate = () => changerJour(1);
@@ -489,7 +517,9 @@ export default function Home() {
    */
   const retourMaintenant = () => {
     const now = DateTime.now();
-    initialiserOffset(now.hour * (pxHeures + L_HEURES));
+    const start = now.startOf('day').minus({ days: 3 })
+    chargerFenetre(start)
+    initialiserOffset((3 * 24 + now.hour) * (pxHeures + L_HEURES));
     // hasSame: comparing only `.day` missed e.g. the 10th of another month.
     if (!todayDateTime?.hasSame(now, 'day')) {
       setTodayDateTime(now.startOf('day'));
@@ -564,10 +594,11 @@ export default function Home() {
 
   useAnimatedReaction(
     () => offsetX.value,
-    (current, previous) => {
+    (current) => {
       onPan(current)
+      scheduleOnRN(traiterDefilementTimeline, current, windowStartMillis.value)
     }
-  )
+  , [pxHeures, L_HEURES, todayDateTime])
 
   useNavFab("home", {
     href: '/home/create',
@@ -585,16 +616,20 @@ export default function Home() {
       // coming back from it (see appliquerJourCalendrier). It used to reset to
       // today; the "today" tab in the bottom bar does that now. First visit: today.
       const jourAffiche = jourAfficheRef.current ?? now
+      const debutFenetre = jourAffiche.startOf('day').minus({ days: 3 })
+      windowStartRef.current = debutFenetre
+      windowStartMillis.value = debutFenetre.toMillis()
+      fenetreEnCoursRef.current = `${debutFenetre.toISODate()}/${debutFenetre.plus({ days: JOURS_FENETRE }).toISODate()}`
+      setWindowStart(debutFenetre)
       setTodayDateTime(jourAffiche.startOf('day'));
       setCurrentTime(now);
       dateAujShared.value = jourAffiche.toMillis();
       jourDemandeRef.current = jourAffiche.startOf('day');
       afficherDepuisCache(jourAffiche);
-      prechargerJours(jourAffiche);
       //chargerEvenements(now, now)
 
       userEventsRefresh.current = new AutoRefresh(api, '/evenements/', {
-        extraParams: paramsJour(jourAffiche),
+        extraParams: paramsPlage(debutFenetre, debutFenetre.plus({ days: JOURS_FENETRE })),
         onData: modifierEvenementsMembreFetched,
         onError: (error) => {
           log("impossible de charger les évènements du membre", error)
@@ -607,7 +642,7 @@ export default function Home() {
       })
 
       friendsEventsRefresh.current = new AutoRefresh(api, '/evenements/amis', {
-        extraParams: paramsJour(jourAffiche),
+        extraParams: paramsPlage(debutFenetre, debutFenetre.plus({ days: JOURS_FENETRE })),
         onData: modifierEvenementsAmisFetched,
         onError: (error) => {
           log("impossible de charger les évènements d'amis", error)
@@ -856,7 +891,14 @@ export default function Home() {
         {/* ── Timeline (heures) ── */}
         <View style={s.timeline}>
           <View style={ s.column} />
-          <Timeline horizontal={true}/>
+          <Timeline
+            horizontal
+            windowStart={windowStart}
+            selectedDate={todayDateTime?.hasSame(DateTime.now(), 'day')
+              ? DateTime.now()
+              : todayDateTime?.plus({ hours: 9 })}
+            timelineDays={JOURS_FENETRE}
+          />
         </View>
 
         {/* ── Zone principale (3/4) — horaire amis ── */}
@@ -892,7 +934,9 @@ export default function Home() {
                   >
                     {friends.map((friend) => {
                       const commonFreeSlots = dispoCommunesPossibles
-                        ? getCommonFreeSlots(evenementsHoraire, friend.evenements, todayDateTime)
+                        ? Array.from({ length: JOURS_FENETRE }, (_, jour) =>
+                            getCommonFreeSlots(evenementsHoraire, friend.evenements, windowStart.plus({ days: jour }))
+                          ).flat()
                         : []
                       return(
                         <View key={friend.id} style={[s.friendList]}>
@@ -921,7 +965,8 @@ export default function Home() {
                             events={friend.evenements}
                             textColor={colors.text}
                             offsetSnap={L_HEURES + pxHeures}
-                            displayedDate={todayDateTime}
+                            displayedDate={windowStart}
+                            timelineDays={JOURS_FENETRE}
                             getEvenements={() => { refreshAt(todayDateTime ?? DateTime.now()) }}
                           />
                         </View>                    
@@ -949,7 +994,8 @@ export default function Home() {
                   eventsColor={colors.primary}
                   textColor={colors.text}
                   listSize={LIST_HEIGHT}
-                  displayedDate={todayDateTime}
+                  displayedDate={windowStart}
+                  timelineDays={JOURS_FENETRE}
                   getEvenements={() => {refreshAt(todayDateTime ?? DateTime.now())}}
                   horizontal={true}
                 />

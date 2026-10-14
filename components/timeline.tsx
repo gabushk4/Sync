@@ -37,9 +37,12 @@ const heures = [
 ];
 type TimelineProps = {
     horizontal: boolean
+    windowStart?: DateTime
+    selectedDate?: DateTime
+    timelineDays?: number
 }
 
-export default function Timeline({ horizontal } : TimelineProps){
+export default function Timeline({ horizontal, windowStart, selectedDate, timelineDays = 1 } : TimelineProps){
     const { colors } = usePalette()
     const {fonts} = useFont()
     const {pxHeures, L_HEURES, H_HEURES} = useTimeline()
@@ -65,25 +68,32 @@ export default function Timeline({ horizontal } : TimelineProps){
             showsVerticalScrollIndicator={false}
             scrollEnabled={true}
             onLayout={() => {
-                const now = DateTime.now()
-                offset.value = now.hour * (pxHeures + L_HEURES)
+                const cible = selectedDate ?? DateTime.now()
+                const heureDansLaFenetre = windowStart
+                    ? cible.diff(windowStart.startOf('day'), 'hours').hours
+                    : cible.hour
+                offset.value = Math.max(0, heureDansLaFenetre) * (pxHeures + L_HEURES)
             }}
             >
-            {heures.map((item) => (
+            {Array.from({ length: timelineDays * 24 }, (_, index) => {
+                const now = (windowStart ?? DateTime.now().startOf('day').minus({ days: 3 })).plus({ hours: index })
+                const item = heures[index % 24]
+                const minuit = now.hour === 0
+                return (
                 <View
-                key={item.id}
+                key={`h-${index}`}
                 style={{
                     
                     
                     alignItems: 'center',
                     justifyContent:'center',
                     backgroundColor: 'transparent',
-                    ...(horizontal ? { marginRight: pxHeures, width: L_HEURES, height:'100%' } : { marginBottom: pxHeures, height: H_HEURES, width:'100%' })
+                    ...(horizontal ? { marginRight: pxHeures, width: L_HEURES, height:'100%', borderLeftWidth: minuit ? 1 : 0, borderColor: colors.muted } : { marginBottom: pxHeures, height: H_HEURES, width:'100%' })
                 }}
                 >
-                    <Text style={{color: colors.text, fontSize:16, fontFamily:fonts.number}}>{item.heure}</Text>
+                    <Text style={{color: colors.text, fontSize:minuit ? 12 : 16, fontFamily:fonts.number}}>{minuit ? now.toFormat('ccc d') : item.heure}</Text>
                 </View>
-            ))}
+            )})}
             </Animated.ScrollView>
         
         
