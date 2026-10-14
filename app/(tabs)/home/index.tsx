@@ -125,7 +125,7 @@ export default function Home() {
   const userEventsRefresh = useRef<AutoRefresh>(null)
 
   //Sates
-  const [, setCurrentTime] = useState<DateTime>()
+  const [tempsClassement, setTempsClassement] = useState(() => DateTime.now())
   const [friends, setFriends] = useState<Array<any>>([])
   const [userEvents, setUserEvents] = useState<Array<any>>([])
   const [todayDateTime, setTodayDateTime] = useState<DateTime>()
@@ -149,6 +149,12 @@ export default function Home() {
   const jourAfficheRef = useRef<DateTime | undefined>(undefined)
   useEffect(() => { jourAfficheRef.current = todayDateTime }, [todayDateTime])
 
+  // Refresh the proximity tie-breaker as upcoming slots get closer or pass.
+  useEffect(() => {
+    const timer = setInterval(() => setTempsClassement(DateTime.now()), 60_000)
+    return () => clearInterval(timer)
+  }, [])
+
   // Holidays (imported, see estJourFerie) are shown under the date in the bottom bar,
   // but they don't occupy the day: no block on the timeline, no "fully booked" card,
   // and they don't remove common free slots.
@@ -169,9 +175,34 @@ export default function Home() {
     return evenementsHoraire.find((ev: any) => ev?.debut && ev?.fin && ev.debut <= debutJour && ev.fin >= finJour)
   }, [evenementsHoraire, todayDateTime, evenementsMembreAJour])
 
-  // Common free slots only once both rows hold the displayed day's events, and
-  // none on a fully booked day.
-  const dispoCommunesPossibles = evenementsMembreAJour && evenementsAmisAJour && !evenementJourneeComplete
+  // Shared availability can be shown as soon as both full window responses are
+  // loaded. A fully booked selected day must not hide availability on the other
+  // six days of the planning window.
+  const dispoCommunesPossibles = evenementsMembreAJour && evenementsAmisAJour
+  const disponibilitesAmis = useMemo(() => friends.map((ami) => ({
+    ami,
+    disponibilites: dispoCommunesPossibles
+      ? getCommonFreeSlotsSurPlage(evenementsHoraire, ami.evenements, windowStart, JOURS_FENETRE)
+      : [],
+  })), [friends, dispoCommunesPossibles, evenementsHoraire, windowStart])
+  const amisAvecDisponibilites = useMemo(() => {
+    const maintenant = tempsClassement
+    return disponibilitesAmis.map(({ ami, disponibilites }) => {
+      const aVenir = disponibilites.filter((slot: any) => !slot.passe && slot.end > maintenant)
+      const minutesCommunes = aVenir.reduce((total: number, slot: any) => {
+        const debutUtile = slot.start > maintenant ? slot.start : maintenant
+        return total + Math.max(0, slot.end.diff(debutUtile, 'minutes').minutes)
+      }, 0)
+      const prochaineDisponibilite = aVenir.length > 0
+        ? Math.max(0, aVenir[0].start.diff(maintenant, 'minutes').minutes)
+        : Number.POSITIVE_INFINITY
+      return { ami, disponibilites, minutesCommunes, prochaineDisponibilite }
+    }).sort((a, b) =>
+      b.minutesCommunes - a.minutesCommunes
+      || a.prochaineDisponibilite - b.prochaineDisponibilite
+      || String(a.ami.pseudo ?? '').localeCompare(String(b.ami.pseudo ?? ''))
+    )
+  }, [disponibilitesAmis, tempsClassement])
   const [chargementEchec, setChargementEchec] = useState(false)
   const [chargementEvenements, setChargementEvenements] = useState(false)
   // Pre-fills the create screen with the day currently displayed, at the suggested
@@ -626,7 +657,7 @@ export default function Home() {
       const debutFenetre = windowStartRef.current
       fenetreEnCoursRef.current = `${debutFenetre.toISODate()}/${debutFenetre.plus({ days: JOURS_FENETRE }).toISODate()}`
       setTodayDateTime(jourAffiche.startOf('day'));
-      setCurrentTime(now);
+      setTempsClassement(now);
       dateAujShared.value = jourAffiche.toMillis();
       jourDemandeRef.current = jourAffiche.startOf('day');
       afficherDepuisCache(jourAffiche);
@@ -936,13 +967,10 @@ export default function Home() {
                       majMaxY();
                     }}
                   >
-                    {friends.map((friend) => {
+                    {amisAvecDisponibilites.map(({ ami: friend, disponibilites: commonFreeSlots }) => {
                       // Toujours calculer sur la fenêtre active entière, pas sur
                       // le jour actuellement visible (qui peut être le 16 dans
                       // une fenêtre chargée du 14 au 20).
-                      const commonFreeSlots = dispoCommunesPossibles
-                        ? getCommonFreeSlotsSurPlage(evenementsHoraire, friend.evenements, windowStart, JOURS_FENETRE)
-                        : []
                       return(
                         <View key={friend.id} style={[s.friendList]}>
                           {/* Photo de profil */}

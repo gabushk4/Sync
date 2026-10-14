@@ -12,8 +12,6 @@ import { useAPI } from "./contexteAPI"
 import { useInvites } from "./contexteInvites"
 import ceilBy5 from "@/functions/ceilBy5"
 
-type LoadingStatus = 'loading' | 'idle' | 'error';
-
 type EventDraftContextType = {
     invites: Participant[];
     start: DateTime;
@@ -43,7 +41,7 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
     const now = DateTime.now()
     const suggestionsOffset = useRef(0) 
     const friendsListOffset = useRef(0)
-    const commonAvailController = useRef<AbortController>(new AbortController())
+    const commonAvailController = useRef<AbortController | null>(null)
     const friendsAvailController = useRef<AbortController>(new AbortController())
 
     const DEBOUNCE_MS = 350
@@ -57,11 +55,7 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
     const [friendsSuggestions, setFriendsSuggestions] = useState<Array<FriendIntervals>>([])
     const [friendsHasMore, setFriendsHasMore] = useState(false)
 
-    //Gab hot fix: loading status has to be a ref 
-    const loadingStatus = useRef<LoadingStatus>('idle')
-
-    const getCommonAvail = async () => {
-        loadingStatus.current = 'loading'
+    const getCommonAvail = useCallback(async (signal: AbortSignal) => {
         try {
             //cant proceed if interval between start and end is invalid
             if (start.toMillis() > end.toMillis()) return
@@ -72,11 +66,12 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
                 offset: suggestionsOffset.current,
                 ids: invites.map(i => i.id)
             },
-            {                
-                signal: commonAvailController.current.signal
+            {
+                signal
             })            
 
-            loadingStatus.current = 'idle'
+            // Don't let an older response replace suggestions for a newer range.
+            if (signal.aborted || commonAvailController.current?.signal !== signal) return
             suggestionsOffset.current = res.data.offset
             log("getCommonAvail:", res.data)
             if (res.data.disponibilites && res.status === 200) {
@@ -87,14 +82,13 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
                 })))
             }
         } catch (err) {
-            loadingStatus.current = 'error'
-            catcher(err, "Impossible de suggérer des crénaux")
+            if (axios.isCancel(err) || signal.aborted || (err as any)?.code === 'ERR_CANCELED') return
+            catcher(err, "Impossible de suggérer des créneaux")
         }
-    } 
+    }, [api, end, invites, start])
 
     const getFriendsAvail = useCallback(async (append = false) => {
         try {
-            loadingStatus.current = 'loading'
             if (!start || !end || start.toMillis() > end.toMillis()) {
                 return { append, hasMore: false, friendIds: [] }
             }
@@ -113,7 +107,6 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
                     signal: friendsAvailController.current.signal
                 }
             )
-            loadingStatus.current = 'idle'
             //log("getFriendsAvail", res.data)
 
             const fetchedFriends = ((res.data.amis ?? []) as Array<{
@@ -143,40 +136,30 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
             return page
         } catch (error) {
             if (axios.isCancel(error)) return { append, hasMore: true, friendIds: [] }
-            loadingStatus.current = 'error'
             catcher(error, "Impossible de suggérer des amis")
             return { append, hasMore: true, friendIds: [] }
         }
     }, [api, end, start])
 
-    useEffect(() => {      
-        if (requestsEnabled) {
-            //log("invites", invites)
-            
-            commonAvailController.current = new AbortController()
+    useEffect(() => {
+        commonAvailController.current?.abort()
+        commonAvailController.current = null
+        if (!requestsEnabled) return
 
-            let timeout: number
-            if (invites.length > 0) {
-                log("timeout set")
-                timeout = setTimeout(() => {
-                    log("timeout entered")
-                    if (loadingStatus.current != 'idle') {
-                        log("request aborted")
-                        commonAvailController.current.abort()                        
-                    }
+        suggestionsOffset.current = 0
+        setSlotSuggestions([])
+        if (invites.length === 0) return
 
-                    getCommonAvail()
-                }, DEBOUNCE_MS)
-            }
-            if (invites.length == 0) {
-                setSlotSuggestions([])
-            }
+        const controller = new AbortController()
+        commonAvailController.current = controller
+        const timeout = setTimeout(() => getCommonAvail(controller.signal), DEBOUNCE_MS)
 
-            return () => {
-                clearTimeout(timeout)
-            }
+        return () => {
+            clearTimeout(timeout)
+            controller.abort()
+            if (commonAvailController.current === controller) commonAvailController.current = null
         }
-    }, [invites, requestsEnabled])
+    }, [getCommonAvail, requestsEnabled])
 
     useEffect(() => {
         if (requestsEnabled) {
@@ -188,10 +171,6 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
             friendsAvailabilityEvents.publishPage({ append: false, hasMore: false, friendIds: [] })
 
             const timeout = setTimeout(() => {
-                if (loadingStatus.current != 'idle') {
-                    friendsAvailController.current.abort()
-                }
-
                 getFriendsAvail(false)
             }, DEBOUNCE_MS)
 
