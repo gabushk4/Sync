@@ -1,7 +1,6 @@
 import { useFont } from '@/contextes/contexteFont'
 import { usePalette } from '@/contextes/contextePalette'
 import { useTimeline } from '@/contextes/contexteTimeline'
-import { findLeft, findWidth } from '@/functions/calculerDimensionsEvenements'
 import { convertirTimestampDateCourte, convertirTimestampHeure } from '@/functions/convertirTimestamp'
 import { Event } from '@/types/calendar'
 import Icon from '@react-native-vector-icons/ionicons'
@@ -22,6 +21,7 @@ type Props = {
     /** Replaces the default tap (open the event's details). */
     onPress?: (event: Event) => void;
     textColor?: string;
+    timelineDays?: number;
 }
 
 /** Inner padding between the block's border and its text. */
@@ -40,7 +40,7 @@ const PAD = 6
  * @param {Props} props
  * @returns {JSX.Element | null}
  */
-export default function ListItem({ event, horizontal, displayedDate, listOffset, eventsColor, textColor, onPress }:Props) {
+export default function ListItem({ event, horizontal, displayedDate, listOffset, eventsColor, textColor, onPress, timelineDays = 1 }:Props) {
     const { fonts } = useFont()
     const { colors } = usePalette()
     const { L_HEURES, H_HEURES, pxHeures } = useTimeline()
@@ -50,11 +50,19 @@ export default function ListItem({ event, horizontal, displayedDate, listOffset,
     const valide = !!debut && !!fin && !!displayedDate
 
     const heureOffset = horizontal ? pxHeures + L_HEURES : pxHeures + H_HEURES
-    const left = valide && horizontal ? findLeft(debut, fin, displayedDate, heureOffset) : 0
-    const top = valide && !horizontal ? findLeft(debut, fin, displayedDate, heureOffset) : 0
-    // Never thinner than one hour's width, so short events stay tappable/readable.
-    const taille = valide ? Math.max(findWidth(debut, fin, displayedDate, heureOffset), pxHeures) : 0
-    const longueurTimeline = 24 * heureOffset
+    const windowStart = displayedDate?.startOf('day')
+    const windowEnd = windowStart?.plus({ days: timelineDays })
+    const visibleStart = windowStart && debut ? (debut > windowStart ? debut : windowStart) : undefined
+    const visibleEnd = windowEnd && fin ? (fin < windowEnd ? fin : windowEnd) : undefined
+    const left = valide && horizontal && visibleStart
+        ? ((visibleStart.toMillis() - windowStart!.toMillis()) / 3600000) * heureOffset : 0
+    const top = valide && !horizontal && visibleStart
+        ? ((visibleStart.toMillis() - windowStart!.toMillis()) / 3600000) * heureOffset : 0
+    // Clip event blocks at the loaded window edges while preserving their actual
+    // timestamps for labels and event details.
+    const taille = valide && visibleStart && visibleEnd
+        ? Math.max(((visibleEnd.toMillis() - visibleStart.toMillis()) / 3600000) * heureOffset, pxHeures) : 0
+    const longueurTimeline = timelineDays * 24 * heureOffset
 
     // Label size along the scroll axis: at most 3 hours wide, never wider than the block.
     const tailleTexte = Math.max(Math.min(taille - 2 * PAD, pxHeures * 3), 0)
@@ -75,6 +83,8 @@ export default function ListItem({ event, horizontal, displayedDate, listOffset,
     })
 
     if (!valide) return null
+
+    if (!visibleStart || !visibleEnd || visibleEnd <= visibleStart) return null
 
     const surPlusieursJours = fin.startOf('day').diff(debut.startOf('day'), 'days').toObject().days! > 0
 

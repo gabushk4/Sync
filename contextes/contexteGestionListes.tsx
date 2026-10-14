@@ -47,7 +47,7 @@ export const GestionScrollProvider = ({ children }: { children: ReactNode }) => 
 
   // Shared values
   const offset = useSharedValue(0);
-  const maxOffset = Math.max(0, 24 * (pxHeures + L_HEURES) - (WIN_W - 80));
+  const maxOffset = Math.max(0, 7 * 24 * (pxHeures + L_HEURES) - (WIN_W - 80));
   const clampOffset = (value: number, sharedValue?: SharedValue<number>) => {
     'worklet'
     const newOffset = Math.min(Math.max(value, 0), maxOffset)

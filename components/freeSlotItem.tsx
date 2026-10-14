@@ -20,26 +20,32 @@ type Props = {
     horizontal: boolean;
     listOffset: SharedValue<number>
     owner: any
+    timelineDays?: number
 }
 
-export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, listOffset, owner }: Props) {
+export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, listOffset, owner, timelineDays = 1 }: Props) {
     const { t } = useTranslation('home')
     const { colors } = usePalette()
     const {fonts} = useFont()
     const { pxHeures, H_HEURES, L_HEURES } = useTimeline()
     
+    const debutFenetre = displayedDate?.startOf('day')
+    const finFenetre = debutFenetre?.plus({ days: timelineDays })
+    const debutVisible = debutFenetre && freeSlot.start < debutFenetre ? debutFenetre : freeSlot.start
+    const finVisible = finFenetre && freeSlot.end > finFenetre ? finFenetre : freeSlot.end
     const left = horizontal
-                    ? findLeft(freeSlot.start, freeSlot.end, displayedDate as DateTime, pxHeures + L_HEURES)
+                    ? debutFenetre ? (debutVisible.toMillis() - debutFenetre.toMillis()) / 3600000 * (pxHeures + L_HEURES) : 0
         : 0
     const top = horizontal
                     ? 0
         : findLeft(freeSlot.start, freeSlot.end, displayedDate as DateTime, pxHeures + H_HEURES)
-    const height = horizontal
+    const hauteurCalculee = horizontal
                     ? '100%'
         : findWidth(freeSlot.start, freeSlot.end, displayedDate, pxHeures + H_HEURES)
     const width = horizontal 
-                    ? findWidth(freeSlot.start, freeSlot.end, displayedDate, pxHeures + L_HEURES)
+                    ? (finVisible.toMillis() - debutVisible.toMillis()) / 3600000 * (pxHeures + L_HEURES)
         : '100%'
+    const height = hauteurCalculee
     
     // `passe`: today's hours already elapsed (see getCommonFreeSlots), shown greyed out.
     // Rectification (Philip Kvaratshelya) for a more conventional display: past
@@ -59,7 +65,7 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
         listOffset,
         inset: pxHeures,
         centerThreshold: 2 * (pxHeures + (horizontal ? L_HEURES : H_HEURES)),
-        timelineLength: 24 * (pxHeures + (horizontal ? L_HEURES : H_HEURES)),
+        timelineLength: timelineDays * 24 * (pxHeures + (horizontal ? L_HEURES : H_HEURES)),
     })
     
     const s = StyleSheet.create({
