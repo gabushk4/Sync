@@ -12,6 +12,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  packages:
+    name: Packages Update
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm install
   lint:
     name: Lint (fichiers modifiés)
     runs-on: ubuntu-latest
