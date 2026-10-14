@@ -2,6 +2,7 @@ import ToastAbs from "@/abstractions/toastAbs"
 import { toastTypes } from "@/constants/toastConfig"
 import i18n from "../i18n"
 import log from "./log"
+import { capturerErreurPourSignalement } from "@/contextes/contexteSignalements"
 
 export default function catcher(error, titre){
     //const {ouvirModal} = useModal()
@@ -10,6 +11,7 @@ export default function catcher(error, titre){
     // login screen and flags the error, so there's nothing useful to show.
     if (error?.deconnecte) return
     const status = error?.response?.status ?? error?.status
+    capturerErreurPourSignalement(error, titre)
     const errorKey = String(status ?? error?.code ?? 'default')
     const fallback = i18n.t('default', { ns: 'errors', returnObjects: true })
     const localized = i18n.t(errorKey, { ns: 'errors', returnObjects: true })
