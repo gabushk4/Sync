@@ -14,7 +14,7 @@ import { DateTime } from 'luxon';
 import { Dimensions, Easing, Image, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { getCommonFreeSlots } from '@/functions/availability';
+import { getCommonFreeSlotsSurPlage } from '@/functions/availability';
 import catcher from '@/functions/catcher';
 import { convertLocalToUTC, convertUTCToLocal } from '@/functions/convertirUTCenLocal';
 import log from '@/functions/log';
@@ -56,6 +56,10 @@ const HAUTEUR_RETOUR = 34
 // corner radius.
 const LARGEUR_ONGLET = 52
 const RAYON_ONGLET = 10
+// Limite volontaire : les disponibilités communes ne sont calculées que dans
+// la fenêtre déjà chargée. Exemple : fenêtre du 14 au 20 inclus, même si l'on
+// consulte le 16; sa borne API exclusive est le 21 à 00:00. On ne charge donc
+// pas une nouvelle semaine depuis chaque jour affiché.
 const JOURS_FENETRE = 7
 const { width: WIN_W, height: WIN_H } = Dimensions.get('window')
 
@@ -616,11 +620,11 @@ export default function Home() {
       // coming back from it (see appliquerJourCalendrier). It used to reset to
       // today; the "today" tab in the bottom bar does that now. First visit: today.
       const jourAffiche = jourAfficheRef.current ?? now
-      const debutFenetre = jourAffiche.startOf('day').minus({ days: 3 })
-      windowStartRef.current = debutFenetre
-      windowStartMillis.value = debutFenetre.toMillis()
+      // Keep the existing sliding window and horizontal offset when returning
+      // from a pushed screen (such as event creation). Re-centering only the
+      // window start here made the same offset point at a different calendar day.
+      const debutFenetre = windowStartRef.current
       fenetreEnCoursRef.current = `${debutFenetre.toISODate()}/${debutFenetre.plus({ days: JOURS_FENETRE }).toISODate()}`
-      setWindowStart(debutFenetre)
       setTodayDateTime(jourAffiche.startOf('day'));
       setCurrentTime(now);
       dateAujShared.value = jourAffiche.toMillis();
@@ -933,10 +937,11 @@ export default function Home() {
                     }}
                   >
                     {friends.map((friend) => {
+                      // Toujours calculer sur la fenêtre active entière, pas sur
+                      // le jour actuellement visible (qui peut être le 16 dans
+                      // une fenêtre chargée du 14 au 20).
                       const commonFreeSlots = dispoCommunesPossibles
-                        ? Array.from({ length: JOURS_FENETRE }, (_, jour) =>
-                            getCommonFreeSlots(evenementsHoraire, friend.evenements, windowStart.plus({ days: jour }))
-                          ).flat()
+                        ? getCommonFreeSlotsSurPlage(evenementsHoraire, friend.evenements, windowStart, JOURS_FENETRE)
                         : []
                       return(
                         <View key={friend.id} style={[s.friendList]}>

@@ -33,8 +33,13 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
     const finFenetre = debutFenetre?.plus({ days: timelineDays })
     const debutVisible = debutFenetre && freeSlot.start < debutFenetre ? debutFenetre : freeSlot.start
     const finVisible = finFenetre && freeSlot.end > finFenetre ? finFenetre : freeSlot.end
+    const positionHeures = (date: DateTime) => {
+        if (!debutFenetre) return 0
+        const jour = Math.round(date.startOf('day').diff(debutFenetre, 'days').days)
+        return jour * 24 + date.hour + date.minute / 60 + date.second / 3600 + date.millisecond / 3600000
+    }
     const left = horizontal
-                    ? debutFenetre ? (debutVisible.toMillis() - debutFenetre.toMillis()) / 3600000 * (pxHeures + L_HEURES) : 0
+                    ? positionHeures(debutVisible) * (pxHeures + L_HEURES)
         : 0
     const top = horizontal
                     ? 0
@@ -43,7 +48,7 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
                     ? '100%'
         : findWidth(freeSlot.start, freeSlot.end, displayedDate, pxHeures + H_HEURES)
     const width = horizontal 
-                    ? (finVisible.toMillis() - debutVisible.toMillis()) / 3600000 * (pxHeures + L_HEURES)
+                    ? (positionHeures(finVisible) - positionHeures(debutVisible)) * (pxHeures + L_HEURES)
         : '100%'
     const height = hauteurCalculee
     
@@ -103,7 +108,7 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
         <TouchableOpacity
             key={`fs${freeSlot.start}-${freeSlot.end}`}
             accessibilityRole="button"
-            accessibilityLabel={`${t('commonFreeSlot')} ${freeSlot.start.toFormat('t')}–${freeSlot.end.toFormat('t')}`}
+            accessibilityLabel={`${t('commonFreeSlot')} ${freeSlot.start.toFormat('ccc d t')}–${freeSlot.end.toFormat('ccc d t')}`}
             style={[s.freeSlot, {
                 position: 'absolute',
                 left: left,
@@ -126,8 +131,8 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
                 router.push({
                     pathname: '/(tabs)/home/create',
                     params: {
-                        start: freeSlot.start,
-                        end: freeSlot.end,
+                        start: freeSlot.start.toISO(),
+                        end: freeSlot.end.toISO(),
                         friend: JSON.stringify({
                             id: owner.id,
                             pseudo: owner.pseudo,
