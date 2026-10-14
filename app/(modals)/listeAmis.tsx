@@ -11,9 +11,9 @@ import ModalBase from "@/components/modalBase";
 import { useAPI } from "@/contextes/contexteAPI";
 import { useFont } from "@/contextes/contexteFont";
 import { usePalette } from "@/contextes/contextePalette";
+import { modalEvents } from "@/events/modalEvents";
 import catcher from "@/functions/catcher";
 import { convertUTCToLocal } from "@/functions/convertirUTCenLocal";
-import { modalEvents } from "@/events/modalEvents";
 import { useFriendList } from "@/hooks/useFriendList";
 import { Participant } from "@/types/invites";
 

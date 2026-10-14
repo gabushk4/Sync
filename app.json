@@ -39,6 +39,12 @@
       "expo-status-bar",
       "expo-localization",
       [
+        "expo-sensors",
+        {
+          "motionPermission": "Sync utilise les mouvements de l'appareil pour ouvrir le formulaire de signalement."
+        }
+      ],
+      [
         "expo-audio",
         {
           "microphonePermission": "Sync utilise le micro pour enregistrer tes messages vocaux."

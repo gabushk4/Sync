@@ -15,7 +15,8 @@ import { FabProvider } from '@/contextes/contexteFAB';
 //Contexts
 
 //Dependencies
-import { Stack } from 'expo-router';
+import { router, Stack, usePathname } from 'expo-router';
+import { Accelerometer } from 'expo-sensors';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -40,6 +41,7 @@ import {
 
 import { toastConfig } from '@/constants/toastConfig';
 import { EventDraftProvider } from '@/contextes/contexteEventDraft';
+import { SignalementsProvider } from '@/contextes/contexteSignalements';
 import { initLocalization } from '@/locales/initLocale';
 
 // This is the default configuration
@@ -59,7 +61,8 @@ export default function RootLayout() {
       <FontProvider>
         <AccessTokenProvider>
           <MockModeProvider>
-            <APIProvider>   
+            <APIProvider>
+              <SignalementsProvider>
               
                 <SettingsProvider>
                   <PaletteProvider>
@@ -87,7 +90,8 @@ export default function RootLayout() {
                       </AuthProvider>
                     </MembreProvider>
                   </PaletteProvider>
-                </SettingsProvider>  
+                </SettingsProvider>
+              </SignalementsProvider>
             </APIProvider>
           </MockModeProvider>
         </AccessTokenProvider>            
@@ -123,6 +127,42 @@ function AppLoader() {
 function RootLayoutNav() {
   const { navTheme } = usePalette();
   const { state } = useAuth()
+  const pathname = usePathname()
+
+  useEffect(() => {
+    if (state !== 'authenticated') return
+
+    let actif = true
+    let dernierDeclenchement = 0
+    let subscription: ReturnType<typeof Accelerometer.addListener> | undefined
+
+    const demarrerEcoute = async () => {
+      try {
+        const disponible = await Accelerometer.isAvailableAsync()
+        if (!actif || !disponible) return
+
+        Accelerometer.setUpdateInterval(100)
+        subscription = Accelerometer.addListener(({ x, y, z }) => {
+          const acceleration = Math.sqrt(x * x + y * y + z * z)
+          const maintenant = Date.now()
+          const dejaDansSignalement = pathname.endsWith('/reportBug')
+
+          if (acceleration < 2.3 || dejaDansSignalement || maintenant - dernierDeclenchement < 2000) return
+
+          dernierDeclenchement = maintenant
+          router.push('/(modals)/reportBug')
+        })
+      } catch (error) {
+        console.warn('Impossible de démarrer la détection de secousse', error)
+      }
+    }
+
+    void demarrerEcoute()
+    return () => {
+      actif = false
+      subscription?.remove()
+    }
+  }, [pathname, state])
 
   /* const enregistrerPushToken = async (accessToken: string)=>{
     
