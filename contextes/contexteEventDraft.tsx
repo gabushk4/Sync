@@ -57,26 +57,35 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
     const [friendsSuggestions, setFriendsSuggestions] = useState<Array<FriendIntervals>>([])
     const [friendsHasMore, setFriendsHasMore] = useState(false)
 
-    //Gab hot fix: loading status has to be a ref 
-    const loadingStatus = useRef<LoadingStatus>('idle')
+    //Gab hot fix: loading status has to be a ref
+    // Un statut par requête : partager le même faisait annuler la requête des créneaux communs
+    // dès que celle des amis était en cours (et vice versa)
+    const commonLoadingStatus = useRef<LoadingStatus>('idle')
+    const friendsLoadingStatus = useRef<LoadingStatus>('idle')
 
     const getCommonAvail = async () => {
-        loadingStatus.current = 'loading'
+        //cant proceed if interval between start and end is invalid
+        if (start.toMillis() > end.toMillis()) return
+
+        // annule la requête précédente encore en cours, puis en démarre une nouvelle avec un contrôleur neuf
+        // (un AbortController annulé le reste : le réutiliser annulerait aussitôt la nouvelle requête → ERR_CANCELED)
+        if (commonLoadingStatus.current === 'loading') commonAvailController.current.abort()
+        const controller = new AbortController()
+        commonAvailController.current = controller
+
+        commonLoadingStatus.current = 'loading'
         try {
-            //cant proceed if interval between start and end is invalid
-            if (start.toMillis() > end.toMillis()) return
-            
             const res = await api.post("/disponibilites/communes", {
                 debut: formaterDatePourServeur(ceilBy5(convertLocalToUTC(start))),
                 fin: formaterDatePourServeur(ceilBy5(convertLocalToUTC(end))),
                 offset: suggestionsOffset.current,
                 ids: invites.map(i => i.id)
             },
-            {                
-                signal: commonAvailController.current.signal
-            })            
+            {
+                signal: controller.signal
+            })
 
-            loadingStatus.current = 'idle'
+            if (commonAvailController.current === controller) commonLoadingStatus.current = 'idle'
             suggestionsOffset.current = res.data.offset
             log("getCommonAvail:", res.data)
             if (res.data.disponibilites && res.status === 200) {
@@ -87,18 +96,25 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
                 })))
             }
         } catch (err) {
-            loadingStatus.current = 'error'
+            // requête remplacée par une plus récente : ce n'est pas une erreur
+            if (axios.isCancel(err)) return
+            if (commonAvailController.current === controller) commonLoadingStatus.current = 'error'
             catcher(err, "Impossible de suggérer des crénaux")
         }
-    } 
+    }
 
     const getFriendsAvail = useCallback(async (append = false) => {
+        if (!start || !end || start.toMillis() > end.toMillis()) {
+            return { append, hasMore: false, friendIds: [] }
+        }
+
+        // même principe que getCommonAvail : contrôleur neuf pour chaque requête
+        if (friendsLoadingStatus.current === 'loading') friendsAvailController.current.abort()
+        const controller = new AbortController()
+        friendsAvailController.current = controller
+
         try {
-            loadingStatus.current = 'loading'
-            if (!start || !end || start.toMillis() > end.toMillis()) {
-                return { append, hasMore: false, friendIds: [] }
-            }
-            
+            friendsLoadingStatus.current = 'loading'
             const requestOffset = friendsListOffset.current
             log("getFriendsAvail", start, end, requestOffset)
 
@@ -110,10 +126,10 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
                         offset_ami: requestOffset,
                         //seuil: could be specified in settings 
                     },
-                    signal: friendsAvailController.current.signal
+                    signal: controller.signal
                 }
             )
-            loadingStatus.current = 'idle'
+            if (friendsAvailController.current === controller) friendsLoadingStatus.current = 'idle'
             //log("getFriendsAvail", res.data)
 
             const fetchedFriends = ((res.data.amis ?? []) as Array<{
@@ -143,7 +159,7 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
             return page
         } catch (error) {
             if (axios.isCancel(error)) return { append, hasMore: true, friendIds: [] }
-            loadingStatus.current = 'error'
+            if (friendsAvailController.current === controller) friendsLoadingStatus.current = 'error'
             catcher(error, "Impossible de suggérer des amis")
             return { append, hasMore: true, friendIds: [] }
         }
@@ -153,22 +169,13 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
         if (requestsEnabled) {
             //log("invites", invites)
             
-            commonAvailController.current = new AbortController()
-
-            let timeout: number
+            let timeout: ReturnType<typeof setTimeout> | undefined
             if (invites.length > 0) {
-                log("timeout set")
-                timeout = setTimeout(() => {
-                    log("timeout entered")
-                    if (loadingStatus.current != 'idle') {
-                        log("request aborted")
-                        commonAvailController.current.abort()                        
-                    }
-
-                    getCommonAvail()
-                }, DEBOUNCE_MS)
+                // getCommonAvail annule lui-même la requête précédente et crée son propre contrôleur
+                timeout = setTimeout(() => getCommonAvail(), DEBOUNCE_MS)
             }
             if (invites.length == 0) {
+                commonAvailController.current.abort()
                 setSlotSuggestions([])
             }
 
@@ -181,19 +188,14 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
     useEffect(() => {
         if (requestsEnabled) {
             friendsAvailController.current.abort()
-            friendsAvailController.current = new AbortController()
+            friendsLoadingStatus.current = 'idle'
             friendsListOffset.current = 0
             setFriendsSuggestions([])
             setFriendsHasMore(false)
             friendsAvailabilityEvents.publishPage({ append: false, hasMore: false, friendIds: [] })
 
-            const timeout = setTimeout(() => {
-                if (loadingStatus.current != 'idle') {
-                    friendsAvailController.current.abort()
-                }
-
-                getFriendsAvail(false)
-            }, DEBOUNCE_MS)
+            // getFriendsAvail crée son propre contrôleur
+            const timeout = setTimeout(() => getFriendsAvail(false), DEBOUNCE_MS)
 
             return () => {
                 clearTimeout(timeout)
