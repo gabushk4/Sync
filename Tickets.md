@@ -7,7 +7,7 @@ branche, sans toucher au comportement. Critère commun : `npx eslint <fichiers>`
 
 ## Débloquer la CI (T1 → T5)
 
-- [ ] **T1 — Nettoyer le test du composant supprimé (débloque le job test en strict)**
+- [D] **T1 — Nettoyer le test du composant supprimé (débloque le job test en strict)**
   Décision user (10/10/2026) : la suppression de `components/StyledText.tsx`
   et `components/Themed.tsx` est assumée.
   Action : supprimer `components/__tests__/StyledText-test.js` (il importe
@@ -16,14 +16,14 @@ branche, sans toucher au comportement. Critère commun : `npx eslint <fichiers>`
   Acceptation : `npm run test` vert sans exception.
   ⚠️ Ne pas oublier T2 : `components/EditScreenInfo.tsx` importe encore
   `MonoText` depuis le module supprimé.
-- [ ] **T2 — Imports cassés par la suppression T1 (3 erreurs tsc TS2307, petit ticket)**
+- [D] **T2 — Imports cassés par la suppression T1 (3 erreurs tsc TS2307, petit ticket)**
   `app/modal.tsx:6` (`@/components/Themed`), `components/EditScreenInfo.tsx:5-6`
   (`./StyledText`, `./Themed`). Migrer vers `react-native` (ou abstraction
   existante), sans changer le comportement.
-- [ ] **T3 — `abstractions/touchableOpacityAbs.tsx:23` (3 erreurs tsc)**
+- [D] **T3 — `abstractions/touchableOpacityAbs.tsx:23` (3 erreurs tsc)**
   `Text` non défini/importé (`react/jsx-no-undef`) + props JSX invalides
   (TS2607/TS2786).
-- [ ] **T4 — `svgs/appIcon.tsx:11`, `svgs/closeMenu.tsx:11`, `svgs/hamburgerMenu.tsx:11` (3 erreurs tsc)**
+- [D] **T4 — `svgs/appIcon.tsx:11`, `svgs/closeMenu.tsx:11`, `svgs/hamburgerMenu.tsx:11` (3 erreurs tsc)**
   Prop `xmlns` rejetée par les types `react-native-svg` (TS2322). Mécanique.
 - [ ] **T5 — Re-bloquer le typecheck (dépend de T2, T3, T4, T13)**
   Quand `npx tsc --noEmit` sort en exit 0 : retirer `continue-on-error: true`
@@ -32,7 +32,7 @@ branche, sans toucher au comportement. Critère commun : `npx eslint <fichiers>`
 
 ## Nettoyage mécanique (T6, avant les corrections sémantiques pour des diffs propres)
 
-- [ ] **T6 — Code mort : ~155 `no-unused-vars` + 18 `@typescript-eslint/no-unused-vars` (warnings)**
+- [D] **T6 — Code mort : ~155 `no-unused-vars` + 18 `@typescript-eslint/no-unused-vars` (warnings)**
   Imports/variables inutilisés sur tout le projet. `npx eslint --fix` en
   corrige une partie automatiquement (vérifier le diff avant de pousser).
   Fichier le plus touché : `app/(tabs)/home/details/[eventId].tsx` (25 warnings).
