@@ -27,6 +27,13 @@ import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpac
 type SourceImport = 'telephone' | 'ics';
 
 /**
+ * To separate concerns, Importing from a file must be separated from importing from a systems calendar. 
+ * Also, we need to be able to manage separeted calendars. 
+ * If the user wants to delete events from an imported file, or from an imported system calendar, he has to be able to do so.
+ * For now, this code limits the control of the user over its calendar.
+ */
+
+/**
  * Importer un calendrier (stories #4 et #7), depuis deux sources au choix :
  *  - les calendriers du téléphone (expo-calendar)
  *  - un fichier .ics (Google Agenda, Outlook, Apple Calendar...)
