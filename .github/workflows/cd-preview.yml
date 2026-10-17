@@ -1,0 +1,31 @@
+name: CD - Preview
+
+# Chaque merge sur main publie une update OTA vers le channel `preview`.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-preview
+  cancel-in-progress: true
+
+jobs:
+  update:
+    name: eas update (preview)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: npm ci
+      - run: eas update --branch preview --message "preview ${{ github.sha }}" --non-interactive

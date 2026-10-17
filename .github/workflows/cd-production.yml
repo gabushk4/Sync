@@ -1,0 +1,34 @@
+name: CD - Production
+
+# Push sur prod = update OTA vers le channel `production`, après approbation manuelle.
+# Les builds natifs (eas build --profile production) restent manuels.
+on:
+  push:
+    branches: [prod]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-production
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: eas update (production)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Settings > Environments > production > Required reviewers
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: npm ci
+      - run: eas update --branch production --message "release ${{ github.sha }}" --non-interactive
