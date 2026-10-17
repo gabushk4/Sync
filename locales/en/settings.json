@@ -22,5 +22,12 @@
     "appVersion":"version {{version}}",
     "about":"about sync",
     "privacyPolicy":"privacy policy",
-    "minorSecurity":"child safety standards"
+    "minorSecurity":"child safety standards",
+    "imports":"import and manage a calendar",
+    "calendarImports":{
+        "system": "from system",
+        "file": "from .ics file",
+        "google": "from Google Agenda",
+        "outlook": "from Outlook Calendar"
+    }
 }

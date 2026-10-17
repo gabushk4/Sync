@@ -450,16 +450,6 @@ export default function ProfilEcran(){
                         >
                             <Icon name='log-out' color={colors.error} size={28} />
                         </AnimatedTouchableOpacity>
-                        {/* Stories #4 et #7 : importer un calendrier (téléphone ou .ics) */}
-                        <AnimatedTouchableOpacity
-                            style={[s.floatingButton, s.floatingOption, importOptionAnimated]}
-                            onPress={() => {
-                                toggleHamburgerMenu()
-                                router.push('/(tabs)/profile/importCalendar')
-                            }}
-                        >
-                            <Icon name='calendar' color={colors.text} size={28} />
-                        </AnimatedTouchableOpacity>
                 </View>
         </View>         
         </View>                  

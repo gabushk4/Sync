@@ -21,6 +21,13 @@ export default function ProfileLayout() {
             <Stack.Screen
                 name="importCalendar" options={{ headerTitle: t('navigation.importCalendar')}}
             />
+            <Stack.Screen
+                name="settings/calendars/google" options={{ headerTitle: 'Google Agenda' }}
+            />
+            <Stack.Screen
+                name="settings/calendars/outlook" options={{ headerTitle: 'Outlook Calendar' }}
+            />
+            
         </Stack>
     )
 }
