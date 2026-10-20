@@ -27,6 +27,17 @@
 	"friendMood": "État d'âme",
 	"moodEmpty": "Aucun état d'âme partagé pour le moment.",
 	"bioEmpty": "Aucune bio pour le moment.",
+	"commonSlots": {
+		"title": "Disponibilités communes",
+		"seeInSchedule": "Voir dans l'horaire",
+		"week": "{{debut}} – {{fin}}",
+		"previousWeek": "semaine précédente",
+		"nextWeek": "semaine suivante",
+		"slot": "de {{debut}} à {{fin}}",
+		"empty": "Aucune disponibilité commune avec {{pseudo}} cette semaine.",
+		"create": "créer un évènement avec {{pseudo}} : {{creneau}}",
+		"retry": "impossible de charger les disponibilités, réessayer",		"loadFailed": "impossible de charger les disponibilités communes"
+	},
 	"errors": {
 		"widgetsLoadFailed": "erreur lors du chargement des widgets",
 		"updateFailed": "impossible de modifier le profil",

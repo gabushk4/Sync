@@ -1,4 +1,4 @@
-import { useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, useColorScheme, View } from 'react-native';
@@ -42,6 +42,8 @@ import { DateTime } from "luxon";
  *   the suggested start stays on the chosen day and only the past is blocked
  *   (the chosen day could become unpickable), and a missing title or a past
  *   start get a clear message before anything is sent
+ * @author Philip Kvaratshelya — user story 25: `retour` route param (back to a
+ *   friend's profile when opened from it)
  * @returns {JSX.Element}
  */
 export default function CreateEvent({ }) {
@@ -55,7 +57,27 @@ export default function CreateEvent({ }) {
     
     const formRef = useRef<EventFormHandle>(null)
 
-    const { start, end, friend } = useLocalSearchParams<{ start?: string, end?: string, friend?: string }>()
+    const { start, end, friend, retour } = useLocalSearchParams<{ start?: string, end?: string, friend?: string, retour?: string }>()
+    // Opened from another tab (a friend's profile, user story 25): `retour` is the
+    // screen to go back to (JSON `{ pathname, params }`) once this one is left, by
+    // the back arrow or after creating — instead of the home tab's timeline.
+    const retourRef = useRef(retour)
+    // This screen leaves by itself (created / dropped): `retour` applies then too,
+    // but not when the "sync" tab pops the home stack (see app/(tabs)/_layout).
+    const sortieVoulueRef = useRef(false)
+
+    /**
+     * Leaves after creating (or dropping, from the conflict screen): pops the home
+     * stack back to the home screen (replace stacked a second one over the calendar
+     * page when created from there); `retour` then reopens the friend's profile.
+     *
+     * @author Philip Kvaratshelya — user story 25
+     * @returns {void}
+     */
+    const quitterApresCreation = () => {
+        sortieVoulueRef.current = true
+        navigation.dispatch({ type: 'POP_TO_TOP' })
+    }
 
     // Sorted defensively regardless of the order `start`/`end` arrive in —
     // constraints.maximumStart ending up before minimumStart crashes the
@@ -131,7 +153,7 @@ export default function CreateEvent({ }) {
     const quitterConflit = (sortie: SortieConflit) => {
         setConflit(null)
         if (sortie === 'retour') navigation.goBack()
-        else if (sortie === 'accueil') navigation.dispatch({ type: 'POP_TO_TOP' })
+        else if (sortie === 'accueil') quitterApresCreation()
     }
 
     /**
@@ -202,9 +224,7 @@ export default function CreateEvent({ }) {
                         text2: t('create.createdMessage'),
                         autoHide: true,
                     })
-                    // Pops the home stack back to the home screen (replace stacked a
-                    // second one over the calendar page when created from there).
-                    navigation.dispatch({ type: 'POP_TO_TOP' })
+                    quitterApresCreation()
                 }
             } else {
                 ToastAbs.show({ type: toastTypes.error, text2: errorMessage })
@@ -235,6 +255,13 @@ export default function CreateEvent({ }) {
         const listener = navigation.addListener('beforeRemove', (e) => {
             console.log('on back')
             resetInvites()
+            // Back to the screen this one was opened from, once removed (the home
+            // stack is left on its timeline). Philip Kvaratshelya — user story 25.
+            const parOnglet = e.data.action.type === 'POP_TO_TOP' && !sortieVoulueRef.current
+            if (retourRef.current && !parOnglet) {
+                const destination = JSON.parse(retourRef.current)
+                setTimeout(() => router.navigate(destination), 0)
+            }
         })
         return () => {
             navigation.removeListener('beforeRemove', listener)

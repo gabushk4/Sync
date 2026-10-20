@@ -11,5 +11,11 @@
   "backToToday": "Revenir à aujourd'hui",
   "fullyBooked": "Journée complète",
   "untitledEvent": "Évènement",
-  "backToNow": "Revenir à maintenant"
+  "backToNow": "Revenir à maintenant",
+  "search": {
+    "open": "Rechercher un ami",
+    "close": "Fermer la recherche",
+    "placeholder": "Rechercher un ami",
+    "noResult": "Aucun ami ne correspond à « {{texte}} »"
+  }
 }

@@ -27,6 +27,17 @@
 	"friendMood": "Mood",
 	"moodEmpty": "No mood shared right now.",
 	"bioEmpty": "No bio yet.",
+	"commonSlots": {
+		"title": "Common availabilities",
+		"seeInSchedule": "See in schedule",
+		"week": "{{debut}} – {{fin}}",
+		"previousWeek": "previous week",
+		"nextWeek": "next week",
+		"slot": "from {{debut}} to {{fin}}",
+		"empty": "No common availability with {{pseudo}} this week.",
+		"create": "create an event with {{pseudo}}: {{creneau}}",
+		"retry": "couldn't load the availabilities, retry",		"loadFailed": "unable to load common availabilities"
+	},
 	"errors": {
 		"widgetsLoadFailed": "error loading widgets",
 		"updateFailed": "unable to update profile",

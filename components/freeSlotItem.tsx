@@ -5,7 +5,7 @@ import { findLeft, findWidth } from "@/functions/calculerDimensionsEvenements";
 
 import { useFont } from "@/contextes/contexteFont";
 import log from "@/functions/log";
-import { router } from "expo-router";
+import ouvrirCreationAvecAmi from "@/functions/ouvrirCreationAvecAmi";
 import { DateTime } from "luxon";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 import { useTranslation } from 'react-i18next';
@@ -128,19 +128,8 @@ export default function FreeSlotItem({ freeSlot, displayedDate, horizontal, list
                     return 
                 }
                 log("common free slot with", owner)
-                router.push({
-                    pathname: '/(tabs)/home/create',
-                    params: {
-                        start: freeSlot.start.toISO(),
-                        end: freeSlot.end.toISO(),
-                        friend: JSON.stringify({
-                            id: owner.id,
-                            pseudo: owner.pseudo,
-                            fp_url: owner.fp_url ?? null,
-                            privilege: 'lecteur',
-                        })
-                    }
-                })
+                // Shared with a friend's profile widget (Philip Kvaratshelya — user story 25).
+                ouvrirCreationAvecAmi({ debut: freeSlot.start, fin: freeSlot.end, ami: owner })
             }}
         >
             <Animated.View
