@@ -60,7 +60,7 @@ type Horaires = { leader: PersonneHoraire | null, invites: PersonneHoraire[], mo
  *
  * Route param `invitation`: {@link InvitationInfo} as JSON.
  *
- * @author Philip Kvaratshelya — user story 8 (reviewing an invitation in conflict)
+ * @author Philip — user story 8 (reviewing an invitation in conflict)
  * @returns {JSX.Element}
  */
 export default function RevueInvitation() {
@@ -74,7 +74,7 @@ export default function RevueInvitation() {
     const { width: largeurEcran } = useWindowDimensions()
     // This screen shows one day: the shared bounds (GestionScrollProvider) now cover
     // the home screen's seven days and let the rows scroll into empty days.
-    // Rectification (Philip Kvaratshelya) after the seven-day window.
+    // Rectification (Philip) after the seven-day window.
     const maxOffset = Math.max(0, 24 * (pxHeures + L_HEURES) - (largeurEcran - LARGEUR_COLONNE))
     const clampOffset = (valeur: number) => {
         'worklet'
@@ -104,7 +104,7 @@ export default function RevueInvitation() {
      * can't be tapped — with its title for a friend, or grey and
      * "private" for someone who isn't a friend (`masque`, the API sends no title).
      *
-     * @author Philip Kvaratshelya — user story 8 (answering an invitation)
+     * @author Philip — user story 8 (answering an invitation)
      * @param {PersonneHoraire} personne
      * @param {'leader' | 'invite' | 'moi'} role
      * @returns {Event[]}
@@ -125,7 +125,7 @@ export default function RevueInvitation() {
                 : ev.masque ? colors.muted : undefined,
 
             // The member's own events too: they open their details, to move or
-            // delete one in conflict (Philip Kvaratshelya — user story 8).
+            // delete one in conflict (Philip — user story 8).
             cliquable: role === 'moi' || (!!ev.est_invitation && role === 'leader')
         }) as Event))
 
@@ -134,7 +134,7 @@ export default function RevueInvitation() {
      * one of the member's own events opens its details (edit / delete / leave),
      * pushed over this screen so going back returns here (reloaded on focus).
      *
-     * @author Philip Kvaratshelya — user story 8 (adjusting my schedule)
+     * @author Philip — user story 8 (adjusting my schedule)
      * @param {Event} ev
      * @returns {void}
      */
@@ -154,7 +154,7 @@ export default function RevueInvitation() {
      * Events that make a person busy, for the common free slots: everything but the
      * invited event while it isn't accepted (a pending invitation doesn't take the time).
      *
-     * @author Philip Kvaratshelya — user story 8 (answering an invitation)
+     * @author Philip — user story 8 (answering an invitation)
      * @param {Event[]} evenements - A row's events (evenementsDe).
      * @returns {Event[]}
      */
@@ -229,7 +229,7 @@ export default function RevueInvitation() {
      * with, for the leader and for a friend, the free slots shared with the member
      * (like the home screen).
      *
-     * @author Philip Kvaratshelya — user story 8 (answering an invitation)
+     * @author Philip — user story 8 (answering an invitation)
      * @param {PersonneHoraire} personne
      * @param {'leader' | 'invite' | 'moi'} role
      * @returns {JSX.Element}

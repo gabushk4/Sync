@@ -24,7 +24,7 @@ type Props = {
  * close it. Its band takes the background of what it sits on (here, the home
  * timeline's hours).
  *
- * @author Philip Kvaratshelya — user story 22 (friend search on the home screen)
+ * @author Philip — user story 22 (friend search on the home screen)
  * @param {Props} props
  * @returns {JSX.Element}
  */

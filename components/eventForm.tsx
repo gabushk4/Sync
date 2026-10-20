@@ -62,6 +62,10 @@ type Props = {
     }
     /** Hides the participants section (the invitation decision page shows its own list). */
     masquerParticipants?: boolean
+    /** 'indisponibilite': unavailability form — optional title (the reason), no
+     * recurrence nor participants, and the privacy switch tells whether friends see
+     * the reason. Philip — user story 20. */
+    nature?: 'evenement' | 'indisponibilite'
     // setEvent n'est plus utilisé pour la synchronisation continue.
     // Garde-le seulement si un autre écran en dépend pour un aperçu readonly.
     setEvent?: React.Dispatch<React.SetStateAction<Event>>
@@ -78,13 +82,16 @@ const dtNow = DateTime.now()
  * @param {'create' | 'edit' | 'details'} props.mode - Controls which fields are editable vs read-only.
  * @param {Props['prefills']} [props.prefills] - Initial start/end/participants to pre-fill in 'create' mode.
  * @param {Props['constraints']} [props.constraints] - Min/max bounds for the date-time pickers.
+ * @param {'evenement' | 'indisponibilite'} [props.nature='evenement'] - Unavailability form
+ *   (Philip — user story 20).
  * @param {React.Ref<EventFormHandle>} ref - Exposes `getValues()` to the parent screen.
  * @returns {JSX.Element}
  */
 const EventForm = forwardRef<EventFormHandle, Props>(
 
-function EventForm({ event, prefills, constraints, mode, masquerParticipants = false }, ref) {
+function EventForm({ event, prefills, constraints, mode, masquerParticipants = false, nature = 'evenement' }, ref) {
     const { t } = useTranslation('events')
+    const indisponibilite = nature === 'indisponibilite'
     const { colors } = usePalette()
     const { fonts } = useFont()
     const { ajouterInvite } = useInvites()    
@@ -202,7 +209,7 @@ function EventForm({ event, prefills, constraints, mode, masquerParticipants = f
             prive: eventPrivate,
             start,
             end,
-            regleRecurrence: creerRegle(),
+            regleRecurrence: indisponibilite ? null : creerRegle(),
         }),
     }))
 
@@ -281,8 +288,9 @@ function EventForm({ event, prefills, constraints, mode, masquerParticipants = f
                             }
                         }}
                         maxLength={MAX_LONG_TITLE}
-                        autoFocus={mode === 'create'}
-                        placeholder={t('form.titlePlaceholder')}
+                        // An unavailability's reason is optional: no keyboard on opening.
+                        autoFocus={mode === 'create' && !indisponibilite}
+                        placeholder={indisponibilite ? t('unavailability.reasonPlaceholder') : t('form.titlePlaceholder')}
                         placeholderTextColor={colors.muted}
                         returnKeyType="next"
                         onSubmitEditing={() => refDescription.current?.focus()}
@@ -367,8 +375,8 @@ function EventForm({ event, prefills, constraints, mode, masquerParticipants = f
                     />
                 </View>
             )}
-            {/* Reccurence */}
-            <View style={{ gap: 8 }}>
+            {/* Reccurence (none for an unavailability) */}
+            {!indisponibilite && <View style={{ gap: 8 }}>
                 <View style={[s.champ, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 4 }]}>
                     <Text style={s.label}>{t('form.recurrenceLabel')}</Text>
                     <MenuDeroulant
@@ -434,10 +442,14 @@ function EventForm({ event, prefills, constraints, mode, masquerParticipants = f
                         )}
                     </View>
                 )}
-            </View>
-            {/* Visibility */}
+            </View>}
+            {/* Visibility (for an unavailability: whether friends see the reason) */}
             <View style={[s.champ, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', alignSelf: 'flex-end' }]}>
-                <Animated.Text style={s.label}>{eventPrivate ? t('form.private') : t('form.public')}</Animated.Text>
+                <Animated.Text style={s.label}>
+                    {indisponibilite
+                        ? (eventPrivate ? t('unavailability.reasonPrivate') : t('unavailability.reasonShared'))
+                        : (eventPrivate ? t('form.private') : t('form.public'))}
+                </Animated.Text>
                 {mode != 'details'
                     ?   <View style={{ alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}>                    
                             <Icon name='lock-open' color={eventPrivate ? colors.muted : colors.text} size={24}/>
@@ -457,8 +469,8 @@ function EventForm({ event, prefills, constraints, mode, masquerParticipants = f
                 
             </View>
 
-            {/* masquerParticipants: invitation decision page (Philip Kvaratshelya — user story 8). */}
-            {!masquerParticipants && <View style={[s.champ, {height:'auto', paddingBottom:0}]}>
+            {/* masquerParticipants: invitation decision page (Philip — user story 8). */}
+            {!masquerParticipants && !indisponibilite && <View style={[s.champ, {height:'auto', paddingBottom:0}]}>
                 <ParticipantsListe
                     participantsUrl={eventParticipantsControlUrl}
                     listType='event'

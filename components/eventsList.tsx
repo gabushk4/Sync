@@ -1,5 +1,6 @@
 // components/EvenementsListe.tsx
 import { DateTime } from 'luxon'
+import { ReactNode } from 'react'
 import { StyleSheet, View } from 'react-native'
 import Animated, { scrollTo, useAnimatedReaction, useAnimatedRef } from 'react-native-reanimated'
 
@@ -29,6 +30,8 @@ export type EventsListProps = {
     /** Replaces the default tap on an event (open its details). */
     onPressEvenement?: (event: Event) => void;
     timelineDays?: number;
+    /** Drawn behind the events, over the whole row (the member's free blocks). */
+    arrierePlan?: ReactNode;
 }
 
 /**
@@ -51,7 +54,10 @@ export type EventsListProps = {
  * @param {any[] | undefined} props.commonFreeSlots - Free slots shared with the member (friends' rows).
  * @param {any} props.owner - Member whose events these are.
  * @param {(event: Event) => void} [props.onPressEvenement] - Replaces the default tap on an event.
- * @param {number} [props.timelineDays=1] - Days the row holds (seven on the home screen). * @author Philip Kvaratshelya — user story 8: onPressEvenement (invitation review
+ * @param {number} [props.timelineDays=1] - Days the row holds (seven on the home screen).
+ * @param {ReactNode} [props.arrierePlan] - Drawn behind the events: the member's free
+ *   blocks, see TrousHoraire (Philip — user story 20).
+ * @author Philip — user story 8: onPressEvenement (invitation review
  *   screen); the first-layout scroll is now Timeline's (defilerAuDemarrage)
  * @returns {JSX.Element}
  */
@@ -68,6 +74,7 @@ export default function EventsList({
     owner,
     onPressEvenement,
     timelineDays = 1,
+    arrierePlan,
 }: EventsListProps) {
     const { offset } = useGestionScroll()
     const { pxHeures, L_HEURES, H_HEURES } = useTimeline()
@@ -125,6 +132,7 @@ export default function EventsList({
                 height: horizontal ? '100%' : timelineDays * 24 * (pxHeures + H_HEURES),
             }}
             >
+                {arrierePlan}
                 {events.filter(Boolean).map((item) =>
                     <ListItem
                         // Occurrences of a recurring event share the parent's id: the start

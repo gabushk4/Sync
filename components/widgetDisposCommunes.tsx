@@ -34,7 +34,7 @@ type Props = {
  * The slots come from POST /disponibilites/communes (`ids`: the friend, `offset`:
  * weeks after this one), the same computation as the creation form's suggestions.
  *
- * @author Philip Kvaratshelya — user story 25 (common availabilities on a friend's profile)
+ * @author Philip — user story 25 (common availabilities on a friend's profile)
  * @param {Props} props
  * @param {AmiInvite} props.ami - The friend whose profile is shown.
  * @returns {JSX.Element}
@@ -112,7 +112,7 @@ export default function WidgetDisposCommunes({ ami }: Props) {
     /**
      * One week arrow: the previous week (none before this one) or the next.
      *
-     * @author Philip Kvaratshelya — user story 25
+     * @author Philip — user story 25
      * @param {-1 | 1} sens - -1 for the previous week, 1 for the next.
      * @returns {JSX.Element}
      */
@@ -135,7 +135,7 @@ export default function WidgetDisposCommunes({ ami }: Props) {
      * One slot: its day (only on the day's first slot), then its hours, with the end's
      * day when the slot runs past midnight. Tap: create an event together on it.
      *
-     * @author Philip Kvaratshelya — user story 25
+     * @author Philip — user story 25
      * @param {Interval} creneau
      * @param {number} index - Its place in `creneaux` (sorted by start).
      * @returns {JSX.Element}
@@ -159,7 +159,7 @@ export default function WidgetDisposCommunes({ ami }: Props) {
                     debut: creneau.debut,
                     fin: creneau.fin,
                     ami,
-                    retour: { pathname: '/(tabs)/profile/[membreId]', params: { membreId: ami.id } },
+                    depuisProfil: true,
                 })}
                 accessibilityRole="button"
                 accessibilityLabel={t('commonSlots.create', { pseudo: ami.pseudo, creneau: `${jour} ${heures}` })}

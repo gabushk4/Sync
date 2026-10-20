@@ -20,7 +20,7 @@ export default function ToastErreur({text1, text2, ...rest}){
 
     return(
         // minHeight (was a fixed height): a longer message used to overflow the card.
-        // Rectification (Philip Kvaratshelya) for a more conventional display.
+        // Rectification (Philip) for a more conventional display.
         <View style={{minHeight:96, width:'90%', marginTop:16, backgroundColor:colors.card, borderColor:colors.error, borderWidth:1, borderRadius:16, overflow:'hidden'}}>
             <View style={{flexDirection:'row', minHeight:76, width:'100%', }}>
                 <View style={{width:'20%', justifyContent:'center', alignItems:'center'}}>

@@ -23,7 +23,7 @@ let surveillant: ReturnType<typeof setTimeout> | null = null;
  * leave the queue stuck — every later toast was queued and never shown (e.g.
  * "the event must have a name" after creating a multi-day event).
  *
- * @author Philip Kvaratshelya — rectification for a more conventional display:
+ * @author Philip — rectification for a more conventional display:
  *   every message is shown, none stays stuck behind a closed screen
  * @returns {void}
  */

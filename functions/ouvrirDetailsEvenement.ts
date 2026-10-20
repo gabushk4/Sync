@@ -5,7 +5,7 @@ import { DateTime } from 'luxon'
  * Opens an event's details screen, for the occurrence starting at `debut`.
  * Shared by the timeline (ListItem) and the month calendar's events list.
  *
- * @author Philip Kvaratshelya — user story 5 (month calendar)
+ * @author Philip — user story 5 (month calendar)
  * @param {{ id?: string, debut?: DateTime, fin?: DateTime }} evenement - Event (local DateTimes).
  * @returns {void} Does nothing when the event has no id or start.
  */

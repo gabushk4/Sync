@@ -3,7 +3,7 @@
  * friend's profile): the home screen opens its search with that text, as if the
  * member had typed it. Same pattern as calendrierEvents.
  *
- * @author Philip Kvaratshelya — user story 22 (friend search) and 25 (common
+ * @author Philip — user story 22 (friend search) and 25 (common
  *   availabilities on a friend's profile)
  */
 type Ecouteur = (texte: string) => void
@@ -14,7 +14,7 @@ export const rechercheAmiEvents = {
     /**
      * Asks the home screen to search `texte` (a friend's pseudo).
      *
-     * @author Philip Kvaratshelya — user stories 22 and 25
+     * @author Philip — user stories 22 and 25
      * @param {string} texte
      * @returns {void}
      */
@@ -25,7 +25,7 @@ export const rechercheAmiEvents = {
     /**
      * Calls `ecouteur` with every search asked from now on.
      *
-     * @author Philip Kvaratshelya — user stories 22 and 25
+     * @author Philip — user stories 22 and 25
      * @param {(texte: string) => void} ecouteur
      * @returns {() => void} Unsubscribes.
      */

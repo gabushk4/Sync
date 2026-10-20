@@ -13,7 +13,7 @@ export function useNavFab(owner: string, config: FabConfig) {
     // and must then publish the new ones, not the first render's (e.g. the home
     // calendar's selected day / range for the "+" button). Synced in an effect (not
     // during render, React Compiler lint); declared before the focus effect, so it
-    // runs first in the same commit. Philip Kvaratshelya — user story 5.
+    // runs first in the same commit. Philip — user story 5.
     useEffect(() => { configRef.current = config })
 
     console.log('useNavFab render', owner);

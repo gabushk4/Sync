@@ -17,7 +17,7 @@ export const HAUTEUR_LEGENDE = 28
  * (ParticipantLigne): green checkmark, clock (light / dark), red cross.
  * Anything other than 'acceptee' / 'refusee' is pending.
  *
- * @author Philip Kvaratshelya — user story 9 (participants' answers)
+ * @author Philip — user story 9 (participants' answers)
  * @param {string | null | undefined} statut - 'acceptee' | 'en_attente' | 'refusee'.
  * @param {string | null | undefined} colorScheme - useColorScheme().
  * @returns {ImageSourcePropType}
@@ -34,7 +34,7 @@ export function iconeStatutInvitation(statut: string | null | undefined, colorSc
  * Reminder of what the participants' status icons mean (accepted / pending /
  * refused), under the participants list of an event the member was invited to.
  *
- * @author Philip Kvaratshelya — user story 9 (participants' answers)
+ * @author Philip — user story 9 (participants' answers)
  * @returns {JSX.Element}
  */
 export default function LegendeStatutsInvitation() {

@@ -1,6 +1,6 @@
 # 13. Légende des statuts d'invitation (détails d'un évènement)
 
-> Auteur : **Philip Kvaratshelya** — user story 9 (réponses des participants).
+> Auteur : **Philip** — user story 9 (réponses des participants).
 > Dernière mise à jour : 13/10/2026.
 
 Dans la liste des participants d'un évènement, chaque ligne (`ParticipantLigne`) montre la

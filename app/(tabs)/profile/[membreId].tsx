@@ -28,7 +28,7 @@ export default function MemberProfil() {
   const { membre } = useMembre()
   const [profile, setProfile] = useState<FriendProfile | null>(null)
   // Friends only (and not on one's own profile): the common availabilities widget.
-  // Philip Kvaratshelya — user story 25.
+  // Philip — user story 25.
   const [estAmi, setEstAmi] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -48,7 +48,7 @@ export default function MemberProfil() {
 
   // Spinner only before the first answer: reloading on focus (e.g. back from creating
   // an event from the widget) keeps the page, so the widget keeps its week.
-  // Philip Kvaratshelya — user story 25.
+  // Philip — user story 25.
   if (loading && !profile) return <View style={{ flex: 1, justifyContent: 'center', backgroundColor: colors.background }}><ActivityIndicator color={colors.text} /></View>
   if (!profile) return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}><Text style={{ color: colors.text, fontFamily: fonts.body }}>{t('errors.friendProfileUnavailable')}</Text></View>
 

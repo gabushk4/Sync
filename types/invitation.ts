@@ -4,7 +4,7 @@ import { convertUTCToLocal } from '@/functions/convertirUTCenLocal'
 
 // Event invitation being answered, shared by the feed, the invitation review
 // screen and the decision (event details) page.
-// Philip Kvaratshelya — user story 8 (answering an invitation in conflict).
+// Philip — user story 8 (answering an invitation in conflict).
 
 /** What the app needs to answer an invitation (from a notification's `details`). */
 export type InvitationInfo = {
@@ -27,7 +27,7 @@ export type StatutInvitation = 'en_attente' | 'acceptee' | 'refusee'
 /**
  * Reads an invitation from a notification's `details` (resolved by the API).
  *
- * @author Philip Kvaratshelya — user story 8
+ * @author Philip — user story 8
  * @param {Record<string, any> | null | undefined} details - `details` of an 'invitation_evenement' notification.
  * @returns {InvitationInfo | null} Null when it isn't an invitation.
  */
@@ -47,7 +47,7 @@ export function invitationDepuisDetails(details: Record<string, any> | null | un
 /**
  * Local start and end of the invited event (undefined when the API sent no date).
  *
- * @author Philip Kvaratshelya — user story 8
+ * @author Philip — user story 8
  * @param {InvitationInfo} invitation
  * @param {string} [fuseau] - Member's timezone (device's by default).
  * @returns {{ debut: DateTime | undefined, fin: DateTime | undefined }}

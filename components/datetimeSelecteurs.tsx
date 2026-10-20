@@ -41,7 +41,7 @@ const END_DELAY_FROM_START = 60 //minutes
  * @param {boolean} [props.disabled] - Disables the Android picker trigger buttons.
  * @param {DateTime} [props.minimumStart] - Earliest selectable start.
  * @param {DateTime} [props.maximum] - Latest selectable date/time, for both start and end pickers.
- * @author Philip Kvaratshelya — rectification for a more conventional display: the "all day" switch works (it never
+ * @author Philip — rectification for a more conventional display: the "all day" switch works (it never
  *   toggled, then reset the dates), turns itself on for whole days from the
  *   calendar, and each Android date picker opens alone
  * @returns {JSX.Element}
@@ -93,7 +93,7 @@ export default function DateTimeSelecteur({timezone, disabled=false, minimumStar
      * or moved after the new start when it would come before it. All day: the
      * start stays at midnight and the end at least at the end of that day.
      *
-     * @author Philip Kvaratshelya — rectification for a more conventional display (all-day mode, end kept)
+     * @author Philip — rectification for a more conventional display (all-day mode, end kept)
      * @param {Date} jsDate - The date picked in the native picker.
      * @returns {void}
      */
@@ -130,7 +130,7 @@ export default function DateTimeSelecteur({timezone, disabled=false, minimumStar
     /**
      * Applies a new end date, keeping the existing end time.
      *
-     * @author Philip Kvaratshelya — rectification for a more conventional display (closes its own Android dialog)
+     * @author Philip — rectification for a more conventional display (closes its own Android dialog)
      * @param {Date} jsDate - The date picked in the native picker.
      * @returns {void}
      */
@@ -210,7 +210,7 @@ export default function DateTimeSelecteur({timezone, disabled=false, minimumStar
      * next hour (not before now), the end day an hour after that time. Switching off
      * a calendar range used to drop its dates (back to now + 1h → start + 1h).
      *
-     * @author Philip Kvaratshelya — rectification for a more conventional display
+     * @author Philip — rectification for a more conventional display
      *   (user story 5: ranges selected in the month calendar)
      * @param {boolean} active - New value of the switch.
      * @returns {void}

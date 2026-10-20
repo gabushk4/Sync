@@ -1,6 +1,6 @@
 # 12. « Jour entier » dans la création d'un évènement
 
-> Auteur : **Philip Kvaratshelya** — rectification pour un affichage plus conventionnel,
+> Auteur : **Philip** — rectification pour un affichage plus conventionnel,
 > liée à la user story 5 (plages sélectionnées dans le calendrier mensuel).
 > Dernière mise à jour : 13/10/2026.
 

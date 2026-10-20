@@ -6,7 +6,7 @@ import { Interval } from '@/types/availabilities'
  * local ones. Shared by the creation form's suggestions (contexteEventDraft) and a
  * friend's profile widget (WidgetDisposCommunes).
  *
- * @author Philip Kvaratshelya — user story 25 (common availabilities on a friend's
+ * @author Philip — user story 25 (common availabilities on a friend's
  *   profile): extracted from contexteEventDraft
  * @param {{ id: string, debut: string, fin: string }[]} disponibilites - The API's `disponibilites`.
  * @param {string} [fuseau] - Member's timezone (the device's by default).

@@ -2,7 +2,7 @@
  * Text compared by a search: trimmed, lowercase, accents removed ("Élo" finds
  * "elodie"), like the pseudo column's collation on the API side.
  *
- * @author Philip Kvaratshelya — user story 22 (friend search on the home screen)
+ * @author Philip — user story 22 (friend search on the home screen)
  * @param {string} texte - Typed text, or the text searched in (a pseudo).
  * @returns {string}
  */

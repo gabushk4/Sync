@@ -42,7 +42,7 @@ type TimelineProps = {
     timelineDays?: number
     /** Scroll to `selectedDate` (or now) on first layout (default). The invitation
      * review screen scrolls to the event's hour itself, within its one-day bounds.
-     * Philip Kvaratshelya — user story 8 (replaces EventsList's defilerMaintenant). */
+     * Philip — user story 8 (replaces EventsList's defilerMaintenant). */
     defilerAuDemarrage?: boolean
 }
 

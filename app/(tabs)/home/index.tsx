@@ -27,6 +27,7 @@ import EventsList, { RETRAIT_RANGEE } from '@/components/eventsList';
 import ProfilPic from '@/components/pfp';
 import Spinner from '@/components/spinner';
 import Timeline from '@/components/timeline';
+import TrousHoraire from '@/components/trousHoraire';
 import { useFont } from '@/contextes/contexteFont';
 import { useMembre } from '@/contextes/contexteMembre';
 import { useTimeline } from '@/contextes/contexteTimeline';
@@ -72,7 +73,7 @@ const { width: WIN_W, height: WIN_H } = Dimensions.get('window')
  * the abbreviation dot. Falls back to the first letters of the full name ('MMMM',
  * as in the calendar) if the short form isn't available.
  *
- * @author Philip Kvaratshelya — rectification for a more conventional display
+ * @author Philip — rectification for a more conventional display
  * @param {DateTime} dt
  * @returns {string}
  */
@@ -89,7 +90,7 @@ function abregerMois(dt: DateTime): string {
  * story 5). The rows poll the API (AutoRefresh) for the displayed day, so an
  * accepted invitation shows up on both members' rows (user story 9).
  *
- * @author Philip Kvaratshelya — rectification for a more conventional display:
+ * @author Philip — rectification for a more conventional display:
  *   - coming back to this screen keeps the displayed day (it reset to today);
  *   - a "back to today" tab in the bottom bar, against the edge on the side where
  *     now is, replaces the floating arrows that covered the timeline;
@@ -132,7 +133,7 @@ export default function Home() {
   const [, setCurrentTime] = useState<DateTime>()
   const [friends, setFriends] = useState<Array<any>>([])
 
-  // ── Friend search (user story 22, Philip Kvaratshelya) ──
+  // ── Friend search (user story 22, Philip) ──
   // The magnifier left of the hours opens a search bar over the timeline; the
   // friends' rows then show only the friends whose pseudo contains the text. It is
   // live: the loaded rows are filtered on every letter (no wait), and the API is
@@ -162,7 +163,7 @@ export default function Home() {
   /**
    * Params of the friends' request: the loaded window, plus the search if any.
    *
-   * @author Philip Kvaratshelya — user story 22
+   * @author Philip — user story 22
    * @param {DateTime} debut - Window start.
    * @returns {Record<string, any>}
    */
@@ -174,7 +175,7 @@ export default function Home() {
   /**
    * Applies a search to the friends' rows (reloads them right away).
    *
-   * @author Philip Kvaratshelya — user story 22
+   * @author Philip — user story 22
    * @param {string} texte - Text to search ('' for every friend).
    * @returns {void}
    */
@@ -197,7 +198,7 @@ export default function Home() {
   /**
    * Closes the search: every friend's row comes back, as before searching.
    *
-   * @author Philip Kvaratshelya — user story 22
+   * @author Philip — user story 22
    * @returns {void}
    */
   // A search asked from a friend's profile ("See in schedule", user stories 22 and
@@ -243,14 +244,14 @@ export default function Home() {
   // value here is put back on return. Otherwise another screen's one-day timeline
   // (e.g. revueInvitation, an offset always under 24 h) made this screen rebase its
   // window on every drag, throwing that screen's rows out of their day.
-  // Rectification (Philip Kvaratshelya) of the seven-day window.
+  // Rectification (Philip) of the seven-day window.
   const accueilActif = useSharedValue(false)
   const accueilActifRef = useRef(false)
   const offsetAccueilRef = useRef<number | null>(null)
 
   // "Now" for the "back to today / now" tab, in the loaded window: it moves when the
   // window slides. Same wall-clock layout as the blocks (day × 24 + hour, see ListItem).
-  // Rectification (Philip Kvaratshelya) of the seven-day window.
+  // Rectification (Philip) of the seven-day window.
   useEffect(() => {
     const now = DateTime.now()
     const jours = Math.round(now.startOf('day').diff(windowStart.startOf('day'), 'days').days)
@@ -263,7 +264,7 @@ export default function Home() {
    * even while another screen moved the shared one). Switching day keeps it, like
    * the one-day timeline did, instead of jumping to the current hour or midnight.
    *
-   * @author Philip Kvaratshelya — rectification of the seven-day window
+   * @author Philip — rectification of the seven-day window
    * @returns {number} 0 to 23.
    */
   const heureAffichee = () => {
@@ -275,7 +276,7 @@ export default function Home() {
    * Puts the timeline on `heure` of the window's middle day (the displayed one: the
    * window starts three days before it), and remembers it as this screen's offset.
    *
-   * @author Philip Kvaratshelya — rectification of the seven-day window
+   * @author Philip — rectification of the seven-day window
    * @param {number} heure - Hour of the day, 0 to 23.
    * @returns {void}
    */
@@ -289,6 +290,11 @@ export default function Home() {
   // but they don't occupy the day: no block on the timeline, no "fully booked" card,
   // and they don't remove common free slots.
   const evenementsHoraire = useMemo(() => userEvents.filter((ev: any) => !estJourFerie(ev)), [userEvents])
+  // Unavailabilities in red on the member's row (Philip — user story 20).
+  const evenementsMembreAffiches = useMemo(
+    () => evenementsHoraire.map((ev: any) => (ev.nature === 'indisponibilite' ? { ...ev, couleur: colors.indisponible } : ev)),
+    [evenementsHoraire, colors.indisponible]
+  )
   const feriesDuJour = useMemo(() => joursFeriesDuJour(userEvents, todayDateTime), [userEvents, todayDateTime])
 
   // Whether the loaded events are the displayed day's (see jourMembre / jourAmis).
@@ -350,7 +356,7 @@ export default function Home() {
   /**
    * The tab is shown / hidden: records it, and refreshes its clock when shown.
    *
-   * @author Philip Kvaratshelya — rectification for a more conventional display
+   * @author Philip — rectification for a more conventional display
    * @param {boolean} visible
    * @returns {void}
    */
@@ -408,7 +414,7 @@ export default function Home() {
    * Updated for user story 9. SUBJECT TO CHANGE: may be revised depending on how
    * teammates implement their own user stories.
    *
-   * @author Philip Kvaratshelya — rectification for a more conventional display (records the loaded day + cache)
+   * @author Philip — rectification for a more conventional display (records the loaded day + cache)
    * @param {{ evenements?: Array<Object> }} data - API response body.
    * @returns {void}
    */
@@ -433,7 +439,7 @@ export default function Home() {
    * Updated for user story 9. SUBJECT TO CHANGE: may be revised depending on how
    * teammates implement their own user stories.
    *
-   * @author Philip Kvaratshelya — rectification for a more conventional display (records the loaded day, see jourAmis)
+   * @author Philip — rectification for a more conventional display (records the loaded day, see jourAmis)
    * @param {{ resultat?: Friend[] }} data - API response body.
    * @returns {void}
    */
@@ -457,6 +463,7 @@ export default function Home() {
                     id: ev.id_publique,
                     url: ev.url,
                     type: ev.type,
+                    nature: ev.nature,
                     titre: ev.prive ? undefined : ev.titre,
                     prive: ev.prive,
                     debut: start?.toMillis(),
@@ -497,7 +504,7 @@ export default function Home() {
    * the request still in flight for the previous range. Sends `debut`/`fin`
    * for the active seven-day sliding window.
    *
-   * @author Philip Kvaratshelya — rectification for a more conventional display (cache + prefetch)
+   * @author Philip — rectification for a more conventional display (cache + prefetch)
    * @param {DateTime} dt - Any moment of the day to load.
    * @returns {void}
    */
@@ -540,7 +547,7 @@ export default function Home() {
    * then replaces them with fresh ones). No-op when the day isn't cached: the
    * member's row then stays blank until it loads (see evenementsMembreAJour).
    *
-   * @author Philip Kvaratshelya — rectification for a more conventional display
+   * @author Philip — rectification for a more conventional display
    * @param {DateTime} dt - Day about to be displayed.
    * @returns {void}
    */
@@ -560,7 +567,7 @@ export default function Home() {
    * transition. Its events come from the cache / a prefetch; the AutoRefresh starts
    * again on focus, on this day.
    *
-   * @author Philip Kvaratshelya — user story 5 (month calendar)
+   * @author Philip — user story 5 (month calendar)
    * @param {DateTime} jour - Selected day (a range's first day).
    * @returns {void}
    */
@@ -646,7 +653,7 @@ export default function Home() {
    * Date button (calendar icon): opens the month calendar page on the displayed day
    * (user story 5). Coming back shows the day selected there (see the focus effect).
    *
-   * @author Philip Kvaratshelya — user story 5 (month calendar)
+   * @author Philip — user story 5 (month calendar)
    * @returns {void}
    */
   const ouvrirCalendrier = () => {
@@ -661,7 +668,7 @@ export default function Home() {
    * and, if another day was displayed, switches back to today and refetches its
    * events.
    *
-   * @author Philip Kvaratshelya — rectification for a more conventional display
+   * @author Philip — rectification for a more conventional display
    * @returns {void}
    */
   const retourMaintenant = () => {
@@ -752,6 +759,8 @@ export default function Home() {
 
   useNavFab("home", {
     href: '/home/create',
+    // Asks first: create an event or add an unavailability (Philip — user story 20).
+    menuCreation: true,
     params: debutCreation ? { start: debutCreation.toISO() } : undefined,
     icon: null,
     visible: true,
@@ -788,7 +797,7 @@ export default function Home() {
         onError: (error) => {
           log("impossible de charger les évènements du membre", error)
           // Stops the member row's spinner: an empty row (the error toast says why)
-          // instead of waiting forever. Rectification (Philip Kvaratshelya).
+          // instead of waiting forever. Rectification (Philip).
           setUserEvents([])
           setJourMembre(jourDemandeRef.current)
           catcher(error, t('errors.loadMemberEvents'))
@@ -899,7 +908,7 @@ export default function Home() {
     // centered "+" button (the arrows used to sit against the edges, and their
     // unequal widths pushed the date button off-center). The "back to today" tab
     // stays against the edges (absolute).
-    // Philip Kvaratshelya — rectification for a more conventional display.
+    // Philip — rectification for a more conventional display.
     botBar: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -1198,7 +1207,7 @@ export default function Home() {
                 <EventsList
                   owner={membre}
                   commonFreeSlots={undefined}
-                  events={evenementsHoraire}
+                  events={evenementsMembreAffiches}
                   offsetSnap={L_HEURES + pxHeures}
                   eventsColor={colors.primary}
                   textColor={colors.text}
@@ -1207,6 +1216,9 @@ export default function Home() {
                   timelineDays={JOURS_FENETRE}
                   getEvenements={() => {refreshAt(todayDateTime ?? DateTime.now())}}
                   horizontal={true}
+                  // Free stretches in pale blue: hold then drag to pick a range (create an
+                  // event / add an unavailability). Philip — user story 20.
+                  arrierePlan={<TrousHoraire evenements={evenementsHoraire} debutFenetre={windowStart} jours={JOURS_FENETRE} />}
                 />
                 {/* Fully booked day: a fixed card over the (still mounted) timeline, so
                     it doesn't scroll and the timeline comes back as it was on a normal day. */}

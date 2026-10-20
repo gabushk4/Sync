@@ -21,7 +21,7 @@ import { useNavFab } from '@/hooks/useNavFAB'
  * returns to the home timeline, already switched to the selected day (see
  * calendrierEvents).
  *
- * @author Philip Kvaratshelya — user story 5 (month calendar)
+ * @author Philip — user story 5 (month calendar)
  * @returns {JSX.Element}
  */
 export default function CalendrierPage() {
@@ -105,6 +105,8 @@ export default function CalendrierPage() {
 
     useNavFab('calendrier', {
         href: '/home/create',
+        // Asks first: create an event or add an unavailability (Philip — user story 20).
+        menuCreation: true,
         params: paramsCreation,
         icon: null,
         visible: true,

@@ -9,30 +9,31 @@ export type AmiInvite = { id: string, pseudo: string, fp_url?: string | null }
  * (read-only participant). Shared by the home timeline's free slots (FreeSlotItem)
  * and a friend's profile widget (WidgetDisposCommunes).
  *
- * @author Philip Kvaratshelya — user story 25 (common availabilities on a friend's
- *   profile): extracted from FreeSlotItem, plus `retour`
+ * @author Philip — user story 25 (common availabilities on a friend's
+ *   profile): extracted from FreeSlotItem
+ * @author Philip — rectification (user story 20): from a friend's profile, the
+ *   creation opens in the profile stack (app/(tabs)/profile/create), so going back
+ *   returns straight to that profile — the home stack showed the timeline first
  * @param {Object} options
  * @param {DateTime} options.debut - Slot start (a past start is moved to now by create.tsx).
  * @param {DateTime} options.fin - Slot end.
  * @param {AmiInvite} options.ami - Friend to invite.
- * @param {{ pathname: string, params?: Record<string, string> }} [options.retour] - Screen
- *   to go back to once the creation is left (create.tsx's `retour`), e.g. the friend's
- *   profile; the home timeline otherwise.
+ * @param {boolean} [options.depuisProfil=false] - Opened from the friend's profile.
  * @returns {void}
  */
-export default function ouvrirCreationAvecAmi({ debut, fin, ami, retour }: {
+export default function ouvrirCreationAvecAmi({ debut, fin, ami, depuisProfil = false }: {
     debut: DateTime,
     fin: DateTime,
     ami: AmiInvite,
-    retour?: { pathname: string, params?: Record<string, string> },
+    depuisProfil?: boolean,
 }): void {
     router.push({
-        pathname: '/(tabs)/home/create',
+        pathname: depuisProfil ? '/(tabs)/profile/create' : '/(tabs)/home/create',
         params: {
             start: debut.toISO(),
             end: fin.toISO(),
             friend: JSON.stringify({ id: ami.id, pseudo: ami.pseudo, fp_url: ami.fp_url ?? null, privilege: 'lecteur' }),
-            ...(retour ? { retour: JSON.stringify(retour) } : {}),
+            ...(depuisProfil ? { depuis: 'profil' } : {}),
         },
     } as any)
 }

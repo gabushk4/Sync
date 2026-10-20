@@ -17,7 +17,7 @@ type Props = {
  * cards) with a title, optional controls next to it, and the widget's content.
  * The profile page stacks its widgets under the member's info.
  *
- * @author Philip Kvaratshelya — user story 25 (profile widgets)
+ * @author Philip — user story 25 (profile widgets)
  * @param {Props} props
  * @returns {JSX.Element}
  */

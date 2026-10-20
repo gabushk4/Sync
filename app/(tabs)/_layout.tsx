@@ -48,7 +48,7 @@ export default function TabLayout() {
         // The tab used to be a link (`href` option) that opened the home route again:
         // a fresh timeline, back on today, pushed over the calendar. Without `href`,
         // the tab only switches tabs, and this listener pops the home stack.
-        // Philip Kvaratshelya — user story 5 (month calendar).
+        // Philip — user story 5 (month calendar).
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             const etatOnglets = navigation.getState()

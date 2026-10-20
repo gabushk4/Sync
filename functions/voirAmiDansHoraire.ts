@@ -6,7 +6,7 @@ import { rechercheAmiEvents } from '@/events/rechercheAmiEvents'
  * with the friend search open on `pseudo` — as if the member had searched them.
  * The home stack is popped like the "sync" tab does (app/(tabs)/_layout).
  *
- * @author Philip Kvaratshelya — user stories 22 (friend search) and 25 (common
+ * @author Philip — user stories 22 (friend search) and 25 (common
  *   availabilities on a friend's profile)
  * @param {any} navigation - Navigation of a screen of the tabs (e.g. the friend's
  *   profile); its parent is the tabs navigator.

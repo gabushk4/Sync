@@ -67,7 +67,7 @@ export const GestionScrollProvider = ({ children }: { children: ReactNode }) => 
    * Scrolls every row to `offsetDefault` (the current hour) and records it as
    * "now", the reference of the "back to today / now" tab.
    *
-   * @author Philip Kvaratshelya — rectification for a more conventional display:
+   * @author Philip — rectification for a more conventional display:
    *   `anime: false` for the rows' first layout, which used to set the offset
    *   without recording "now" (it stayed at midnight, so the tab showed up while
    *   already on the current hour, on the wrong side)
@@ -90,7 +90,7 @@ export const GestionScrollProvider = ({ children }: { children: ReactNode }) => 
    * window slides (and nobody set it any more on first layout, so the tab showed
    * up at launch).
    *
-   * @author Philip Kvaratshelya — rectification after the seven-day window
+   * @author Philip — rectification after the seven-day window
    * @param {number} offsetNow - Offset of the current hour in the loaded window.
    * @returns {void}
    */
@@ -120,7 +120,7 @@ export const GestionScrollProvider = ({ children }: { children: ReactNode }) => 
 
     // Also on a side change: scrolling from one side of now to the other in one
     // drag kept the old side (the "back to today" tab then pointed the wrong way).
-    // Rectification (Philip Kvaratshelya) for a more conventional display.
+    // Rectification (Philip) for a more conventional display.
     if (afficherRetourMaintenant.value.afficher !== afficher || afficherRetourMaintenant.value.left !== left) {
       afficherRetourMaintenant.value = { afficher, left };
     }

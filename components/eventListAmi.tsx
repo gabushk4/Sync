@@ -173,7 +173,7 @@ function EventListAmiContent() {
                             onPress={() => {
                                 const amisSelec = amis.filter(ami => idsSelec.has(ami.id))
                                 // A route param can arrive as the text "undefined": no URL then (event
-                                // being created, invitations sent with it). Philip Kvaratshelya — user story 8.
+                                // being created, invitations sent with it). Philip — user story 8.
                                 const url = Array.isArray(inviterUrl) ? inviterUrl[0] : inviterUrl
                                 onPressSelect(amisSelec, url && url !== 'undefined' ? url : undefined)
                                 modalEvents.emitClosing()

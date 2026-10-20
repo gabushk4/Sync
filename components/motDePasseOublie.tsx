@@ -22,7 +22,7 @@ const COURRIEL_VALIDE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
  * swipe down) or once the e-mail is sent.
  * Errors are shown in the sheet itself: the app's toasts would render under it.
  *
- * @author Philip Kvaratshelya — rectification for a more conventional display:
+ * @author Philip — rectification for a more conventional display:
  *   the login screen's "forgot password" button now works, shown in ModalBase
  * @returns {JSX.Element}
  */
@@ -42,7 +42,7 @@ export default function MotDePasseOublie() {
      * Asks the API to e-mail a reset link; on success, closes the sheet (ModalBase's
      * closing animation, then the route is dismissed) and confirms with a toast, else shows the API's reason (e.g. unknown e-mail).
      *
-     * @author Philip Kvaratshelya — rectification
+     * @author Philip — rectification
      * @returns {Promise<void>}
      */
     const envoyer = async () => {

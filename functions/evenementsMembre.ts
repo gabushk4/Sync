@@ -42,7 +42,7 @@ export const paramsJour = (jour: DateTime) => paramsPlage(jour.startOf('day'), j
  * neighbouring months' days shown on its first and last weeks (they used to
  * have no dots and no events), with a higher event limit. See {@link paramsPlage}.
  *
- * @author Philip Kvaratshelya — user story 5 (month calendar)
+ * @author Philip — user story 5 (month calendar)
  * @param {DateTime} mois - Any moment of the month to fetch.
  * @returns {{ debut: string | null, fin: string | null, limite: number }}
  */
@@ -79,7 +79,7 @@ export function formaterEvenementsMembre(evenements: any[], fuseau?: string) {
  * no end / an empty duration). The calendar's dots, day list and labels all use
  * it, so they agree on which days an event covers.
  *
- * @author Philip Kvaratshelya — user story 5 (month calendar)
+ * @author Philip — user story 5 (month calendar)
  * @param {{ debut?: DateTime, fin?: DateTime }} evenement - Event with local DateTimes
  *   (callers have checked that it has a start).
  * @returns {DateTime}

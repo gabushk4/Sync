@@ -81,7 +81,7 @@ export const EventDraftProvider = ({makeReq = true, initialStart, initialEnd, ch
             suggestionsOffset.current = res.data.offset
             log("getCommonAvail:", res.data)
             if (res.data.disponibilites && res.status === 200) {
-                // Shared with a friend's profile widget (Philip Kvaratshelya — user story 25).
+                // Shared with a friend's profile widget (Philip — user story 25).
                 setSlotSuggestions(versCreneauxLocaux(res.data.disponibilites))
             }
         } catch (err) {

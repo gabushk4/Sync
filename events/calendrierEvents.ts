@@ -8,7 +8,7 @@ import { DateTime } from 'luxon'
  * to be read only when the home screen regained focus, so the old day showed
  * during the transition and then switched.
  *
- * @author Philip Kvaratshelya — user story 5 (month calendar)
+ * @author Philip — user story 5 (month calendar)
  */
 type Ecouteur = (jour: DateTime) => void
 
@@ -19,7 +19,7 @@ export const calendrierEvents = {
      * Records the day selected in the calendar (range start for a range) and
      * tells the listeners (the home screen).
      *
-     * @author Philip Kvaratshelya — user story 5 (month calendar)
+     * @author Philip — user story 5 (month calendar)
      * @param {DateTime} jour
      * @returns {void}
      */
@@ -30,7 +30,7 @@ export const calendrierEvents = {
     /**
      * Calls `ecouteur` with every day selected from now on.
      *
-     * @author Philip Kvaratshelya — user story 5 (month calendar)
+     * @author Philip — user story 5 (month calendar)
      * @param {(jour: DateTime) => void} ecouteur
      * @returns {() => void} Unsubscribes.
      */

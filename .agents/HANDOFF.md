@@ -187,7 +187,7 @@
 
 ---
 
-# HANDOFF — Philip Kvaratshelya (branche `philip-dev-s1`, 10-11/10/2026) : calendrier (US5), conflits / invitations (US8), rectifications d'affichage
+# HANDOFF — Philip (branche `philip-dev-s1`, 10-11/10/2026) : calendrier (US5), conflits / invitations (US8), rectifications d'affichage
 
 Branche : `philip-dev-s1` (à jour avec `origin/main` au début du travail, commit `3df9b0a`).
 
@@ -316,7 +316,7 @@ Non corrigé (noté) :
   (création + modale de conflit).
 - Retirés : `getEventDateRangeParams` (mort, doublon de `paramsJour`) et le paramètre
   `existant` de la modale de conflit (plus envoyé).
-- Commentaires JSDoc avec `@author Philip Kvaratshelya — user story 5` (calendrier),
+- Commentaires JSDoc avec `@author Philip — user story 5` (calendrier),
   `— user story 8` (conflit, app + API) et `— rectification for a more conventional
   display` (accueil, toasts, FAB, dispo communes, validations, API titre / date passée).
 - Vérifié : `tsc` (aucune nouvelle erreur), API locale (201 / 400 titre / 400 passé /
@@ -395,7 +395,7 @@ Non corrigé (noté) :
 - DRY : `functions/couleurStatutInvitation.ts` (revue + panneau), `bornesLocales` dans
   `types/invitation.ts`, `useDecisionInvitation` : accepter / refuser → `repondre(statut)`,
   `ouvrirDecisionInvitation` partagé (fil + revue). Confirmation « Attention » avant de
-  retirer des conflits. JSDoc `@author Philip Kvaratshelya — user story 8` partout.
+  retirer des conflits. JSDoc `@author Philip — user story 8` partout.
 - Retestés en local : 409 / 200 à l'acceptation, 403 non-participant, horaires 200 / 404,
   création 201.
 
@@ -475,7 +475,7 @@ Non corrigé (noté) :
 - Tester les changements du calendrier dans l'app (le bundle compile maintenant).
 - Rien n'est commité ni poussé sur `philip-dev-s1`.
 
-## État final (11/10/2026) — Philip Kvaratshelya
+## État final (11/10/2026) — Philip
 - Tout est commité sur `philip-dev-s1` (app) et `philip_dev` (API), `origin/main` fusionné
   dans les deux, PR ouvertes vers `main` pour revue du superviseur.
 - Vérifié : `tsc` → seules les erreurs préexistantes (T3, T4, T13 sauf `details/[eventId]`
@@ -489,7 +489,7 @@ Non corrigé (noté) :
   plus haut (exceptions récurrentes, fenêtre récurrente de `verifierDisponibilite`,
   énumération de comptes sur `/recuperation/demande`, erreurs de l'app non journalisées).
 
-## « Jour entier » : dates d'une plage du calendrier conservées (13/10/2026) — Philip Kvaratshelya
+## « Jour entier » : dates d'une plage du calendrier conservées (13/10/2026) — Philip
 - `components/datetimeSelecteurs.tsx` (`basculerJourEntier`) : désactiver Jour entier sur une
   plage du calendrier gardait « aujourd'hui + 1 h → début + 1 h » ; les jours sont maintenant
   conservés (début = 1er jour à l'heure suivante, fin = dernier jour une heure plus tard).
@@ -498,3 +498,56 @@ Non corrigé (noté) :
 - Doc : `docs/12-jour-entier.md` (lien dans `docs/README.md`).
 - Bug hors sujet noté (non corrigé, T13) : `app/(tabs)/home/edit/[event].tsx:161` appelle
   `useActionFab` avec l'ancienne signature → l'écran de modification devrait planter.
+
+## Plages libres de l'horaire du membre — sélection (20/10/2026) — Philip
+- Fait : sur la rangée du membre (accueil), chaque trou sans évènement est un bloc bleu pâle
+  (`colors.disponible`, ajouté à `themes/generateTheme.ts`), grisé s'il est passé.
+  Appui long (350 ms) puis glisser = sélection au pas de 15 min, bornée au trou de départ ;
+  au relâchement : menu « Créer un évènement » (ouvre `create` avec `start`/`end`) ou
+  « Ajouter une indisponibilité » (toast « bientôt » pour l'instant). Relâcher sur un
+  évènement existant → toast d'erreur. Trou passé → toast « dans le passé ».
+- Fichiers : `functions/trousHoraire.ts` (calcul pur + conversions position ↔ heure),
+  `components/trousHoraire.tsx`, prop `arrierePlan` de `components/eventsList.tsx`,
+  `app/(tabs)/home/index.tsx`, `locales/{fr,en}/home.json` (`plageLibre`),
+  `tests/trousHoraire.test.js` (4/4).
+- Reste : tester sur appareil (cohabitation de l'appui long avec le défilement horizontal
+  et le tap sur les évènements) ; brancher « Ajouter une indisponibilité » (API + stockage).
+- Mise à jour (20/10/2026) : les trous sont maintenant au style des dispos communes (contour
+  bleu `colors.disponible`, fond transparent, libellé collant « Disponible » / « Date passée »).
+- Mise à jour (20/10/2026) : défilement auto quand le doigt est tenu près d'un bord de la rangée
+  (56 px, 60→260 px/s, s'arrête au bout du trou) ; le libellé du trou sélectionné est masqué.
+  Limite : une sélection ne dépasse pas la fenêtre chargée au début de l'appui (7 jours).
+
+## Indisponibilités — page de création (20/10/2026) — Philip
+- Stockage : un évènement de `nature = 'indisponibilite'` (colonne enum ajoutée à `evenements`,
+  pas `type` qui entrerait en collision avec le `type` récurrence/exception de formaterEvenement).
+  Mêmes conflits, même affichage ; `prive` = raison non partagée avec les amis.
+- API (sync_api, philip_dev, non commité) : migration `20261020000000_ADD_nature_to_evenements.js`
+  (appliquée sur syncdb_dev), `bd/schema.sql`, middleware `lireNature` sur POST /evenements
+  (titre optionnel → « Indisponible », pas de participants ni de récurrence), `creerEvenement`
+  (nature), `formaterEvenement` / `retourConflit` / `trouverConflits` renvoient `nature`.
+  Testé en local dans une transaction annulée (insertion, conflit, format).
+- App : écran `app/(tabs)/home/indisponibilite.tsx` (EventForm `nature="indisponibilite"` :
+  sans récurrence ni participants, raison optionnelle, partage de la raison, jour entier) ;
+  route dans `home/_layout.tsx` ; le menu des plages libres l'ouvre avec la plage.
+  Conflit (409) au moment de confirmer → toast d'erreur listant ce qui gêne
+  (« Tu as déjà quelque chose cette journée-là » en jour entier).
+- Reste : test sur appareil ; affichage distinct des indisponibilités sur la timeline et dans
+  les détails (l'écran de détails les montre comme un évènement) ; modification / suppression.
+- Mise à jour (20/10/2026) : menu de choix partagé `components/menuCreation.tsx` (« Créer un
+  évènement » en bouton plein, « Ajouter une indisponibilité » en lien discret). Le « + » de
+  l'accueil et du calendrier l'ouvre d'abord (`FabConfig.menuCreation`, géré dans `customTabBar`),
+  avec les mêmes params pour les deux écrans ; la sélection d'une plage libre l'utilise aussi.
+- Mise à jour (20/10/2026) : indisponibilités en rouge sur la rangée du membre (`colors.indisponible`,
+  via `couleur` de ListItem). Rectification `create.tsx` (`retour`) : le profil de l'ami s'affiche
+  d'abord, puis la création est retirée de la pile de l'accueil (l'horaire apparaissait entre les deux).
+- Mise à jour (20/10/2026) : tout ce travail est la user story 20 (étiquettes @author mises à jour, app + API).
+  Répétition retirée : `functions/positionTimeline.ts` (positionHeures / heuresVersDate, partagé par
+  ListItem, FreeSlotItem, TrousHoraire) ; `plagePreremplie` / `debutDejaPasse` dans `functions/jourCreation.ts`
+  (create.tsx + indisponibilite.tsx) ; `components/voileEnvoi.tsx`. Jest 7/7 ; ESLint home/index : 13 erreurs
+  comme avant (T11), aucune nouvelle.
+- Correction (20/10/2026) : le retour via `beforeRemove` + `preventDefault` de create.tsx plantait sur iOS
+  (« removed natively but didn't get removed from JS state », non supporté par native-stack). Remplacé :
+  depuis le profil d'un ami, la création s'ouvre dans la pile du profil (`app/(tabs)/profile/create.tsx`,
+  ré-export de home/create, param `depuis: 'profil'`) ; le retour natif revient au profil, et après création
+  `goBack()`. Param `retour` supprimé (create.tsx, ouvrirCreationAvecAmi, widgetDisposCommunes).

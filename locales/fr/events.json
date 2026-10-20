@@ -4,7 +4,8 @@
     "details": "détails",
     "edit": "éditer",
     "calendar": "Calendrier",
-    "invitationReview": "Horaires de l'invitation"
+    "invitationReview": "Horaires de l'invitation",
+    "unavailability": "Indisponibilité"
   },
   "details": {
     "recurringEditTitle": "édition d'une récurrence",
@@ -127,5 +128,16 @@
     "refuse": "Refuser",
     "refuseFailed": "Impossible de refuser l'invitation",
     "invitedBy": "Invité par"
+  },
+  "unavailability": {
+    "reasonPlaceholder": "raison (optionnelle)...",
+    "reasonPrivate": "raison privée",
+    "reasonShared": "raison partagée",
+    "createdTitle": "Indisponibilité ajoutée",
+    "createdMessage": "Tes amis te verront occupé sur cette plage",
+    "dayTaken": "Tu as déjà quelque chose cette journée-là",
+    "rangeTaken": "Tu as déjà quelque chose sur cette plage",
+    "inTheWay": "Déjà prévu : {{titres}}",
+    "createFailed": "Impossible d'ajouter l'indisponibilité"
   }
 }
