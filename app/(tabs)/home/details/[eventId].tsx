@@ -42,7 +42,7 @@ export default function Details(){
     // Decision mode: opened from the invitation review by tapping the leader's invited
     // event. The event is read-only (no edit / delete); a panel lists its participants
     // with their answer and offers accept / refuse.
-    // Philip Kvaratshelya — user story 8 (answering an invitation in conflict).
+    // Philip — user story 8 (answering an invitation in conflict).
     const invitation = useMemo<InvitationInfo | null>(
         () => (typeof invitationParam === 'string' ? JSON.parse(invitationParam) : null),
         [invitationParam]

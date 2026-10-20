@@ -75,7 +75,7 @@ const minutesToTime = (date, minutes) => {
  * neither has an event (nor a do-not-disturb rule), grouped into slots of at
  * least `minDuration` minutes.
  *
- * @author Philip Kvaratshelya — rectification for a more conventional display: today's elapsed hours are kept, marked
+ * @author Philip — rectification for a more conventional display: today's elapsed hours are kept, marked
  *   `passe` (shown greyed out) instead of disappearing; a slot crossing the
  *   current hour is split in two
  * @param {Array} userEvents - Member's events (local DateTimes).

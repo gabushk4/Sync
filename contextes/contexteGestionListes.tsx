@@ -27,6 +27,7 @@ type GestionScrollContextType = {
 
   // Functions
   initialiserOffset: (offsetDefault: number, anime?: boolean) => void;
+  definirOffsetMaintenant: (offsetNow: number) => void;
   onPan: (offset: number) => void;
   abonnerRef: (ref: ScrollView | null, index: number) => void;
   viderRefs: () => void;
@@ -66,7 +67,7 @@ export const GestionScrollProvider = ({ children }: { children: ReactNode }) => 
    * Scrolls every row to `offsetDefault` (the current hour) and records it as
    * "now", the reference of the "back to today / now" tab.
    *
-   * @author Philip Kvaratshelya — rectification for a more conventional display:
+   * @author Philip — rectification for a more conventional display:
    *   `anime: false` for the rows' first layout, which used to set the offset
    *   without recording "now" (it stayed at midnight, so the tab showed up while
    *   already on the current hour, on the wrong side)
@@ -81,6 +82,20 @@ export const GestionScrollProvider = ({ children }: { children: ReactNode }) => 
     offset.value = anime
       ? withTiming(boundedOffset, {duration:300, easing:Easing.inOut(Easing.linear)})
       : boundedOffset;
+  };
+
+  /**
+   * Records where "now" is, without scrolling: the reference of the "back to today /
+   * now" tab. With the home screen's seven-day window, "now" moves whenever the
+   * window slides (and nobody set it any more on first layout, so the tab showed
+   * up at launch).
+   *
+   * @author Philip — rectification after the seven-day window
+   * @param {number} offsetNow - Offset of the current hour in the loaded window.
+   * @returns {void}
+   */
+  const definirOffsetMaintenant = (offsetNow: number) => {
+    offsetMaintenant.value = Math.max(0, offsetNow);
   };
 
   const derniereHapticsOffset = useSharedValue(0);
@@ -105,7 +120,7 @@ export const GestionScrollProvider = ({ children }: { children: ReactNode }) => 
 
     // Also on a side change: scrolling from one side of now to the other in one
     // drag kept the old side (the "back to today" tab then pointed the wrong way).
-    // Rectification (Philip Kvaratshelya) for a more conventional display.
+    // Rectification (Philip) for a more conventional display.
     if (afficherRetourMaintenant.value.afficher !== afficher || afficherRetourMaintenant.value.left !== left) {
       afficherRetourMaintenant.value = { afficher, left };
     }
@@ -137,6 +152,7 @@ export const GestionScrollProvider = ({ children }: { children: ReactNode }) => 
         LEFT_GO_TO_BEFORE,
         LEFT_GO_TO_AFTER,
         initialiserOffset,
+        definirOffsetMaintenant,
         onPan,
         abonnerRef,
         viderRefs,

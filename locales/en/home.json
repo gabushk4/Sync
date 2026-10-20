@@ -11,5 +11,26 @@
   "backToToday": "Back to today",
   "fullyBooked": "Fully booked",
   "untitledEvent": "Event",
-  "backToNow": "Back to now"
+  "backToNow": "Back to now",
+  "search": {
+    "open": "Search for a friend",
+    "close": "Close the search",
+    "placeholder": "Search for a friend",
+    "noResult": "No friend matches “{{texte}}”"
+  },
+  "plageLibre": {
+    "titre": "Selected range",
+    "creerEvenement": "Create an event",
+    "ajouterIndisponibilite": "Add an unavailability",
+    "annuler": "Cancel",
+    "occupeTitre": "Range already taken",
+    "occupe": "Selection on an existing event.",
+    "passeTitre": "In the past",
+    "passe": "This range has already passed.",
+    "disponible": "Available",
+    "datePassee": "Past date"
+  },
+  "creation": {
+    "titre": "Add to your schedule"
+  }
 }

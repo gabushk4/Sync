@@ -24,7 +24,7 @@ type Options = {
  *   accept, or to see everyone's schedule that day (`onVoirHoraire`);
  * - `refuser`: refuses it.
  *
- * @author Philip Kvaratshelya — user story 8 (answering an invitation in conflict)
+ * @author Philip — user story 8 (answering an invitation in conflict)
  * @param {InvitationInfo | null} invitation - Invitation to answer (null: nothing to do).
  * @param {Options} options
  * @returns {{ accepter: () => Promise<void>, refuser: () => Promise<void>,
@@ -44,7 +44,7 @@ export default function useDecisionInvitation(invitation: InvitationInfo | null,
      * Sends the answer. Accepting may answer 409 (the event overlaps the member's
      * schedule): the conflict screen then opens instead of an error.
      *
-     * @author Philip Kvaratshelya — user story 8
+     * @author Philip — user story 8
      * @param {'acceptee' | 'refusee'} statut
      * @returns {Promise<void>}
      */
@@ -69,7 +69,7 @@ export default function useDecisionInvitation(invitation: InvitationInfo | null,
     /**
      * The conflict screen is left (see SortieConflit).
      *
-     * @author Philip Kvaratshelya — user story 8 (answering an invitation)
+     * @author Philip — user story 8 (answering an invitation)
      * @param {SortieConflit} sortie
      * @returns {void}
      */

@@ -202,7 +202,7 @@ export default function ConnexionEcran(){
                             {t('login.noAccount')}
                         </LinkAbs>
                         <TouchableOpacity
-                            // "Forgot password" sheet, in ModalBase (Philip Kvaratshelya — rectification).
+                            // "Forgot password" sheet, in ModalBase (Philip — rectification).
                             onPress={() => router.push('/(auth)/mdpOublie' as any)}
                         >
                             <Text style={linkStyle.link}>

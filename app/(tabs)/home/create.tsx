@@ -1,7 +1,6 @@
 import { useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import { useActionFab } from "@/hooks/useActionFAB";
 
@@ -11,7 +10,7 @@ import { useMembre } from "@/contextes/contexteMembre";
 import { usePalette } from "@/contextes/contextePalette";
 
 import EventForm from "@/components/eventForm";
-import Spinner from "@/components/spinner";
+import VoileEnvoi from "@/components/voileEnvoi";
 import catcher from "@/functions/catcher";
 import log from "@/functions/log";
 import { defaultEvent, Event } from "@/types/calendar";
@@ -25,8 +24,7 @@ import formaterDatePourServeur from "@/functions/formaterDatePourServeur";
 import { Participant } from "@/types/invites";
 import { conflitsDeLaReponse, EvenementEnConflit, NouvelEvenement } from "@/types/conflit";
 import ConflitEvenement, { SortieConflit } from "@/components/conflitEvenement";
-import ceilBy5 from "@/functions/ceilBy5";
-import { estJourneeEntiere } from "@/functions/jourCreation";
+import { debutDejaPasse, plagePreremplie } from "@/functions/jourCreation";
 import { DateTime } from "luxon";
 
 /**
@@ -36,12 +34,15 @@ import { DateTime } from "luxon";
  * calendar (`start` and `end` both set — user story 5). An overlap with existing
  * events opens the conflict screen (user story 8).
  *
- * @author Philip Kvaratshelya — user story 5 (pre-filled day / range from the
+ * @author Philip — user story 5 (pre-filled day / range from the
  *   calendar) and user story 8 (conflict screen on a 409)
- * @author Philip Kvaratshelya — rectification for a more conventional display:
+ * @author Philip — rectification for a more conventional display:
  *   the suggested start stays on the chosen day and only the past is blocked
  *   (the chosen day could become unpickable), and a missing title or a past
  *   start get a clear message before anything is sent
+ * @author Philip — user story 25 / rectification (user story 20): opened from a
+ *   friend's profile, this screen lives in the profile stack (app/(tabs)/profile/create,
+ *   `depuis: 'profil'`), so leaving it goes straight back to that profile
  * @returns {JSX.Element}
  */
 export default function CreateEvent({ }) {
@@ -55,42 +56,39 @@ export default function CreateEvent({ }) {
     
     const formRef = useRef<EventFormHandle>(null)
 
-    const { start, end, friend } = useLocalSearchParams<{ start?: string, end?: string, friend?: string }>()
+    const { start, end, friend, depuis } = useLocalSearchParams<{ start?: string, end?: string, friend?: string, depuis?: string }>()
 
-    // Sorted defensively regardless of the order `start`/`end` arrive in —
-    // constraints.maximumStart ending up before minimumStart crashes the
-    // native date picker deep inside DateTimeSelecteur.
-    let debutDemande = DateTime.fromISO(start as string)
-    let finDemandee = end ? DateTime.fromISO(end as string) : undefined
-    if (finDemandee && debutDemande > finDemandee) {
-        [debutDemande, finDemandee] = [finDemandee, debutDemande]
+    /**
+     * Leaves after creating (or dropping, from the conflict screen): pops the home
+     * stack back to the home screen (replace stacked a second one over the calendar
+     * page when created from there). Opened from a friend's profile (`depuis:
+     * 'profil'`, profile stack): back to that profile.
+     *
+     * @author Philip — user story 25; profile stack: rectification (user story 20).
+     *   The previous `retour` param prevented the removal in `beforeRemove` and
+     *   navigated to the profile itself, which native-stack doesn't support on iOS
+     *   (the screen was removed natively but kept in JS state).
+     * @returns {void}
+     */
+    const quitterApresCreation = () => {
+        if (depuis === 'profil') navigation.goBack()
+        else navigation.dispatch({ type: 'POP_TO_TOP' })
     }
 
-    // Events can't start in the past.
-    // - Single slot (e.g. tapping a near-term time in the timeline): at least 1h
-    //   from now, since there's no explicit end to anchor against.
-    // - Explicit range (the calendar's drag-select, user story 5): its start, or
-    //   now when the range starts earlier today (it used to trust a past start).
-    // A range already over is dropped (the calendar's "+" refuses it anyway).
+    // Pre-filled range, never in the past (sorting / past rules: plagePreremplie,
+    // shared with the unavailability screen; Philip — user story 20).
+    // The suggested start is kept apart from the pickers' minimum: the minimum used
+    // to be this suggestion, so its day / hour couldn't be moved earlier (e.g.
+    // selecting the 11th late in the evening suggested the 12th at midnight, and the
+    // 11th could no longer be picked).
     const maintenant = DateTime.now()
-    if (finDemandee && finDemandee <= maintenant) finDemandee = undefined
-    // Suggested start (pre-filled), kept apart from the pickers' minimum: the
-    // minimum used to be this suggestion, so its day / hour couldn't be moved
-    // earlier (e.g. selecting the 11th late in the evening suggested the 12th
-    // at midnight, and the 11th could no longer be picked).
-    let debutSuggere: DateTime
-    if (!debutDemande.isValid) debutSuggere = maintenant.plus({ hours: 1 })
-    // Whole days (the calendar's range): kept as is, even when it starts today, so the
-    // form opens with "all day" on.
-    else if (finDemandee && estJourneeEntiere(debutDemande, finDemandee)) debutSuggere = debutDemande
-    else if (finDemandee) debutSuggere = debutDemande > maintenant ? debutDemande : ceilBy5(maintenant)
-    else debutSuggere = debutDemande.diff(maintenant, 'hours').hours > 1 ? debutDemande : maintenant.plus({ hours: 1 })
+    const { debutSuggere, finDemandee } = plagePreremplie(start, end, maintenant)
     // The pickers only forbid the past.
     const minimumStart = maintenant
 
     const [enChargement, setEnChargement] = useState(false)
     // Set synchronously (a state update isn't visible yet to a second tap): a double
-    // tap on ✓ used to send the event twice. Rectification (Philip Kvaratshelya).
+    // tap on ✓ used to send the event twice. Rectification (Philip).
     const envoiEnCoursRef = useRef(false)
     
     //log('setter end')
@@ -104,7 +102,7 @@ export default function CreateEvent({ }) {
      * Opens the conflict screen over this one, which lists every existing event
      * the new one overlaps and can remove them all, then create the new one.
      *
-     * @author Philip Kvaratshelya — user story 8 (event conflicts)
+     * @author Philip — user story 8 (event conflicts)
      * @param {EvenementEnConflit[]} existants - Conflicting events, as sent in the API's 409 response.
      * @param {NouvelEvenement} nouveau - The POST body of the event being created, so the
      *   conflict screen can create it itself once the existing ones are removed.
@@ -124,14 +122,14 @@ export default function CreateEvent({ }) {
      *   or the home timeline;
      * - 'accueil' (created / dropped): back to the home timeline.
      *
-     * @author Philip Kvaratshelya — user story 8 (event conflicts)
+     * @author Philip — user story 8 (event conflicts)
      * @param {SortieConflit} sortie
      * @returns {void}
      */
     const quitterConflit = (sortie: SortieConflit) => {
         setConflit(null)
         if (sortie === 'retour') navigation.goBack()
-        else if (sortie === 'accueil') navigation.dispatch({ type: 'POP_TO_TOP' })
+        else if (sortie === 'accueil') quitterApresCreation()
     }
 
     /**
@@ -140,7 +138,7 @@ export default function CreateEvent({ }) {
      * success. If the API answers 409 (overlap with existing events, user story 8),
      * opens the conflict screen.
      *
-     * @author Philip Kvaratshelya — user story 8 (409 → conflict screen) and
+     * @author Philip — user story 8 (409 → conflict screen) and
      *   rectification (validation messages, back to the existing home screen)
      * @returns {Promise<void>}
      */
@@ -169,12 +167,8 @@ export default function CreateEvent({ }) {
             } else if (values.titre.trim().length < 4) {
                 valid = false
                 errorMessage = t('create.titleTooShort', { title: values.titre })
-            } else if (estJourneeEntiere(values.start, values.end)
-                ? values.start < DateTime.now().startOf('day')
-                : values.start < DateTime.now().minus({ minutes: 1 })) {
-                // No events in the past (the pickers' minimum is set when the screen
-                // opens, so the start can pass while the form is being filled). An
-                // all-day event starts at midnight: today is still allowed.
+            } else if (debutDejaPasse(values.start, values.end)) {
+                // No events in the past (shared check, Philip — user story 20).
                 valid = false
                 errorMessage = t('create.pastStart')
             }
@@ -202,9 +196,7 @@ export default function CreateEvent({ }) {
                         text2: t('create.createdMessage'),
                         autoHide: true,
                     })
-                    // Pops the home stack back to the home screen (replace stacked a
-                    // second one over the calendar page when created from there).
-                    navigation.dispatch({ type: 'POP_TO_TOP' })
+                    quitterApresCreation()
                 }
             } else {
                 ToastAbs.show({ type: toastTypes.error, text2: errorMessage })
@@ -232,7 +224,7 @@ export default function CreateEvent({ }) {
     })
 
     useFocusEffect(useCallback(() => { 
-        const listener = navigation.addListener('beforeRemove', (e) => {
+        const listener = navigation.addListener('beforeRemove', () => {
             console.log('on back')
             resetInvites()
         })
@@ -272,12 +264,8 @@ export default function CreateEvent({ }) {
                     minimumStart: minimumStart
                 }}
             />
-            {/* Event being sent. Rectification (Philip Kvaratshelya). */}
-            {enChargement && (
-                <View style={stylesEnvoi.voile} pointerEvents="none">
-                    <Spinner size={40} color={colors.text} accessibilityLabel={t('common:loading')} />
-                </View>
-            )}
+            {/* Event being sent. Rectification (Philip); shared VoileEnvoi (user story 20). */}
+            {enChargement && <VoileEnvoi />}
             {conflit && (
                 <ConflitEvenement
                     existants={conflit.existants}
@@ -289,12 +277,3 @@ export default function CreateEvent({ }) {
         </>
     )
 }
-
-const stylesEnvoi = StyleSheet.create({
-    // Centered over the form while the event is being sent.
-    voile: {
-        position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-})

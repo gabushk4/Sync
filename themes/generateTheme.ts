@@ -10,6 +10,10 @@ export type ThemeColors = {
     success: string;
     muted: string;
     warning: string;
+    /** Outline of the member's free stretches (blue, fixed whatever the hue). Philip — user story 20. */
+    disponible: string;
+    /** Block of an unavailability on the member's row (red, fixed whatever the hue). Philip — user story 20. */
+    indisponible: string;
 };
 
 
@@ -28,6 +32,8 @@ export function generateTheme(h: number, scheme: 'light' | 'dark') : ThemeColors
             error:      hsl(0, 60, 60),
             success:    hsl(90, 60, 60),
             warning:    hsl(50, 60, 60),
+            disponible: hsl(205, 75, 65),
+            indisponible: hsl(0, 50, 32),
             notification: hsl(0, 80, 50), // required by React Navigation
         };
     }
@@ -43,6 +49,8 @@ export function generateTheme(h: number, scheme: 'light' | 'dark') : ThemeColors
         error:      hsl(0, 60, 40),
         success:    hsl(90, 60, 40),
         warning:    hsl(50, 60, 40),
+        disponible: hsl(205, 75, 45),
+        indisponible: hsl(0, 75, 80),
         notification: hsl(0, 80, 50), // required by React Navigation
     };
 }

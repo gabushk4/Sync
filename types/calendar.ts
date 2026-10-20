@@ -11,6 +11,8 @@ export type Event = {
   prive: 0 | 1;
   privilege_membre: "lecteur" | "editeur" | null;
   type?: "recurrence" | "exception";
+  // 'indisponibilite': a busy stretch the member declared (Philip — user story 20).
+  nature?: "evenement" | "indisponibilite";
   regle_recurrence?: string;
   id_parent?: string;
   debut_occurence?: DateTime;
@@ -20,7 +22,7 @@ export type Event = {
   // de la même colonne côté serveur pour savoir où réimporter depuis.
   source?: 'sync' | 'ics' | 'google' | 'outlook' | 'device';
   // Timeline display overrides (invitation review screen): block color, and
-  // whether tapping the block does anything. Philip Kvaratshelya — user story 8.
+  // whether tapping the block does anything. Philip — user story 8.
   couleur?: string;
   cliquable?: boolean;
 };

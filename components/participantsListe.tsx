@@ -204,7 +204,7 @@ export default function ParticipantsListe({ participantsUrl, listType, peutGerer
                     {t('common:showMore')}
                 </LinkAbs>
             }
-            {/* Philip Kvaratshelya — user story 9: what the status icons mean. */}
+            {/* Philip — user story 9: what the status icons mean. */}
             {afficherLegende && <LegendeStatutsInvitation />}
             <TouchableOpacity style={[s.inviter]}
                 onPress={() => {
@@ -215,7 +215,7 @@ export default function ParticipantsListe({ participantsUrl, listType, peutGerer
                             // Only for an existing event (invite right away). While creating
                             // one there's no URL: the friends are only added to the draft,
                             // and invited when the event is created (POST /evenements).
-                            // Philip Kvaratshelya — user story 8.
+                            // Philip — user story 8.
                             ...(participantsUrl ? { inviterUrl: participantsUrl } : {}),
                             availableFriendIds: JSON.stringify(availableFriendIds),
                             hasMoreFriends: String(friendsHasMore),

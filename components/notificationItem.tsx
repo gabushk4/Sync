@@ -57,7 +57,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
 
     // An event invitation: accepting goes through the shared decision logic, which
     // checks the member's schedule (conflict screen, review of the schedules).
-    // Philip Kvaratshelya — user story 8.
+    // Philip — user story 8.
     const invitation = item.type === 'invitation_evenement' ? invitationDepuisDetails(item.details) : null
     const decision = useDecisionInvitation(invitation, {
         onRepondu: () => notifRefresh?.forceRefresh(),
@@ -124,7 +124,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
     const actionnerNotif = async (method: string, url: string, body: any = undefined) => {
         log("actionner notif", {method, url, body})
         // Invitations: both answers go through the decision logic (conflict check on
-        // accept, spinner, no double sending). Philip Kvaratshelya — user story 8.
+        // accept, spinner, no double sending). Philip — user story 8.
         if (invitation && body?.statut === 'acceptee') return decision.accepter()
         if (invitation && body?.statut === 'refusee') return decision.refuser()
         try {
@@ -375,7 +375,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                 }}
                 disabled={!!decision.enCours}
             >
-                {/* Spinner on the answer being sent. Philip Kvaratshelya — user story 8. */}
+                {/* Spinner on the answer being sent. Philip — user story 8. */}
                 {decision.enCours && decision.enCours === action.body?.statut
                     ? <Spinner size={22} color={buttonColor} />
                     : action.icon
@@ -449,7 +449,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                     <Text style={s.timestamp}>
                         {/* convertUTCToLocal throws without a date, so the `??` fallback never
                             ran and one notification without date crashed the whole feed.
-                            Rectification (Philip Kvaratshelya). */}
+                            Rectification (Philip). */}
                         {convertToWhen(item.date_envoie ? convertUTCToLocal(item.date_envoie) : DateTime.now().toLocal()) as string}
                     </Text>
                 </View>
@@ -457,7 +457,7 @@ export default function NotificationItem({ item, index, vu }: ItemProps) {
                     onPress={() => {
                         // A pending invitation opens its decision page (event, organizer,
                         // participants, accept / refuse / adjust my schedule).
-                        // Philip Kvaratshelya — user story 8.
+                        // Philip — user story 8.
                         if (!selectionner && invitation && item.statut_metier === 'en_attente' && !expired) {
                             ouvrirDecisionInvitation(invitation)
                             return

@@ -40,9 +40,13 @@ type TimelineProps = {
     windowStart?: DateTime
     selectedDate?: DateTime
     timelineDays?: number
+    /** Scroll to `selectedDate` (or now) on first layout (default). The invitation
+     * review screen scrolls to the event's hour itself, within its one-day bounds.
+     * Philip — user story 8 (replaces EventsList's defilerMaintenant). */
+    defilerAuDemarrage?: boolean
 }
 
-export default function Timeline({ horizontal, windowStart, selectedDate, timelineDays = 1 } : TimelineProps){
+export default function Timeline({ horizontal, windowStart, selectedDate, timelineDays = 1, defilerAuDemarrage = true } : TimelineProps){
     const { colors } = usePalette()
     const {fonts} = useFont()
     const {pxHeures, L_HEURES, H_HEURES} = useTimeline()
@@ -71,6 +75,7 @@ export default function Timeline({ horizontal, windowStart, selectedDate, timeli
             onLayout={() => {
                 if (initialisationFaite.current) return
                 initialisationFaite.current = true
+                if (!defilerAuDemarrage) return
                 const cible = selectedDate ?? DateTime.now()
                 const heureDansLaFenetre = windowStart
                     ? cible.diff(windowStart.startOf('day'), 'hours').hours

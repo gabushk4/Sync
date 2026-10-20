@@ -60,7 +60,7 @@ type Props = {
 /**
  * Identifies one conflicting occurrence (occurrences of a recurring event share its id).
  *
- * @author Philip Kvaratshelya — user story 8 (event conflicts)
+ * @author Philip — user story 8 (event conflicts)
  * @param {EvenementEnConflit} ev
  * @returns {string}
  */
@@ -87,7 +87,7 @@ const cleConflit = (ev: EvenementEnConflit) => `${ev.id}|${ev.debut}`
  * back arrow (see `onSortie`). The Modal has its own <Toast/>: toasts of the
  * app's root would show under it.
  *
- * @author Philip Kvaratshelya — user story 8 (event conflicts)
+ * @author Philip — user story 8 (event conflicts)
  * @param {Props} props
  * @param {EvenementEnConflit[]} props.existants - Conflicting events (409 answer).
  * @param {{ titre: string, debut: string | null, fin: string | null }} props.evenement - Event created / accepted.
@@ -149,7 +149,7 @@ export default function ConflitEvenement({ existants: existantsInitiaux, eveneme
      * fade followed by the regular screen transition. The hand-over happens before
      * the fade ends, once it's mostly transparent.
      *
-     * @author Philip Kvaratshelya — user story 8 (event conflicts)
+     * @author Philip — user story 8 (event conflicts)
      * @param {SortieConflit} sortie - How the screen is left.
      * @returns {void}
      */
@@ -174,7 +174,7 @@ export default function ConflitEvenement({ existants: existantsInitiaux, eveneme
     /**
      * Event created, or the new one dropped: back to the home timeline.
      *
-     * @author Philip Kvaratshelya — user story 8 (event conflicts)
+     * @author Philip — user story 8 (event conflicts)
      * @returns {void}
      */
     const retourAccueil = () => fermer('accueil')
@@ -184,7 +184,7 @@ export default function ConflitEvenement({ existants: existantsInitiaux, eveneme
      * it was before pressing "+" (same page, so same month and selected day /
      * range), or the home timeline. The create screen pops itself (see onSortie).
      *
-     * @author Philip Kvaratshelya — user story 8 (event conflicts)
+     * @author Philip — user story 8 (event conflicts)
      * @returns {void}
      */
     const modifierHoraire = () => fermer('retour')
@@ -195,7 +195,7 @@ export default function ConflitEvenement({ existants: existantsInitiaux, eveneme
      * - editor + single event: deletes it,
      * - otherwise: leaves it (the event stays for its other participants).
      *
-     * @author Philip Kvaratshelya — user story 8 (event conflicts)
+     * @author Philip — user story 8 (event conflicts)
      * @param {EvenementEnConflit} ev - The existing conflicting event.
      * @returns {Promise<void>}
      */
@@ -218,7 +218,7 @@ export default function ConflitEvenement({ existants: existantsInitiaux, eveneme
      * Removes every listed event, then creates / accepts the event (`confirmer`). If
      * events still overlap, this screen is updated to list them instead.
      *
-     * @author Philip Kvaratshelya — user story 8 (event conflicts)
+     * @author Philip — user story 8 (event conflicts)
      * @returns {Promise<void>}
      */
     const retirerEtCreer = async () => {
@@ -267,7 +267,7 @@ export default function ConflitEvenement({ existants: existantsInitiaux, eveneme
      * cancelled or left for good), naming them, then removes them and creates /
      * accepts the event.
      *
-     * @author Philip Kvaratshelya — user story 8 (event conflicts)
+     * @author Philip — user story 8 (event conflicts)
      * @returns {void}
      */
     const confirmerRetrait = () => {
@@ -285,7 +285,7 @@ export default function ConflitEvenement({ existants: existantsInitiaux, eveneme
     /**
      * "Don't create it": the new event was never saved, so just drop it.
      *
-     * @author Philip Kvaratshelya — user story 8 (event conflicts)
+     * @author Philip — user story 8 (event conflicts)
      * @returns {void}
      */
     const abandonnerNouveau = () => {
@@ -297,7 +297,7 @@ export default function ConflitEvenement({ existants: existantsInitiaux, eveneme
      * "Do nothing" (invitation): nothing is removed or answered, the invitation
      * stays pending; back to the screen under this one (feed or decision page).
      *
-     * @author Philip Kvaratshelya — user story 8 (answering an invitation in conflict)
+     * @author Philip — user story 8 (answering an invitation in conflict)
      * @returns {void}
      */
     const neRienFaire = () => {
@@ -309,7 +309,7 @@ export default function ConflitEvenement({ existants: existantsInitiaux, eveneme
      * Formats an event's time range in the member's timezone: one date with its
      * hours, or both dates when it spans several days.
      *
-     * @author Philip Kvaratshelya — user story 8 (event conflicts)
+     * @author Philip — user story 8 (event conflicts)
      * @param {string | null} debut - UTC start (ISO or SQL).
      * @param {string | null} fin - UTC end (ISO or SQL).
      * @returns {string | null} e.g. "lundi 5 octobre · 14:00 - 15:00", or null if a date is missing.
@@ -329,7 +329,7 @@ export default function ConflitEvenement({ existants: existantsInitiaux, eveneme
     /**
      * What confirming will do to an event.
      *
-     * @author Philip Kvaratshelya — user story 8 (event conflicts)
+     * @author Philip — user story 8 (event conflicts)
      * @param {EvenementEnConflit} ev
      * @returns {string}
      */

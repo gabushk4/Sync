@@ -7,7 +7,7 @@ import { bornesLocales, InvitationInfo } from '@/types/invitation'
  * the inviter's, the other invitees' and the member's schedules, the invited event
  * colored by each one's answer.
  *
- * @author Philip Kvaratshelya — user story 8 (reviewing an invitation in conflict)
+ * @author Philip — user story 8 (reviewing an invitation in conflict)
  * @param {InvitationInfo} invitation
  * @returns {void}
  */
@@ -25,7 +25,7 @@ export default function ouvrirRevueInvitation(invitation: InvitationInfo): void 
  * or the leader's event in the invitation review (`depuisRevue`: "adjust my
  * schedule" then just goes back to it).
  *
- * @author Philip Kvaratshelya — user story 8 (answering an invitation)
+ * @author Philip — user story 8 (answering an invitation)
  * @param {InvitationInfo} invitation
  * @param {{ depuisRevue?: boolean }} [options]
  * @returns {void}

@@ -18,7 +18,7 @@ import Animated, { scrollTo, useAnimatedReaction, useAnimatedRef, useAnimatedScr
  * Month calendar component of user story 5: grid, hold-and-drag range selection
  * and the selected days' events list.
  *
- * @author Philip Kvaratshelya — user story 5 (month calendar)
+ * @author Philip — user story 5 (month calendar)
  */
 
 /** One day of the list under the grid: the day, the events it shows and its holidays' names. */
@@ -40,7 +40,7 @@ export type CalendarMonthViewProps = {
     /** Called once a long-press-and-drag range selection ends, with the days sorted earliest-first. */
     onSelectRange?: (debut: DateTime, fin: DateTime) => void;
     /** The displayed month's events are still loading: the list shows a spinner
-     * instead of "no events" (Philip Kvaratshelya — user story 5). */
+     * instead of "no events" (Philip — user story 5). */
     chargement?: boolean;
 }
 
@@ -76,7 +76,7 @@ type SegmentPlageProps = {
  * one segment per row). Pops in when it appears, then springs to follow the
  * row's first/last selected column as the finger drags.
  *
- * @author Philip Kvaratshelya — user story 5 (month calendar)
+ * @author Philip — user story 5 (month calendar)
  * @param {SegmentPlageProps} props
  * @returns {JSX.Element}
  */
@@ -128,7 +128,7 @@ function SegmentPlage({ rangee, colonneDebut, colonneFin, tailleCase, couleur }:
  * that complete the first/last week. The week's start day follows Luxon's
  * global locale (`Settings.defaultLocale`).
  *
- * @author Philip Kvaratshelya — user story 5 (month calendar)
+ * @author Philip — user story 5 (month calendar)
  * @param {DateTime} mois - Any date within the month to build weeks for.
  * @returns {DateTime[][]} A list of weeks, each an array of exactly 7 days.
  */
@@ -175,7 +175,7 @@ function construireSemaines(mois: DateTime): DateTime[][] {
  * wherever it naturally scrolled to — which removes the frame-timing race
  * that a shift-and-recentre approach is prone to.
  *
- * @author Philip Kvaratshelya — user story 5 (month calendar)
+ * @author Philip — user story 5 (month calendar)
  * @param {CalendarMonthViewProps} props
  * @param {DateTime} props.monthDate - Any date within the month to display.
  * @param {DateTime} [props.selectedDate] - Currently selected day, highlighted in the grid.
@@ -265,7 +265,7 @@ export default function CalendarMonthView({
      * shows an arrow on the side that continues on another day, or "all day" when
      * it covers the whole day.
      *
-     * @author Philip Kvaratshelya — user story 5 (month calendar)
+     * @author Philip — user story 5 (month calendar)
      * @param {Event} evenement
      * @param {DateTime} jour - The day the event is listed under.
      * @returns {{ haut: string, bas: string }}
@@ -284,7 +284,7 @@ export default function CalendarMonthView({
     /**
      * "Day 2 of 3" for an event spanning several days, else null.
      *
-     * @author Philip Kvaratshelya — user story 5 (month calendar)
+     * @author Philip — user story 5 (month calendar)
      * @param {Event} evenement
      * @param {DateTime} jour - The day the event is listed under.
      * @returns {string | null}
@@ -301,7 +301,7 @@ export default function CalendarMonthView({
     /**
      * Header of a day section, e.g. "Today · Saturday, October 4".
      *
-     * @author Philip Kvaratshelya — user story 5 (month calendar)
+     * @author Philip — user story 5 (month calendar)
      * @param {DateTime} jour
      * @returns {string}
      */
@@ -319,7 +319,7 @@ export default function CalendarMonthView({
     /**
      * Converts a month index to the month it represents.
      *
-     * @author Philip Kvaratshelya — user story 5 (month calendar)
+     * @author Philip — user story 5 (month calendar)
      * @param {number} index - A value in [0, NOMBRE_MOIS - 1].
      * @returns {DateTime}
      */
@@ -330,7 +330,7 @@ export default function CalendarMonthView({
     /**
      * Converts a month to its index, clamped to the browsable range.
      *
-     * @author Philip Kvaratshelya — user story 5 (month calendar)
+     * @author Philip — user story 5 (month calendar)
      * @param {DateTime} mois
      * @returns {number}
      */
@@ -434,7 +434,7 @@ export default function CalendarMonthView({
      * telling the parent, so the dots and the selected day's events came from the
      * other month (e.g. Oct 4's event vanished after going to November and back).
      *
-     * @author Philip Kvaratshelya — user story 5 (month calendar)
+     * @author Philip — user story 5 (month calendar)
      * @param {number} offsetX - The grid's final horizontal offset.
      * @returns {void}
      */
@@ -452,7 +452,7 @@ export default function CalendarMonthView({
      * End of a drag: only handled when the list is already resting on a page (no
      * momentum follows, so onMomentumScrollEnd won't fire).
      *
-     * @author Philip Kvaratshelya — user story 5 (month calendar)
+     * @author Philip — user story 5 (month calendar)
      * @param {NativeSyntheticEvent<NativeScrollEvent>} e
      * @returns {void}
      */
@@ -467,7 +467,7 @@ export default function CalendarMonthView({
      * updated up front so the resulting scroll-end event and the parent's
      * new `monthDate` are both recognised as already handled.
      *
-     * @author Philip Kvaratshelya — user story 5 (month calendar)
+     * @author Philip — user story 5 (month calendar)
      * @param {1 | -1} direction - 1 for the next month, -1 for the previous one.
      * @returns {void}
      */
@@ -496,7 +496,7 @@ export default function CalendarMonthView({
      * absolute-position version measured the grid while the page was still sliding
      * in, so the touch landed on the wrong day (or none) and the hold did nothing.
      *
-     * @author Philip Kvaratshelya — user story 5 (month calendar)
+     * @author Philip — user story 5 (month calendar)
      * @param {number} x - X position relative to the grid.
      * @param {number} y - Y position relative to the grid.
      * @returns {DateTime | null} The day under that point, or null before layout.
@@ -516,7 +516,7 @@ export default function CalendarMonthView({
     /**
      * Starts a range selection on `jour` (the held day).
      *
-     * @author Philip Kvaratshelya — user story 5 (month calendar)
+     * @author Philip — user story 5 (month calendar)
      * @param {DateTime} jour - The day that was long-pressed.
      * @returns {void}
      */
@@ -530,7 +530,7 @@ export default function CalendarMonthView({
     /**
      * Updates the in-progress range's end day as the finger drags.
      *
-     * @author Philip Kvaratshelya — user story 5 (month calendar)
+     * @author Philip — user story 5 (month calendar)
      * @param {DateTime} jour - The day currently under the finger.
      * @returns {void}
      */
@@ -543,7 +543,7 @@ export default function CalendarMonthView({
      * Ends the range selection: reports the sorted range via
      * `onSelectRange`, then clears the selection state.
      *
-     * @author Philip Kvaratshelya — user story 5 (month calendar)
+     * @author Philip — user story 5 (month calendar)
      * @returns {void}
      */
     function terminerSelection() {
@@ -781,7 +781,7 @@ export default function CalendarMonthView({
      * the active (currently centred) month gets the hold-and-drag gesture and
      * shows the range being dragged.
      *
-     * @author Philip Kvaratshelya — user story 5 (month calendar)
+     * @author Philip — user story 5 (month calendar)
      * @param {{ item: number }} info - `item` is the month index to render.
      * @returns {JSX.Element}
      */
@@ -870,7 +870,7 @@ export default function CalendarMonthView({
     /**
      * Renders one page of the header's title FlatList: a month's name.
      *
-     * @author Philip Kvaratshelya — user story 5 (month calendar)
+     * @author Philip — user story 5 (month calendar)
      * @param {{ item: number }} info - `item` is the month index to render.
      * @returns {JSX.Element}
      */

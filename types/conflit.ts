@@ -37,7 +37,7 @@ export type NouvelEvenement = {
  * older API only sends the first one as `evenement`. Used by the create screen
  * and the conflict screen (a removal that leaves conflicts).
  *
- * @author Philip Kvaratshelya — user story 8 (event conflicts)
+ * @author Philip — user story 8 (event conflicts)
  * @param {{ evenements?: EvenementEnConflit[], evenement?: EvenementEnConflit }} data - 409 response body.
  * @returns {EvenementEnConflit[]}
  */

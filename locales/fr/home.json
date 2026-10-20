@@ -11,5 +11,26 @@
   "backToToday": "Revenir à aujourd'hui",
   "fullyBooked": "Journée complète",
   "untitledEvent": "Évènement",
-  "backToNow": "Revenir à maintenant"
+  "backToNow": "Revenir à maintenant",
+  "search": {
+    "open": "Rechercher un ami",
+    "close": "Fermer la recherche",
+    "placeholder": "Rechercher un ami",
+    "noResult": "Aucun ami ne correspond à « {{texte}} »"
+  },
+  "plageLibre": {
+    "titre": "Plage sélectionnée",
+    "creerEvenement": "Créer un évènement",
+    "ajouterIndisponibilite": "Ajouter une indisponibilité",
+    "annuler": "Annuler",
+    "occupeTitre": "Plage déjà occupée",
+    "occupe": "Sélection dans un évènement déjà existant.",
+    "passeTitre": "Dans le passé",
+    "passe": "Cette plage est déjà passée.",
+    "disponible": "Disponible",
+    "datePassee": "Date passée"
+  },
+  "creation": {
+    "titre": "Ajouter à ton horaire"
+  }
 }

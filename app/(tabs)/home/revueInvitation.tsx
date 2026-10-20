@@ -3,7 +3,7 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router'
 import { DateTime } from 'luxon'
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { useSharedValue, withDecay, withTiming } from 'react-native-reanimated'
 
@@ -21,7 +21,7 @@ import catcher from '@/functions/catcher'
 import { convertUTCToLocal } from '@/functions/convertirUTCenLocal'
 import { getCommonFreeSlots } from '@/functions/availability'
 import couleurStatutInvitation, { assombrir } from '@/functions/couleurStatutInvitation'
-import { paramsJour } from '@/functions/evenementsMembre'
+import { estJourFerie, paramsJour } from '@/functions/evenementsMembre'
 import { ouvrirDecisionInvitation } from '@/functions/ouvrirRevueInvitation'
 import { Event } from '@/types/calendar'
 import { bornesLocales, InvitationInfo } from '@/types/invitation'
@@ -60,7 +60,7 @@ type Horaires = { leader: PersonneHoraire | null, invites: PersonneHoraire[], mo
  *
  * Route param `invitation`: {@link InvitationInfo} as JSON.
  *
- * @author Philip Kvaratshelya — user story 8 (reviewing an invitation in conflict)
+ * @author Philip — user story 8 (reviewing an invitation in conflict)
  * @returns {JSX.Element}
  */
 export default function RevueInvitation() {
@@ -69,8 +69,17 @@ export default function RevueInvitation() {
     const { fonts } = useFont()
     const { api } = useAPI()
     const { membre } = useMembre()
-    const { offset, clampOffset, maxOffset } = useGestionScroll()
+    const { offset } = useGestionScroll()
     const { pxHeures, L_HEURES } = useTimeline()
+    const { width: largeurEcran } = useWindowDimensions()
+    // This screen shows one day: the shared bounds (GestionScrollProvider) now cover
+    // the home screen's seven days and let the rows scroll into empty days.
+    // Rectification (Philip) after the seven-day window.
+    const maxOffset = Math.max(0, 24 * (pxHeures + L_HEURES) - (largeurEcran - LARGEUR_COLONNE))
+    const clampOffset = (valeur: number) => {
+        'worklet'
+        return Math.min(Math.max(valeur, 0), maxOffset)
+    }
 
     const { invitation: invitationParam } = useLocalSearchParams<{ invitation?: string }>()
     const invitation = useMemo<InvitationInfo | null>(
@@ -95,13 +104,14 @@ export default function RevueInvitation() {
      * can't be tapped — with its title for a friend, or grey and
      * "private" for someone who isn't a friend (`masque`, the API sends no title).
      *
-     * @author Philip Kvaratshelya — user story 8 (answering an invitation)
+     * @author Philip — user story 8 (answering an invitation)
      * @param {PersonneHoraire} personne
      * @param {'leader' | 'invite' | 'moi'} role
      * @returns {Event[]}
      */
     const evenementsDe = (personne: PersonneHoraire, role: 'leader' | 'invite' | 'moi'): Event[] =>
-        personne.evenements.map((ev) => (({
+        // Holidays don't occupy the day (like the home screen): no block.
+        personne.evenements.filter((ev) => !estJourFerie(ev)).map((ev) => (({
             ...ev,
             id: ev.id_publique,
             debut: convertUTCToLocal(ev.debut, membre.timezone),
@@ -115,7 +125,7 @@ export default function RevueInvitation() {
                 : ev.masque ? colors.muted : undefined,
 
             // The member's own events too: they open their details, to move or
-            // delete one in conflict (Philip Kvaratshelya — user story 8).
+            // delete one in conflict (Philip — user story 8).
             cliquable: role === 'moi' || (!!ev.est_invitation && role === 'leader')
         }) as Event))
 
@@ -124,7 +134,7 @@ export default function RevueInvitation() {
      * one of the member's own events opens its details (edit / delete / leave),
      * pushed over this screen so going back returns here (reloaded on focus).
      *
-     * @author Philip Kvaratshelya — user story 8 (adjusting my schedule)
+     * @author Philip — user story 8 (adjusting my schedule)
      * @param {Event} ev
      * @returns {void}
      */
@@ -144,7 +154,7 @@ export default function RevueInvitation() {
      * Events that make a person busy, for the common free slots: everything but the
      * invited event while it isn't accepted (a pending invitation doesn't take the time).
      *
-     * @author Philip Kvaratshelya — user story 8 (answering an invitation)
+     * @author Philip — user story 8 (answering an invitation)
      * @param {Event[]} evenements - A row's events (evenementsDe).
      * @returns {Event[]}
      */
@@ -219,7 +229,7 @@ export default function RevueInvitation() {
      * with, for the leader and for a friend, the free slots shared with the member
      * (like the home screen).
      *
-     * @author Philip Kvaratshelya — user story 8 (answering an invitation)
+     * @author Philip — user story 8 (answering an invitation)
      * @param {PersonneHoraire} personne
      * @param {'leader' | 'invite' | 'moi'} role
      * @returns {JSX.Element}
@@ -253,7 +263,6 @@ export default function RevueInvitation() {
                 // The invited event (leader's or member's row): the decision page; the
                 // member's own events: their details.
                 onPressEvenement={ouvrirEvenement}
-                defilerMaintenant={false}
             />
         </View>
         )
@@ -278,7 +287,9 @@ export default function RevueInvitation() {
 
             <View style={s.timeline}>
                 <View style={s.colonneVide} />
-                <Timeline horizontal={true} />
+                {/* The invited event's day (midnight's label is that day, not the home
+                    screen's window); the focus effect above scrolls to the event's hour. */}
+                <Timeline horizontal={true} windowStart={jour} defilerAuDemarrage={false} />
             </View>
 
             {!horaires ? (

@@ -4,7 +4,8 @@
     "details": "Details",
     "edit": "Edit",
     "calendar": "Calendar",
-    "invitationReview": "Invitation schedules"
+    "invitationReview": "Invitation schedules",
+    "unavailability": "Unavailability"
   },
   "details": {
     "recurringEditTitle": "Edit recurring event",
@@ -127,5 +128,16 @@
     "refuse": "Refuse",
     "refuseFailed": "Unable to refuse the invitation",
     "invitedBy": "Invited by"
+  },
+  "unavailability": {
+    "reasonPlaceholder": "reason (optional)...",
+    "reasonPrivate": "reason private",
+    "reasonShared": "reason shared",
+    "createdTitle": "Unavailability added",
+    "createdMessage": "Your friends will see you busy then",
+    "dayTaken": "You already have something that day",
+    "rangeTaken": "You already have something then",
+    "inTheWay": "Already planned: {{titres}}",
+    "createFailed": "Unable to add the unavailability"
   }
 }

@@ -31,7 +31,7 @@ type Props = {
  * participants with their answer, "adjust my schedule" (the invitation review), and
  * the decision — accept or refuse (see useDecisionInvitation).
  *
- * @author Philip Kvaratshelya — user story 8 (answering an invitation in conflict)
+ * @author Philip — user story 8 (answering an invitation in conflict)
  * @param {Props} props
  * @returns {JSX.Element}
  */
