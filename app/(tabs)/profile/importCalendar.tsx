@@ -28,7 +28,7 @@ type SourceImport = 'telephone' | 'ics';
 
 /**
  * To separate concerns, Importing from a file must be separated from importing from a systems calendar. 
- * Also, we need to be able to manage separeted calendars. 
+ * Also, we need to be able to manage separated calendars. 
  * If the user wants to delete events from an imported file, or from an imported system calendar, he has to be able to do so.
  * For now, this code limits the control of the user over its calendar.
  */

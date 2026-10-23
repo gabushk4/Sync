@@ -23,6 +23,8 @@
 - `timezones.ts` - Gestion des fuseaux horaires (liste, décalage, conversion)
 - `tokenStore.ts` - Stockage et gestion des tokens JWT
 - `traduireRecurrence.js` - Traduction des règles de récurrence
+- `googleAgenda.ts` - Client de l'intégration Google Agenda (comptes, calendriers, sélection, suivi SSE de l'import)
+- `googleOAuth.ts` - Flux OAuth Google côté app (obtention du code d'autorisation, PKCE)
 
 ## Fonctions principales (signatures réelles) :
 1. **convertUTCToLocal(dateUTC, timezone = 'local')** - Convertir une date UTC en `DateTime` local (`functions/convertirUTCenLocal.tsx`, export nommé avec `convertLocalToUTC`)
@@ -40,6 +42,10 @@
 13. **convertirTimestamp** - Conversion timestamp → date lisible (localisée FR/EN via `locales/*/formats.json`)
 14. **getNow.js** - Fichier vide (aucune fonction exportée)
 15. **log / ouvrirLienExterne / resolveMock / calculerDimensionsEvenements** - Voir fichiers sources (signatures non reprises ici)
+16. **chargerConfigGoogle / chargerComptesGoogle / chargerCalendriersGoogle / selectionnerCalendriersGoogle / resynchroniserCalendrierGoogle / deconnecterCompteGoogle / connecterCompteGoogle(api, …)** - Appels API de l'intégration Google (`functions/googleAgenda.ts`)
+17. **suivreImportGoogle(api, jobId, { onProgression, onFin })** - Suit un import en flux SSE, avec repli sur le polling ; retourne une fonction d'annulation (`functions/googleAgenda.ts`)
+18. **extraireProgression(bloc)** - Lit les blocs `text/event-stream` reçus (testé dans `tests/googleAgenda.test.js`)
+19. **demanderCodeGoogle(config)** - Lance le consentement Google et renvoie `{ code, code_verifier }`, ou `null` si l'utilisateur annule (`functions/googleOAuth.ts`)
 
 ## Utilisation typique :
 ```typescript

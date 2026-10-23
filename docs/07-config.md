@@ -31,6 +31,15 @@
 - `GET /evenements/amis` - Événements des amis (via `AutoRefresh`)
 - `POST /notifications/push_token` - Enregistrement du token push
 - `DELETE /notifications/{id}` - Supprimer une notification
+- `GET /comptes/google/config` - Configuration OAuth Google publique (client_id, redirect_uri, portées)
+- `GET /comptes/` - Comptes externes liés (`?fournisseur=google`)
+- `POST /comptes/google/connexion` - Lien d'un compte Google (`server_auth_code` + `code_verifier`)
+- `POST /comptes/deconnexion/{id}` - Déconnexion d'un compte externe
+- `GET /calendriers/google` - Comptes + calendriers Google du membre
+- `PUT /calendriers/google` - Sélection des calendriers (idempotent) → `202 {job_id}`
+- `POST /calendriers/syncroniser/{id}` - Relance l'import d'un calendrier → `202 {job_id}`
+- `GET /calendriers/imports/{id}` - Progression d'un import (repli polling)
+- `GET /calendriers/imports/{id}/events` - Progression d'un import en flux SSE (`text/event-stream`)
 
 ## Configuration des couleurs :
 Thème dynamique HSL : `generateTheme(hue, scheme)` (`themes/generateTheme.ts`).

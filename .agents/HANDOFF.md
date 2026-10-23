@@ -498,3 +498,284 @@ Non corrigé (noté) :
 - Doc : `docs/12-jour-entier.md` (lien dans `docs/README.md`).
 - Bug hors sujet noté (non corrigé, T13) : `app/(tabs)/home/edit/[event].tsx:161` appelle
   `useActionFab` avec l'ancienne signature → l'écran de modification devrait planter.
+
+---
+
+# HANDOFF — Écran Google Agenda (21/10/2026)
+
+Branche : `US-18` (les 2 repos `sync` et `sync_api` sont sur `US-18`).
+
+## Contexte determinations (à lire avant de coder)
+- Le client OAuth Google configuré dans `sync_api/.env` (`219177665566-…apps.googleusercontent.com`)
+  est de type **WEB** : l'authorization endpoint répond
+  `Custom scheme URIs are not allowed for 'WEB' client type` pour tout schéma personnalisé,
+  et `redirect_uri_mismatch` pour les URI https testées (`auth.expo.io`, `dev.syncalkemy.ca`…).
+  → pour que l'app obtienne un code, il faut un client **Android/iOS/Desktop** acceptant
+  `sync://oauth2redirect` (cf. `GOOGLE_REDIRECT_URI` dans `sync_api/.env`).
+- `expo-auth-session` v57 n'a plus de proxy `auth.expo.io` câblé (`getStartUrl` n'est appelé
+  nulle part) → pas de repli https possible depuis l'app.
+- `makeClient()` envoyait `redirect_uri=` **vide** ; Google l'acceptait (l'erreur remontait
+  ensuite sur le code), mais `getToken(code, options)` ignore le 2e argument (c'est le
+  callback) : il faut passer un **objet** d'options pour fournir `redirect_uri` + `code_verifier`.
+
+## App (`sync`)
+- `functions/googleAgenda.ts` (nouveau) : client API de l'intégration Google —
+  `chargerConfigGoogle`, `chargerComptesGoogle`, `chargerCalendriersGoogle`,
+  `selectionnerCalendriersGoogle`, `resynchroniserCalendrierGoogle`, `deconnecterCompteGoogle`,
+  `connecterCompteGoogle`, `suivreImportGoogle` (SSE + repli polling), `extraireProgression`.
+  ⚠️ RN n'expose pas `Response.body` (le polyfill de `fetch` passe par XHR) → le flux SSE est
+  lu via `xhr.responseText` dans `onprogress`, en ne traitant que les blocs terminés par `\n\n`.
+- `functions/googleOAuth.ts` (nouveau) : `demanderCodeGoogle(config)` — `expo-auth-session`
+  (`loadAsync` + `promptAsync`), PKCE par défaut, `access_type=offline` + `prompt=consent`
+  (sans ça Google ne renvoie pas de refresh_token). Renvoie `{ code, code_verifier }`.
+- `app/(tabs)/profile/settings/calendars/google.tsx` : écran complet — comptes liés
+  (statut, « accès révoqué », déconnexion), connexion OAuth, liste des calendriers
+  (sélection, calendrier principal, déjà lié à un autre compte), enregistrement de la
+  sélection, resynchronisation d'un calendrier, progression de l'import en direct.
+- `locales/{fr,en}/calendar.json` : section `google` (31 clés, same in both languages).
+- `package.json` : `moduleNameMapper` `^@/(.*)$` ajouté au bloc `jest` (les modules de
+  `functions/` importent via l'alias `@/`).
+- `tests/googleAgenda.test.js` (nouveau) : 5 tests sur le parseur SSE.
+- Docs : `docs/03-fonctions.md` (2 entrées + 4 signatures), `docs/07-config.md` (9 endpoints).
+
+## API (`sync_api`)
+- `GET /comptes/google/config` (nouveau, public) : `client_id`, `redirect_uri`, `scopes`.
+- `GET /comptes/` : **réparé** (la version en cours de travail visait la table `comptes` au
+  lieu de `comptes_externes`, `pool.query()` sans argument, JSON tronqué, et une injection
+  SQL sur `fournisseur`). Retourne maintenant `{ comptes: [...] }` + `a_reconnecter`.
+- `POST /comptes/google/connexion` : échange du code via `exchangeCode` (redirect_uri + PKCE),
+  **upsert** du compte (avant : INSERT → violation de la contrainte unique en reconnexion),
+  conservation du refresh_token existant si Google n'en renvoie pas.
+- `POST /comptes/deconnexion/:idPublique` : **implémenté** — calendriers désactivés,
+  événements supprimés en douceur (`deleted_at`), jeton neutralisé (la colonne est NOT NULL).
+- `PUT /calendriers/google` : **corrigé** — le jeton était pris du *premier* compte du membre
+  (le calendrier pouvait être d'un autre compte) et l'INSERT ne renseignait pas `id_compte`
+  (le calendrier n'était rattaché à aucun compte). Résolution par calendrier, `id_compte`
+  renseigné, `compte_origine` = le compte (et non l'id du calendrier), `label` du job.
+- `POST /calendriers/syncroniser/:idPublique` : **implémenté** (resync d'un calendrier).
+- `POST /calendriers/activer|desactiver` : 501 explicite (le PUT est idempotent et fait foi) —
+  avant, ces stubs ne répondaient jamais et laissaient la requête en suspens.
+- `src/jobs/events_imports.js` : `label` dans le snapshot du job (progression par calendrier).
+- `src/functions/google.js` : `scopes`, `exchangeCode(code, codeVerifier)`, `makeClient()`
+  avec le vrai `redirect_uri`.
+- `src/config/env.js` : `googleRedirectUri` (nouvelle var d'env `GOOGLE_REDIRECT_URI`).
+
+## Vérifications
+- API testée en local (MySQL docker :3307, API :3100) : `GET /comptes` (200),
+  `GET /comptes/?fournisseur=google` (200), `GET /calendriers/google` (200),
+  `POST /comptes/google/connexion` sans code (400), `POST /comptes/deconnexion/:id` (200 :
+  compte `deconnecte`, calendrier `actif=0`, 3 événements en `deleted_at`),
+  `PUT /calendriers/google` sans compte (409) / sélection invalide (400),
+  `POST /calendriers/syncroniser/:id` inconnu (404), `activer|desactiver` (501).
+- Chemin « jeton révoqué » : jeton factice → Google `invalid_grant` → compte marqué
+  `erreur` + `a_reconnecter: true` → l'app affiche « reconnectez ce compte ».
+- App : `tsc` → 5 erreurs, **exactement les 5 préexistantes** (T3 + T13), aucune nouvelle ;
+  `eslint` → 0 erreur sur les 4 fichiers touchés ; `jest` → 8/8 (2 suites) ;
+  `npx expo export -p android` → exit 0 (les fichiers de route vides `file.tsx` /
+  `system.tsx` / `outlook.tsx` ne cassent pas le build).
+
+## Reste / à faire
+- **Console Google** : créer un client Android/iOS/Desktop, y enregistrer
+  `sync://oauth2redirect`, et mettre son `client_id`/`client_secret` dans `sync_api/.env`
+  (`GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_SECRET`). Tant que le client WEB actuel est
+  utilisé, Google refuse le schéma personnalisé → la connexion OAuth ne peut pas aboutir.
+- **Non testé sur appareil** : le flux OAuth (consentement, retour, échange du code) et le
+  suivi SSE en conditions réelles.
+- `sync_api` : le TODO `TODO_IMPORT_SYNCHRONISATION.md` n'est pas à jour (voir le commit
+  correspondant) ; l'état des jobs reste en RAM (pas de table de jobs), pas de
+  synchronisation incrémentale (`sync_token` jamais écrit).
+- Non fait (hors périmètre choisi) : `file.tsx` / `system.tsx` (import .ics et calendriers
+  système) restent vides ; `outlook.tsx` reste vide.
+
+## Bugs hors sujet (notés, non corrigés)
+- `sync_api/src/routes/evenements.js` : `DELETE /evenements/exceptions/:id` cible la table
+  `exceptions` alors que la table s'appelle `evenements_exceptions` (déjà signalé).
+- `sync_api/src/functions/google.js` : `importCalendar` stocke l'id Google brut dans
+  `evenements.uuid_externe` (varchar 64) alors que l'import .ics y met un sha256 ; un id
+  Google long tronquerait l'insertion.
+- `sync_api/src/routes/calendriers.js` (`GET /google`) : le `commit()` est appelé même
+  quand aucune transaction n'a été ouverte (sans conséquence avec MySQL, mais trompeur).
+
+### Complément (21/10/2026) — contrat d'erreur affine
+- `PUT /calendriers/google` distingue maintenant les deux cas de 409 :
+  `409 {message:'aucun compte Google lié'}` (aucun compte du tout) vs
+  `409 {message:'compte Google à reconnecter', code:'google_reauth'}` (compte existant
+  mais jeton invalide). L'app affiche un toast « reconnectez ce compte » sur `google_reauth`.
+- Contrat rejoué contre l'API locale (`tests` manuels, `/tmp/opencode/contrat_app.js`) :
+  `GET /comptes/google/config`, `GET /comptes/`, `GET /calendriers/google`,
+  `PUT /calendriers/google` (409 `google_reauth` avec un jeton factice) et
+  `POST /comptes/deconnexion/:id` → toutes les formes de réponse correspondent aux types
+  TypeScript de `functions/googleAgenda.ts`. Le `400 'calendrier inconnu'` n'est atteignable
+  qu'avec un vrai jeton Google (non testé ici).
+
+### Complément (21/10/2026) — désactivation d'un calendrier = suppression douce
+Décision user : « quand on désactive un calendrier, on ne doit pas supprimer les
+événements, mais mettre un `deleted_at` ».
+
+**API (`sync_api`)**
+- `PUT /calendriers/google` : la désactivation ne fait plus
+  `DELETE FROM calendriers` (qui déclenchait le `ON DELETE CASCADE` sur
+  `evenements.calendrier_id` → suppression physique). Elle fait désormais :
+  `UPDATE evenements SET deleted_at = NOW() WHERE calendrier_id IN (...)` puis
+  `UPDATE calendriers SET actif = 0`. Le calendrier est **conservé** (désactivé),
+  il pourra être réactivé et réimporté plus tard.
+- `GET /calendriers/google` (prune : calendrier disparu de Google) : même traitement
+  (suppression douce + `actif = 0`), plus la transaction qui était ouverte/fermée
+  incohéremment (`commit()` appelé même sans `beginTransaction()`).
+- `PUT /calendriers/google` restructuré : **Google n'est plus contacté que pour les
+  calendriers *nouveaux***. Conséquence : le membre peut **retirer** un calendrier
+  même si son accès Google a été révoqué (sinon il était coincé avec des
+  calendriers qu'il ne pouvait plus enlever). La réactivation, elle, exige un compte
+  `actif` → `409 {code:'google_reauth'}`.
+- `PUT /calendriers/google` renvoie `calendriers_desactives` (nombre de calendriers
+  retirés) en plus de `job_id`.
+- `verifierAccesEvenement` (`src/functions/authenticate.js`) et
+  `GET /evenements/:idevenement` filtrent désormais `deleted_at IS NULL` : un
+  événement en suppression douce n'est plus accessible par son id (403).
+  ⚠️ C'était une fuite : les routes de détail ne filtraient pas `deleted_at`
+  (donc un événement supprimé en douce restait lisible et modifiable).
+- `POST /comptes/deconnexion/:idPublique` : inchangé (déjà en suppression douce).
+
+**App**
+- `selectionnerCalendriersGoogle` renvoie `{ jobId, calendriersDesactives }`.
+- Toast « Sélection enregistrée. » / « N calendrier(s) retiré(s) de Sync. » au lieu de
+  l'avertissement trompeur « aucun nouveau calendrier à importer » (l'app ne pouvait
+  pas distinguer « rien n'a changé » de « j'ai retiré des calendriers »).
+- i18n : `selectionSaved`, `calendarsRemoved_one/_other` (fr + en).
+
+**Vérifié** (contrat rejoué contre l'API locale) : à la désactivation, l'événement
+est **toujours en base** avec `deleted_at` renseigné, le calendrier est conservé avec
+`actif = 0`, `GET /evenements/<id>` → 403, la désactivation fonctionne avec un compte
+en erreur, la réactivation avec un compte en erreur → 409 `google_reauth`.
+
+### Complément (21/10/2026) — import Google : upsert + restauration
+Demande user : « les événements qui sont retrouvés soient un soft delete, les nouveaux
+simplement créés ; un ON DUPLICATE UPDATE avec `deleted_at = NULL` ».
+
+**`sync_api/src/functions/google.js`**
+- L'import ne détruit plus pour reconstruire. `importCalendar` est scindé en
+  `fetchEvents` (appel Google) + `appliquerImport` (écriture en base), ce qui rend le
+  second testable **sans compte Google** (`tests/import_google_check.js`).
+- `appliquerImport` fait, dans une seule transaction :
+  1. `UPDATE evenements SET deleted_at = NOW() WHERE calendrier_id = ? AND fenêtre`
+     → tout ce que Google a dans la fenêtre passe en suppression douce ;
+  2. `INSERT … ON DUPLICATE KEY UPDATE debut=…, fin=…, titre=…, deleted_at = NULL`
+     → les événements **retrouvés** sont restaurés et mis à jour, les **nouveaux** sont
+     créés.
+  L'ordre (soft delete puis upsert) évite d'avoir à distinguer « vu » / « pas vu » à la
+  seconde près — une première version avec un marqueur `updated_at` avait ce défaut
+  (le marqueur était en millisecondes alors que la colonne est en secondes : les
+  événements juste restaurés étaient supprimés dans la foulée).
+- Le conflit porte sur `(createur_id, uuid_externe)` (l'identité stable de l'événement
+  chez Google). `id_publique` et `slug` ne sont pas touchés → **ils restent stables d'un
+  import à l'autre** (un lien partagé vers un événement importé ne casse plus).
+- Optimisation : un nouvel `id_publique` n'est généré que pour les événements vraiment
+  nouveaux (avant : une requête d'unicité par événement, y compris pour ceux qui
+  existaient déjà).
+
+**🐞 Bug trouvé au passage (l'import Google n'a jamais fonctionné)**
+- Le code utilisait `id_calendrier` alors que la colonne s'appelle **`calendrier_id`**
+  (dans le `DELETE` et l'`INSERT`). L'import levait `ER_BAD_FIELD_ERROR` → le job
+  échouait à chaque fois, la progression SSE affichait toujours une erreur. Corrigé.
+
+**Comportement différé avec l'import `.ics`** (volontaire)
+- `POST /evenements/import` ne ressuscite **jamais** un événement supprimé en douce
+  (« on ne le recrée pas ») : un fichier `.ics` ne porte pas l'information de
+  suppression, le ressusciter annulerait les suppressions faites par l'utilisateur.
+- L'import Google, lui, ressuscite : Google est la source de vérité d'un calendrier
+  connecté, et c'est ce qui fait que **réactiver** un calendrier désactivé rend ses
+  événements visibles à nouveau.
+
+**Vérifié** : `node tests/import_google_check.js` → 12/12 (A retrouve son id et son
+nouvel horaire, B est restauré, C est supprimé en douceur et reste en base, D est
+créé, aucun doublon). `tsc` 5 erreurs (préexistantes), `eslint` 0, `jest` 8/8.
+
+### Complément (21/10/2026) — URI de redirection OAuth : contrainte de la console Google
+La nouvelle console Google n'expose une section « Authorized redirect URIs » que pour
+le client **WEB**. Pour les clients Android/iOS, Google **génère** l'URI à partir du
+package / bundle id et elle n'est pas modifiable.
+
+Comme le package Android et le bundle id iOS valent tous deux `com.alkemist.sync`,
+l'URI auto-générée est la même pour les deux clients : `com.alkemist.sync:/oauth2redirect`.
+
+Conséquences :
+- `app.json` : `expo.scheme` passe de `"sync"` à `["sync", "com.alkemist.sync"]`
+  (`expo.scheme` accepte un tableau) → l'app continue de gérer les liens `sync://`
+  existants et reçoit en plus le retour OAuth de Google.
+- `sync_api/.env` : `GOOGLE_REDIRECT_URI=com.alkemist.sync:/oauth2redirect`.
+- `sync_api/src/routes/comptes.js` : `GET /comptes/google/config` sert cette URI —
+  l'app ne la duplique jamais.
+- ⚠️ `expo run:android` / `run:ios` ne rejouent `prebuild` que si le dossier natif est
+  absent (`ensureNativeProject.js` → `if (!existsSync(platform))`). Comme `android/` et
+  `ios/` existent ici, il faut **lancer `npx expo prebuild` avant le run**, sinon le
+  nouveau scheme n'est pas dans le `AndroidManifest` / `Info.plist`.
+- Vérificateur : `node /tmp/opencode/check_redirect.js <client_id>` interroge
+  l'authorization endpoint et dit si l'URI est acceptée (et distingue « client WEB »
+  de « URI non enregistrée »).
+
+### Complément (21/10/2026) — un client OAuth Google par plateforme
+Décision user : « le client envoie son OS et je prends la bonne clé ».
+
+**`sync_api/src/config/googleClients.js` (nouveau)** — registre des clients :
+- variables : `GOOGLE_OAUTH_CLIENT_ID|SECRET|REDIRECT_URI` (défaut) +
+  `..._ANDROID` / `..._IOS` ;
+- `get(plateforme)`, `parClientId(clientId)`, `parClientEnregistre(clientId)` ;
+- garde-fou : une plateforme dont le `client_id` est posé mais pas le secret retombe
+  **entièrement** sur le client par défaut (sinon l'échange utiliserait le secret
+  d'un autre client et échouerait de façon incompréhensible).
+
+**Règle Google qui a dicté l'architecture** : un `refresh_token` est lié au client
+qui l'a émis. D'où la migration `20261021153000_ADD_oauth_client_id_to_comptes_externes.js`
+(colonne `comptes_externes.oauth_client_id`, appliquée en base : batch 13) : l'API
+mémorise le `client_id` ayant servi à lier le compte, et rafraîchit avec ce client.
+
+**Modifications**
+- `src/functions/google.js` : `makeClient(client)` et `exchangeCode(code, verifier, client)`
+  prennent le client du registre ; `importCalendar` reçoit `client` (le refresh
+  doit utiliser le bon client_id).
+- `src/routes/comptes.js` : `GET /comptes/google/config?platform=ios|android` renvoie
+  le client de la plateforme (+ `plateforme`) ; `POST /comptes/google/connexion` résout
+  le client par le `client_id` envoyé par l'app (le code est lié à ce client) et
+  enregistre `oauth_client_id` sur le compte.
+- `src/routes/calendriers.js` : les requêtes de comptes sélectionnent `oauth_client_id`
+  ; le client est résolu pour `listCalendars` et pour chaque job d'import.
+- App : `chargerConfigGoogle(api, plateforme)` (`?platform=ios|android`) et
+  `connecterCompteGoogle(api, code, verifier, clientId)` — le `client_id` repart avec
+  le code, le secret ne quitte jamais le serveur.
+
+**Le client par défaut reste le client WEB** : le compte déjà lié en base (membre 13)
+a été obtenu avec lui, son refresh continue de fonctionner (`oauth_client_id` NULL →
+repli sur le défaut). Les comptes nouveaux, eux, mémorisent leur client.
+
+**Vérifié** : migration appliquée, `GET /comptes/google/config` et `?platform=…`
+répondent, garde-fou du secret vide OK, `tsc` 5 (préexistantes), `eslint` 0, `jest` 8/8.
+
+### Complément (21/10/2026) — clients installés = « public clients » (pas de secret)
+Vérifié empiriquement contre le token endpoint de Google :
+
+| client_id + secret | réponse Google |
+|---|---|
+| Android + **secret du client WEB** | ❌ `invalid_client — The provided client secret is invalid.` |
+| Android + **aucun secret** | ✅ `invalid_grant — Malformed auth code.` (client accepté) |
+| WEB + son secret | ✅ accepté |
+
+→ Le `client_secret` est lié à son client : celui du client WEB ne peut **pas** servir
+avec le client Android/iOS. Un client installé (Android/iOS) est un *public client* :
+Google ne lui donne pas de secret et l'échange du code se fait **sans secret** — c'est
+le rôle du `code_verifier` PKCE.
+
+**`src/config/googleClients.js`** : un client de plateforme n'a besoin que de son
+`client_id` ; son secret est optionnel (vide → public client). Le secret du client par
+défaut n'est **jamais** hérité par un client de plateforme (sinon `invalid_client`).
+Garde-fou révisé : une plateforme est configurée dès qu'elle a un `client_id`.
+
+**`sync_api/.env`** : `GOOGLE_OAUTH_SECRET_ANDROID` / `_IOS` à laisser **vides**.
+
+**État vérifié** :
+```
+défaut    → client …brire8uvr…  secret: présent        (compte déjà lié en base)
+android   → client …jarvpnekm…  secret: AUCUN          (public client)
+ios       → client …qkd2ulqk…   secret: AUCUN          (public client)
+```
+Les deux clients acceptent `com.alkemist.sync:/oauth2redirect` (vérifié via
+`/tmp/opencode/check_redirect.js`).

@@ -98,13 +98,17 @@ export default function Confirm() {
     const selectedAction = action ? actionConfig[action] : undefined
 
     const confirmerAction = async () => {
+        /* Messing with the router at this point is unecessary because the root layout is auth based. 
+         * If the user is unauthenticated, only the login or signin page are available.
+            The router.dismiss() provoke an error where the stack cant be poped.
+        
         if (action === 'signOut') {
             if (router.canDismiss()) {
                 router.dismiss()
             }
             await selectedAction?.callback?.()
             return
-        }
+        } */ 
 
         await selectedAction?.callback?.()
         modalEvents.emitClosing()
